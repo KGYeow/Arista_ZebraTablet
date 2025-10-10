@@ -1,0 +1,45 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\4093094\\source\\repos\\Arista_ZebraTablet\\Arista_ZebraTablet\\Arista_ZebraTablet.Shared\\obj\\Debug\\net9.0\\scopedcss\\projectbundle\\Arista_ZebraTablet.Shared.bundle.scp.css",
+      "PackagePath": "staticwebassets\\Arista_ZebraTablet.Shared.9kz1n0ywj1.bundle.scp.css"
+    },
+    {
+      "Id": "C:\\Users\\4093094\\source\\repos\\Arista_ZebraTablet\\Arista_ZebraTablet\\Arista_ZebraTablet.Shared\\wwwroot\\app.css",
+      "PackagePath": "staticwebassets\\app.css"
+    },
+    {
+      "Id": "C:\\Users\\4093094\\source\\repos\\Arista_ZebraTablet\\Arista_ZebraTablet\\Arista_ZebraTablet.Shared\\wwwroot\\bootstrap\\bootstrap.min.css",
+      "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css"
+    },
+    {
+      "Id": "C:\\Users\\4093094\\source\\repos\\Arista_ZebraTablet\\Arista_ZebraTablet\\Arista_ZebraTablet.Shared\\wwwroot\\bootstrap\\bootstrap.min.css.map",
+      "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css.map"
+    },
+    {
+      "Id": "C:\\Users\\4093094\\source\\repos\\Arista_ZebraTablet\\Arista_ZebraTablet\\Arista_ZebraTablet.Shared\\wwwroot\\favicon.png",
+      "PackagePath": "staticwebassets\\favicon.png"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.Arista_ZebraTablet.Shared.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.Arista_ZebraTablet.Shared.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.build.Arista_ZebraTablet.Shared.props",
+      "PackagePath": "build\\Arista_ZebraTablet.Shared.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.buildMultiTargeting.Arista_ZebraTablet.Shared.props",
+      "PackagePath": "buildMultiTargeting\\Arista_ZebraTablet.Shared.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0\\staticwebassets\\msbuild.buildTransitive.Arista_ZebraTablet.Shared.props",
+      "PackagePath": "buildTransitive\\Arista_ZebraTablet.Shared.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

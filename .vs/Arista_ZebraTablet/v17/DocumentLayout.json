@@ -1,0 +1,45 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\4093094\\source\\repos\\Arista_ZebraTablet\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{3A332216-8CB3-44D1-969B-50FE2F21D4D1}|Arista_ZebraTablet\\Arista_ZebraTablet.Shared\\Arista_ZebraTablet.Shared.csproj|c:\\users\\4093094\\source\\repos\\arista_zebratablet\\arista_zebratablet\\arista_zebratablet.shared\\pages\\home.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{3A332216-8CB3-44D1-969B-50FE2F21D4D1}|Arista_ZebraTablet\\Arista_ZebraTablet.Shared\\Arista_ZebraTablet.Shared.csproj|solutionrelative:arista_zebratablet\\arista_zebratablet.shared\\pages\\home.razor||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 162,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c64b9c2-e352-428e-a56d-0ace190b99a6}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Home.razor",
+              "DocumentMoniker": "C:\\Users\\4093094\\source\\repos\\Arista_ZebraTablet\\Arista_ZebraTablet\\Arista_ZebraTablet.Shared\\Pages\\Home.razor",
+              "RelativeDocumentMoniker": "Arista_ZebraTablet\\Arista_ZebraTablet.Shared\\Pages\\Home.razor",
+              "ToolTip": "C:\\Users\\4093094\\source\\repos\\Arista_ZebraTablet\\Arista_ZebraTablet\\Arista_ZebraTablet.Shared\\Pages\\Home.razor",
+              "RelativeToolTip": "Arista_ZebraTablet\\Arista_ZebraTablet.Shared\\Pages\\Home.razor",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-10-09T07:21:50.366Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

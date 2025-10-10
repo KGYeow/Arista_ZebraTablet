@@ -1,0 +1,470 @@
+﻿@page "/"
+@using System.Net.Http.Headers
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using Arista_ZebraTablet.Shared.Services
+@inject IFormFactor FormFactor
+@inject HttpClient Http
+
+<PageTitle>ARISTA - Batch Barcode Scanner</PageTitle>
+
+<div class="page">
+    <header class="hero">
+        <h1>Batch Barcode Scanner</h1>
+        <p class="subtitle">
+            Upload one or more product images to detect barcodes. Works on @factor using @platform.
+        </p>
+        <ul class="instructions">
+            <li>Select multiple images at once (JPG/PNG/HEIC).</li>
+            <li>On mobile web, the camera may open directly.</li>
+            <li>Click “Send to Python” to run detection and get results for each image.</li>
+        </ul>
+    </header>
+
+    <section class="uploader">
+        <div class="actions">
+            <label for="fileInput" class="btn primary">
+                <span>➕ Add images</span>
+            </label>
+            <button class="btn" @onclick="ClearAll" disabled="@(!Selected.Any())">🧹 Clear all</button>
+        </div>
+
+        <InputFile id="fileInput"
+                   multiple
+                   accept="image/*"
+                   capture="environment"
+                   OnChange="OnFilesSelected"
+                   style="display:none" />
+
+        <div class="dropzone">
+            <div class="dropzone-content">
+                <div class="drop-icon">📷</div>
+                <div class="drop-title">Drop images here or click <label for="fileInput" class="link">browse</label></div>
+                <div class="drop-subtitle">Supported: .jpg, .jpeg, .png, .heic</div>
+            </div>
+        </div>
+
+        @if (Selected.Any())
+        {
+            <div class="thumbs">
+                @foreach (var img in Selected)
+                {
+                    <div class="card">
+                        <div class="thumb">
+                            @img.PreviewDataUrl
+                        </div>
+                        <div class="meta">
+                            <div class="name" title="@img.FileName">@img.FileName</div>
+                            <div class="size">@FormatBytes(img.Bytes?.Length ?? 0)</div>
+                        </div>
+                        <div class="status">
+                            @if (img.State == FileState.Ready)
+                            {
+                                <span class="chip info">Ready</span>
+                            }
+                            else if (img.State == FileState.Uploading)
+                            {
+                                <span class="chip warn">Uploading…</span>
+                            }
+                            else if (img.State == FileState.Done && (img.Result?.Barcodes?.Any() ?? false))
+                            {
+                                <span class="chip ok">Detected</span>
+                            }
+                            else if (img.State == FileState.Done)
+                            {
+                                <span class="chip neutral">No codes</span>
+                            }
+                            else if (img.State == FileState.Error)
+                            {
+                                <span class="chip error">Error</span>
+                            }
+                        </div>
+                        <button class="icon-btn"
+                                title="Remove"
+                                @onclick="@(() => Remove(img.Id))">✖</button>
+                    </div>
+                }
+            </div>
+
+            <div class="submit-row">
+                <button class="btn primary lg"
+                        @onclick="SendToPythonAsync"
+                        disabled="@IsBusy">
+                    @(IsBusy ? "Processing…" : "Send to Python")
+                </button>
+                @if (IsBusy)
+                {
+                    <div class="progress">
+                        <div class="bar" style="width:@Progress%"></div>
+                    </div>
+                }
+            </div>
+        }
+    </section>
+
+    @if (Selected.Any(s => s.Result != null || s.State == FileState.Error))
+    {
+        <section class="results">
+            <h2>Results</h2>
+            @foreach (var item in Selected)
+            {
+                <div class="result-card">
+                    <div class="result-header">
+                        <strong>@item.FileName</strong>
+                        @if (item.State == FileState.Error)
+                        {
+                            <span class="chip error">Error</span>
+                        }
+                        else if (item.Result?.Barcodes?.Any() ?? false)
+                        {
+                            <span class="chip ok">@item.Result.Barcodes.Count barcode(s)</span>
+                        }
+                        else if (item.State == FileState.Done)
+                        {
+                            <span class="chip neutral">No barcodes</span>
+                        }
+                    </div>
+
+                    @if (item.State == FileState.Error)
+                    {
+                        <div class="error-text">@item.ErrorMessage</div>
+                    }
+                    else if (item.Result?.Barcodes?.Any() ?? false)
+                    {
+                        <table class="tbl">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Value</th>
+                                    <th>Symbology</th>
+                                    <th>Confidence</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < item.Result!.Barcodes.Count; i++)
+                                {
+                                    var b = item.Result.Barcodes[i];
+                                    <tr>
+                                        <td>@(i + 1)</td>
+                                        <td><code>@b.Value</code></td>
+                                        <td>@(b.Symbology ?? "—")</td>
+                                        <td>@(b.Confidence is null ? "—" : $"{b.Confidence:P0}")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            }
+        </section>
+    }
+</div>
+
+<style>
+/* Minimal, clean UI that works on both Web & MAUI BlazorWebView */
+.page { padding: clamp(16px, 4vw, 32px); }
+.hero h1 { margin: 0 0 6px 0; font-size: clamp(22px, 3.5vw, 30px); }
+.subtitle { color: #5f6368; margin-bottom: 8px; }
+.instructions { color: #677; margin: 0 0 16px 18px; }
+.instructions li { margin: 4px 0; }
+
+.actions { display:flex; gap:10px; align-items:center; margin-bottom:12px; }
+.btn { appearance:none; border:1px solid #c9ced6; background:#fff; padding:8px 14px; border-radius:8px; cursor:pointer; }
+.btn.primary { background:#1f6feb; color:#fff; border-color:#1f6feb; }
+.btn.lg { padding:12px 18px; font-weight:600; }
+.btn:disabled { opacity:.6; cursor:not-allowed; }
+.icon-btn { border:none; background:transparent; font-size:16px; cursor:pointer; color:#a33; }
+.link { color:#1f6feb; text-decoration:underline; cursor:pointer; }
+
+.dropzone { border:2px dashed #c8d1dc; border-radius:12px; padding:28px; text-align:center; color:#667; }
+.drop-icon { font-size:28px; margin-bottom:6px; }
+.drop-title { font-weight:600; }
+.drop-subtitle { font-size:12px; color:#8594a6; }
+
+.thumbs { display:grid; gap:12px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-top:14px; }
+.card { position:relative; border:1px solid #e3e7ee; border-radius:12px; overflow:hidden; background:#fff; }
+.thumb { height:160px; background:#f7f9fb; display:flex; align-items:center; justify-content:center; }
+.thumb img { max-height:100%; max-width:100%; display:block; }
+.meta { padding:8px 10px; display:flex; justify-content:space-between; align-items:center; gap:6px; }
+.name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.size { color:#7a869a; font-size:12px; }
+.status { position:absolute; top:8px; left:8px; }
+
+.chip { padding:3px 8px; border-radius:999px; font-size:12px; border:1px solid transparent; background:#eef2f7; color:#445; }
+.chip.info { background:#e9f2ff; color:#1e5bd2; border-color:#cfe1ff; }
+.chip.ok { background:#e7f7ef; color:#1b7d42; border-color:#c8ebd7; }
+.chip.warn { background:#fff4db; color:#8f5c00; border-color:#ffe7ad; }
+.chip.error { background:#ffe8e8; color:#a23b3b; border-color:#ffc1c1; }
+.chip.neutral { background:#f1f3f5; color:#5b6a77; border-color:#e0e6ea; }
+
+.submit-row { display:flex; align-items:center; gap:16px; margin-top:16px; }
+.progress { flex:1; height:8px; background:#eef2f6; border-radius:999px; overflow:hidden; }
+.bar { height:100%; background:#1f6feb; width:0%; transition:width .25s ease; }
+
+.results { margin-top:22px; }
+.result-card { border:1px solid #e3e7ee; border-radius:12px; padding:12px; margin-bottom:12px; }
+.result-header { display:flex; align-items:center; gap:10px; }
+.error-text { color:#a23b3b; margin-top:8px; }
+.tbl { width:100%; border-collapse:collapse; margin-top:8px; }
+.tbl th, .tbl td { border-top:1px solid #eef2f6; padding:8px; text-align:left; }
+.tbl thead th { background:#fafbfc; }
+code { background:#f4f6fa; padding:2px 6px; border-radius:6px; }
+</style>
+
+@code {
+    private string factor => FormFactor.GetFormFactor();
+    private string platform => FormFactor.GetPlatform();
+
+    // TODO: set this to your actual Python API endpoint
+    // e.g. "https://api.yourdomain.com/barcode/detect"
+    private const string ApiEndpoint = "/api/barcodes/detect";
+
+    private const long MaxFileBytes = 20L * 1024 * 1024; // 20 MB per file
+    private readonly string[] AllowedContentTypes = new[] {
+        "image/jpeg", "image/png", "image/heic", "image/heif"
+    };
+
+    private List<UploadItem> Selected { get; } = new();
+    private bool IsBusy { get; set; }
+    private int Progress { get; set; } = 0;
+
+    private async Task OnFilesSelected(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles();
+        foreach (var f in files)
+        {
+            // Basic validation
+            var ct = string.IsNullOrWhiteSpace(f.ContentType) ? "image/jpeg" : f.ContentType.ToLowerInvariant();
+            if (!AllowedContentTypes.Contains(ct) && !ct.StartsWith("image/"))
+                continue;
+
+            try
+            {
+                await using var read = f.OpenReadStream(MaxFileBytes); // limit size
+                using var ms = new MemoryStream();
+                await read.CopyToAsync(ms);
+                var bytes = ms.ToArray();
+
+                var preview = $"data:{ct};base64,{Convert.ToBase64String(bytes)}";
+
+                Selected.Add(new UploadItem
+                {
+                    Id = Guid.NewGuid(),
+                    FileName = string.IsNullOrWhiteSpace(f.Name) ? $"{Guid.NewGuid():N}.jpg" : f.Name,
+                    ContentType = ct,
+                    Bytes = bytes,
+                    PreviewDataUrl = preview,
+                    State = FileState.Ready
+                });
+            }
+            catch (Exception ex)
+            {
+                Selected.Add(new UploadItem
+                {
+                    Id = Guid.NewGuid(),
+                    FileName = f.Name ?? "image",
+                    ContentType = ct,
+                    Bytes = null,
+                    PreviewDataUrl = null,
+                    State = FileState.Error,
+                    ErrorMessage = ex.Message
+                });
+            }
+        }
+    }
+
+    private void Remove(Guid id)
+    {
+        var i = Selected.FindIndex(x => x.Id == id);
+        if (i >= 0) Selected.RemoveAt(i);
+    }
+
+    private void ClearAll()
+    {
+        Selected.Clear();
+        IsBusy = false;
+        Progress = 0;
+    }
+
+    private async Task SendToPythonAsync()
+    {
+        if (IsBusy || !Selected.Any()) return;
+
+        try
+        {
+            IsBusy = true; Progress = 5;
+            // Upload in one batch (multipart). If your API expects per-file calls,
+            // loop each item and POST separately with its own multipart content.
+            using var form = new MultipartFormDataContent();
+
+            int idx = 0;
+            foreach (var item in Selected)
+            {
+                if (item.Bytes is null) continue;
+                item.State = FileState.Uploading;
+
+                var content = new ByteArrayContent(item.Bytes);
+                content.Headers.ContentType = new MediaTypeHeaderValue(item.ContentType ?? "image/jpeg");
+                // Use "files" as the field name unless your API expects a different one
+                form.Add(content, "files", item.FileName);
+
+                idx++;
+                Progress = Math.Clamp(5 + (int)((double)idx / Selected.Count * 40), 5, 50);
+            }
+
+            var resp = await Http.PostAsync(ApiEndpoint, form);
+            var text = await resp.Content.ReadAsStringAsync();
+
+            // Try to parse a couple of common shapes:
+            // 1) [{ fileName, barcodes:[{value,symbology,confidence}] , error }]
+            // 2) { items:[ { fileName, barcodes:[...], error } ] }
+            List<DetectResponseItem>? items = null;
+            try
+            {
+                items = JsonSerializer.Deserialize<List<DetectResponseItem>>(text, JsonOptions());
+            }
+            catch
+            {
+                try
+                {
+                    var envelope = JsonSerializer.Deserialize<DetectResponseEnvelope>(text, JsonOptions());
+                    items = envelope?.Items;
+                }
+                catch
+                {
+                    // Not a known shape; fall back to treating entire response as an error
+                }
+            }
+
+            Progress = 75;
+
+            if (items is not null)
+            {
+                // Map results by filename (case-insensitive)
+                var byName = items
+                    .Where(x => !string.IsNullOrWhiteSpace(x.FileName))
+                    .ToDictionary(x => x.FileName!, StringComparer.OrdinalIgnoreCase);
+
+                foreach (var item in Selected)
+                {
+                    if (item.Bytes is null) { item.State = FileState.Error; continue; }
+
+                    if (byName.TryGetValue(item.FileName, out var r))
+                    {
+                        if (!string.IsNullOrWhiteSpace(r.Error))
+                        {
+                            item.State = FileState.Error;
+                            item.ErrorMessage = r.Error;
+                        }
+                        else
+                        {
+                            item.Result = new DetectResult
+                            {
+                                Barcodes = r.Barcodes?.Select(b => new BarcodeDto
+                                {
+                                    Value = b.Value,
+                                    Symbology = b.Symbology,
+                                    Confidence = b.Confidence
+                                }).ToList() ?? new()
+                            };
+                            item.State = FileState.Done;
+                        }
+                    }
+                    else
+                    {
+                        // If server doesn't echo file names, we mark as done without specifics
+                        item.Result = item.Result ?? new DetectResult { Barcodes = new() };
+                        item.State = FileState.Done;
+                    }
+                }
+            }
+            else
+            {
+                // If we cannot parse, mark all as error but show server text on the first one
+                foreach (var item in Selected)
+                {
+                    item.State = FileState.Error;
+                    item.ErrorMessage ??= $"Server response: {text}";
+                }
+            }
+
+            Progress = 100;
+        }
+        catch (Exception ex)
+        {
+            foreach (var item in Selected)
+            {
+                item.State = FileState.Error;
+                item.ErrorMessage ??= ex.Message;
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes <= 0) return "0 B";
+        string[] units = ["B", "KB", "MB", "GB"];
+        var pow = (int)Math.Floor(Math.Log(bytes, 1024));
+        pow = Math.Clamp(pow, 0, units.Length - 1);
+        var val = bytes / Math.Pow(1024, pow);
+        return $"{val:0.##} {units[pow]}";
+    }
+
+    private static JsonSerializerOptions JsonOptions() => new()
+    {
+        PropertyNameCaseInsensitive = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
+    // ------- DTOs & view models -------
+    private enum FileState { Ready, Uploading, Done, Error }
+
+    private class UploadItem
+    {
+        public Guid Id { get; set; }
+        public string? FileName { get; set; }
+        public string? ContentType { get; set; }
+        public byte[]? Bytes { get; set; }
+        public string? PreviewDataUrl { get; set; }
+        public FileState State { get; set; }
+        public string? ErrorMessage { get; set; }
+        public DetectResult? Result { get; set; }
+    }
+
+    private class DetectResult
+    {
+        public List<BarcodeDto> Barcodes { get; set; } = new();
+    }
+
+    private class BarcodeDto
+    {
+        public string? Value { get; set; }
+        public string? Symbology { get; set; }
+        public double? Confidence { get; set; } // 0..1
+    }
+
+    // Server response shapes we try to parse
+    private class DetectResponseEnvelope
+    {
+        [JsonPropertyName("items")] public List<DetectResponseItem>? Items { get; set; }
+    }
+
+    private class DetectResponseItem
+    {
+        [JsonPropertyName("fileName")] public string? FileName { get; set; }
+        [JsonPropertyName("barcodes")] public List<DetectResponseBarcode>? Barcodes { get; set; }
+        [JsonPropertyName("error")] public string? Error { get; set; }
+    }
+
+    private class DetectResponseBarcode
+    {
+        [JsonPropertyName("value")] public string? Value { get; set; }
+        [JsonPropertyName("symbology")] public string? Symbology { get; set; }
+        [JsonPropertyName("confidence")] public double? Confidence { get; set; }
+    }
+}
