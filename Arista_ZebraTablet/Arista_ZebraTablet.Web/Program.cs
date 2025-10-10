@@ -1,12 +1,14 @@
 using Arista_ZebraTablet.Shared.Services;
 using Arista_ZebraTablet.Web.Components;
 using Arista_ZebraTablet.Web.Services;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+
+builder.Services.AddMudServices();
 
 // Add device-specific services used by the Arista_ZebraTablet.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();

@@ -1,6 +1,7 @@
 ﻿using Arista_ZebraTablet.Services;
 using Arista_ZebraTablet.Shared.Services;
 using Microsoft.Extensions.Logging;
+using MudBlazor.Services;
 
 namespace Arista_ZebraTablet
 {
@@ -15,6 +16,8 @@ namespace Arista_ZebraTablet
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
+
+            builder.Services.AddMudServices();
 
             // Add device-specific services used by the Arista_ZebraTablet.Shared project
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
