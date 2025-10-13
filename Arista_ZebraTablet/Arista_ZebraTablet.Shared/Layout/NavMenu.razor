@@ -1,30 +1,38 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">Arista_ZebraTablet</a>
-    </div>
-</div>
+﻿@implements IDisposable
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+@inject NavigationManager NavigationManager
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
+<MudNavMenu Color="Color.Info" Margin="Margin.Dense" Class="@($"py-2 {(DrawerOpen ? "px-2" : "")}")" Rounded="DrawerOpen" Style="transition: all 200ms ease-in-out">
+    @if (DrawerOpen)
+    {
+        <MudText Typo="Typo.caption" Class="d-block px-4 py-2 text-white-50" Style="transition">Activity</MudText>
+    }
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.Home" title="Home">
+        Home
+    </MudNavLink>
+</MudNavMenu>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
+@code {
+    [Parameter] public bool DrawerOpen { get; set; }
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    // Variable declaration & initialization
+    private string? currentUrl;
 
+    // Action on component initialization
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

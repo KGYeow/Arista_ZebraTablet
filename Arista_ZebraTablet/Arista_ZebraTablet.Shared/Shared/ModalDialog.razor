@@ -1,0 +1,45 @@
+﻿<MudDialog
+    TitleClass="px-4 pt-5 pb-2"
+    ContentClass="@($"px-4 {(ShowActions ? "" : "mb-5")}")"
+    ActionsClass="@($"px-4 {(ShowActions ? "pb-5" : "py-0")}")"
+>
+    <!-- Dialog Header -->
+    <TitleContent>
+        <MudText Typo="Typo.h6" Class="pb-2 fw-bold">@Title</MudText>
+        @if (ShowDivider)
+        {
+            <MudDivider />
+        }
+    </TitleContent>
+
+    <!-- Dialog Content Area -->
+    <DialogContent>
+        @ContentArea
+    </DialogContent>
+
+    <!-- Dialog Actions/Footer -->
+    <DialogActions>
+        @if (ShowActions)
+        {
+            @if (ActionsTemplate != null)
+            {
+                @ActionsTemplate
+            }
+            else
+            {
+                @foreach (var action in ComputedActions)
+                {
+                    <MudButton
+                        Color="@action.Color"
+                        Variant="@action.Variant"
+                        Disabled="@action.Disabled"
+                        DropShadow="false"
+                        OnClick="@(() => OnActionClickedAsync(action))"
+                    >
+                        @action.Text
+                    </MudButton>
+                }
+            }
+        }
+    </DialogActions>
+</MudDialog>

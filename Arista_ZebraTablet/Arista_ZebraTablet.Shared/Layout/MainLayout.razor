@@ -1,7 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
 @* Required *@
-<MudThemeProvider />
+<MudThemeProvider Theme="MyCustomTheme" />
 <MudPopoverProvider />
 
 @* Needed for dialogs *@
@@ -10,24 +10,41 @@
 @* Needed for snackbars *@
 <MudSnackbarProvider />
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<MudLayout>
+    <!-- Topbar -->
+    <Topbar Title="Batch Barcode Scanner">
+        <LeftContent>
+            <MudToggleIconButton Icon="@Icons.Material.Rounded.Menu" ToggledIcon="@Icons.Material.Rounded.MenuOpen" Color="Color.Inherit" Edge="Edge.Start" @bind-Toggled="drawerOpen" />
+        </LeftContent>
+    </Topbar>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+    <!-- Sidebar -->
+    <MudDrawer Variant="DrawerVariant.Responsive" ClipMode="DrawerClipMode.Never" @bind-Open="@drawerOpen">
+        <NavMenu DrawerOpen="drawerOpen" />
+    </MudDrawer>
 
-        <article class="content px-4">
+    <!-- Main Content -->
+    <MudMainContent Class="min-vh-100">
+        <!-- Page Content -->
+        <MudContainer Class="py-6" MaxWidth="MaxWidth.Large">
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+    <!-- Footer -->
+    <Footer />
+</MudLayout>
+
+@code {
+    // Variable declaration & initialization
+    private bool drawerOpen = false;
+
+    private Topbar.NavItemModel[] topNav = new Topbar.NavItemModel[]
+    {
+        new ("ASP.NET Core Documentation", "https://learn.microsoft.com/aspnet/core/"),
+    };
+
+    // Define custom theme
+    // Jabil Brand Portal: https://jabil.sharepoint.com/sites/JabilBrandPortal/ (Navigate to Brand Guidelines)
+    MyCustomTheme MyCustomTheme = new MyCustomTheme();
+}

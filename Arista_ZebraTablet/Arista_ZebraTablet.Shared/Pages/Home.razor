@@ -1,168 +1,409 @@
 ﻿@page "/"
-@using System.Net.Http.Headers
+
+@* @using System.Net.Http.Headers
 @using System.Text.Json
-@using System.Text.Json.Serialization
+@using System.Text.Json.Serialization *@
+@using Arista_ZebraTablet.Shared.Application.DTOs
+@using Arista_ZebraTablet.Shared.Application.ViewModels
+@using Arista_ZebraTablet.Shared.Application.Enums
 @using Arista_ZebraTablet.Shared.Services
+
 @inject IFormFactor FormFactor
 @* @inject HttpClient Http *@
 
 <PageTitle>ARISTA - Batch Barcode Scanner</PageTitle>
 
-<MudButton Variant="Variant.Filled">Default</MudButton>
-<MudButton Variant="Variant.Filled" Color="Color.Primary">Primary</MudButton>
-<MudButton Variant="Variant.Filled" Color="Color.Secondary">Secondary</MudButton>
-<MudButton Variant="Variant.Filled" Disabled="true">Disabled</MudButton>
+<MudGrid Spacing="5">
+    <MudItem xs="12">
+        <MudPaper Class="pa-5" Elevation="0">
+            <MudStack Spacing="3" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <MudStack Spacing="3" AlignItems="AlignItems.Center">
+                    <MudText Typo="Typo.h5" Class="fw-bold">Scan Barcode</MudText>
+                    <MudText Typo="Typo.body2" Class="text-secondary">
+                        Upload one or more product images to detect barcodes.
+                        Works on @factor using @platform.
+                    </MudText>
+                </MudStack>
 
-<MudPaper Class="pa-16 ma-2">
-    <header class="hero">
-        <h1>Batch Barcode Scanner</h1>
-        <p class="subtitle">
-            Upload one or more product images to detect barcodes. Works on @factor using @platform.
-        </p>
-        <ul class="instructions">
-            <li>Select multiple images at once (JPG/PNG/HEIC).</li>
-            <li>On mobile web, the camera may open directly.</li>
-            <li>Click “Send to Python” to run detection and get results for each image.</li>
-        </ul>
-    </header>
-</MudPaper>
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+                    <MudButton
+                        Variant="Variant.Filled"
+                        Color="Color.Primary"
+                        Disabled="@(!SelectedImageFiles.Any() || IsBusy)"
+                        DropShadow="false"
+                    >
+                        @(IsBusy ? "Processing..." : "Scan")
+                    </MudButton>
 
-@* <section class="uploader">
-    <div class="actions">
-        <label for="fileInput" class="btn primary">
-            <span>➕ Add images</span>
-        </label>
-        <button class="btn" @onclick="ClearAll" disabled="@(!Selected.Any())">🧹 Clear all</button>
-    </div>
+                    <MudButton
+                        Variant="Variant.Outlined"
+                        Color="Color.Secondary"
+                        Disabled="@(!SelectedImageFiles.Any() || IsBusy)"
+                    >
+                        Clear All
+                    </MudButton>
+                </MudStack>
+            </MudStack>
 
-    <InputFile id="fileInput"
-                multiple
-                accept="image/*"
-                capture="environment"
-                OnChange="OnFilesSelected"
-                style="display:none" />
+            <MudCollapse Expanded="IsBusy">
+                <MudProgressLinear Class="mt-3" Value="@Progress" Color="Color.Info" Min="0" Max="100" Rounded />
+            </MudCollapse>
+        </MudPaper>
+    </MudItem>
 
-    <div class="dropzone">
-        <div class="dropzone-content">
-            <div class="drop-icon">📷</div>
-            <div class="drop-title">Drop images here or click <label for="fileInput" class="link">browse</label></div>
-            <div class="drop-subtitle">Supported: .jpg, .jpeg, .png, .heic</div>
-        </div>
-    </div>
+    <!-- File picker -->
+    <MudItem xs="12" sm="6" md="4" lg="4">
+        <MudFileUpload
+            T="IReadOnlyList<IBrowserFile>"
+            Accept=".jpg,.jpeg,.png,.heic,.heif,image/*"
+            FilesChanged="UploadImageFiles"
+        >
+            <ActivatorContent>
+                <MudButton
+                    StartIcon="@Icons.Material.Filled.CloudUpload"
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    Size="Size.Large"
+                    DropShadow="false"
+                    FullWidth
+                >
+                    Upload Image Files
+                </MudButton>
+            </ActivatorContent>
+        </MudFileUpload>
+    </MudItem>
 
-    @if (Selected.Any())
+    <!-- SelectedImageFiles preview (compact horizontal cards) -->
+    @if (SelectedImageFiles.Any())
     {
-        <div class="thumbs">
-            @foreach (var img in Selected)
-            {
-                <div class="card">
-                    <div class="thumb">
-                        @img.PreviewDataUrl
-                    </div>
-                    <div class="meta">
-                        <div class="name" title="@img.FileName">@img.FileName</div>
-                        <div class="size">@FormatBytes(img.Bytes?.Length ?? 0)</div>
-                    </div>
-                    <div class="status">
-                        @if (img.State == FileState.Ready)
+        <MudItem xs="12">
+            <MudStack Spacing="1">
+                @foreach (var img in SelectedImageFiles)
+                {
+                    <MudCard Elevation="1"
+                             Class="d-flex align-center pa-2"
+                             Style="max-height:84px; min-height:72px;">
+                    
+                        @if (!string.IsNullOrWhiteSpace(img.PreviewDataUrl))
                         {
-                            <span class="chip info">Ready</span>
+                            <MudImage Src="@img.PreviewDataUrl"/>
                         }
-                        else if (img.State == FileState.Uploading)
+                        else
                         {
-                            <span class="chip warn">Uploading…</span>
+                            <MudAvatar Icon="@Icons.Material.Filled.Image"
+                                       Size="Size.Large"
+                                       Color="Color.Default"
+                                       Class="me-2" />
                         }
-                        else if (img.State == FileState.Done && (img.Result?.Barcodes?.Any() ?? false))
-                        {
-                            <span class="chip ok">Detected</span>
-                        }
-                        else if (img.State == FileState.Done)
-                        {
-                            <span class="chip neutral">No codes</span>
-                        }
-                        else if (img.State == FileState.Error)
-                        {
-                            <span class="chip error">Error</span>
-                        }
-                    </div>
-                    <button class="icon-btn"
-                            title="Remove"
-                            @onclick="@(() => Remove(img.Id))">✖</button>
-                </div>
-            }
-        </div>
 
-        <div class="submit-row">
-            <button class="btn primary lg"
-                    @onclick="SendToPythonAsync"
-                    disabled="@IsBusy">
-                @(IsBusy ? "Processing…" : "Send to Python")
-            </button>
-            @if (IsBusy)
-            {
-                <div class="progress">
-                    <div class="bar" style="width:@Progress%"></div>
-                </div>
-            }
-        </div>
+                        <MudStack Spacing="1" Class="overflow-hidden">
+                            <MudText Typo="Typo.subtitle2"
+                                     Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                @img.FileName
+                            </MudText>
+
+                            <MudStack Row Spacing="1">
+                                <MudChip T="BarcodeDto" Color="@StateColor(img.State)">
+                                    @StateLabel(img.State)
+                                </MudChip>
+
+                                @if (img.State == FileState.Done && (img.Result?.Barcodes?.Any() ?? false))
+                                {
+                                    <MudChip T="BarcodeDto" Color="Color.Success" Variant="Variant.Outlined">
+                                        @($"{img.Result!.Barcodes.Count} detected")
+                                    </MudChip>
+                                }
+                            </MudStack>
+
+                            @if (img.State == FileState.Error && !string.IsNullOrWhiteSpace(img.ErrorMessage))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Error">@img.ErrorMessage</MudText>
+                            }
+                        </MudStack>
+
+                        <MudSpacer />
+
+                        <!-- Optional delete button -->
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                       Color="Color.Error"
+                                       Disabled="@IsBusy"
+                                       OnClick="@(() => Remove(img.Id))" />
+                    </MudCard>
+                }
+            </MudStack>
+        </MudItem>
     }
-</section> *@
+
+    @* <!-- Results -->
+    @if (SelectedImageFiles.Any(s => s.Result is not null || s.State == FileState.Error))
+    {
+        <MudItem xs="12">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6">Results</MudText>
+
+                @foreach (var item in SelectedImageFiles)
+                {
+                    <MudDivider Class="my-3" />
+
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+                        <MudText Typo="Typo.subtitle1">@item.FileName</MudText>
+                        <MudChip T="BarcodeDto" Color="@StateColor(item.State)" Variant="Variant.Outlined" Dense>
+                            @StateLabel(item.State)
+                        </MudChip>
+                    </MudStack>
+
+                    @if (item.State == FileState.Error)
+                    {
+                        <MudAlert Severity="Severity.Error" Class="mt-2">@item.ErrorMessage</MudAlert>
+                    }
+                    else if (item.Result?.Barcodes?.Any() ?? false)
+                    {
+                        <MudTable T="BarcodeDto" Dense Hover Class="mt-2">
+                            <HeaderContent>
+                                <MudTh>#</MudTh>
+                                <MudTh>Value</MudTh>
+                                <MudTh>Symbology</MudTh>
+                                <MudTh>Confidence</MudTh>
+                            </HeaderContent>
+                            <ChildRowContent>
+                                @for (int i = 0; i < item.Result!.Barcodes.Count; i++)
+                                {
+                                    var b = item.Result.Barcodes[i];
+                                    <MudTr>
+                                        <MudTd>@(i + 1)</MudTd>
+                                        <MudTd>@b.Value</MudTd>
+                                        <MudTd>@(b.Symbology ?? "—")</MudTd>
+                                        <MudTd>@(b.Confidence is null ? "—" : $"{b.Confidence:P0}")</MudTd>
+                                    </MudTr>
+                                }
+                            </ChildRowContent>
+                        </MudTable>
+                    }
+                    else if (item.State == FileState.Done)
+                    {
+                        <MudText Typo="Typo.body2" Class="text-secondary mt-1">No barcodes</MudText>
+                    }
+                }
+            </MudPaper>
+        </MudItem>
+    } *@
+</MudGrid>
 
 @code {
     private string factor => FormFactor.GetFormFactor();
     private string platform => FormFactor.GetPlatform();
 
-    // TODO: set this to your actual Python API endpoint
-    // e.g. "https://api.yourdomain.com/barcode/detect"
+    // WebApp: relative OK. MAUI: make this ABSOLUTE (e.g., "https://api.example.com/api/barcodes/detect").
     private const string ApiEndpoint = "/api/barcodes/detect";
 
     private const long MaxFileBytes = 20L * 1024 * 1024; // 20 MB per file
-    private readonly string[] AllowedContentTypes = new[] { "image/jpeg", "image/png", "image/heic", "image/heif" };
+    private static readonly string[] AllowedContentTypes = { "image/jpeg", "image/png", "image/heic", "image/heif" };
 
-        // -------     -------
-    private enum FileState { Ready, Uploading, Done, Error }
+    private List<UploadItem> SelectedImageFiles { get; } = new();
+    private bool IsBusy { get; set; }
+    private int Progress { get; set; }
 
-    private class UploadItem
+    // MULTI-FILE handler (preferred)
+    private async Task UploadImageFiles(IReadOnlyList<IBrowserFile> files)
     {
-        public Guid Id { get; set; }
-        public string? FileName { get; set; }
-        public string? ContentType { get; set; }
-        public byte[]? Bytes { get; set; }
-        public string? PreviewDataUrl { get; set; }
-        public FileState State { get; set; }
-        public string? ErrorMessage { get; set; }
-        public DetectResult? Result { get; set; }
+        foreach (var file in files)
+            await AddFileAsync(file);
     }
 
-    private class DetectResult
+    // If you change T="IBrowserFile", use this single-file overload instead:
+    // private async Task UploadImageFiles(IBrowserFile file) => await AddFileAsync(file);
+
+    private async Task AddFileAsync(IBrowserFile file)
     {
-        public List<BarcodeDto> Barcodes { get; set; } = new();
+        var ct = string.IsNullOrWhiteSpace(file.ContentType) ? "image/jpeg" : file.ContentType.ToLowerInvariant();
+        if (!AllowedContentTypes.Contains(ct) && !ct.StartsWith("image/"))
+            return;
+
+        try
+        {
+            await using var read = file.OpenReadStream(MaxFileBytes);
+            using var ms = new MemoryStream();
+            await read.CopyToAsync(ms);
+
+            var bytes = ms.ToArray();
+            var preview = $"data:{ct};base64,{Convert.ToBase64String(bytes)}";
+
+            SelectedImageFiles.Add(new UploadItem
+            {
+                Id = Guid.NewGuid(),
+                FileName = string.IsNullOrWhiteSpace(file.Name) ? $"{Guid.NewGuid():N}.jpg" : file.Name,
+                ContentType = ct,
+                Bytes = bytes,
+                PreviewDataUrl = preview,
+                State = FileState.Ready
+            });
+        }
+        catch (Exception ex)
+        {
+            SelectedImageFiles.Add(new UploadItem
+            {
+                Id = Guid.NewGuid(),
+                FileName = file.Name ?? "image",
+                ContentType = ct,
+                Bytes = null,
+                PreviewDataUrl = null,
+                State = FileState.Error,
+                ErrorMessage = ex.Message
+            });
+        }
+        StateHasChanged();
     }
 
-    private class BarcodeDto
+    private void Remove(Guid id)
     {
-        public string? Value { get; set; }
-        public string? Symbology { get; set; }
-        public double? Confidence { get; set; } // 0..1
+        var i = SelectedImageFiles.FindIndex(x => x.Id == id);
+        if (i >= 0) SelectedImageFiles.RemoveAt(i);
     }
 
-    // Server response shapes we try to parse
-    private class DetectResponseEnvelope
+    // private void ClearAll()
+    // {
+    //     SelectedImageFiles.Clear();
+    //     IsBusy = false;
+    //     Progress = 0;
+    // }
+
+    // private async Task SendToPythonAsync()
+    // {
+    //     if (IsBusy || !SelectedImageFiles.Any()) return;
+
+    //     try
+    //     {
+    //         IsBusy = true;
+    //         Progress = 5;
+
+    //         using var form = new MultipartFormDataContent();
+    //         int idx = 0;
+    //         foreach (var item in SelectedImageFiles)
+    //         {
+    //             if (item.Bytes is null) continue;
+    //             item.State = FileState.Uploading;
+
+    //             var content = new ByteArrayContent(item.Bytes);
+    //             content.Headers.ContentType = new MediaTypeHeaderValue(item.ContentType ?? "image/jpeg");
+    //             form.Add(content, "files", item.FileName);
+
+    //             idx++;
+    //             Progress = Math.Clamp(5 + (int)((double)idx / SelectedImageFiles.Count * 40), 5, 50);
+    //         }
+
+    //         var resp = await Http.PostAsync(ApiEndpoint, form);
+    //         var text = await resp.Content.ReadAsStringAsync();
+
+    //         List<DetectResponseItem>? items = null;
+    //         try
+    //         {
+    //             items = JsonSerializer.Deserialize<List<DetectResponseItem>>(text, JsonOptions());
+    //         }
+    //         catch
+    //         {
+    //             try
+    //             {
+    //                 var envelope = JsonSerializer.Deserialize<DetectResponseEnvelope>(text, JsonOptions());
+    //                 items = envelope?.Items;
+    //             }
+    //             catch { /* fall through */ }
+    //         }
+
+    //         Progress = 75;
+
+    //         if (items is not null)
+    //         {
+    //             var byName = items
+    //                 .Where(x => !string.IsNullOrWhiteSpace(x.FileName))
+    //                 .ToDictionary(x => x.FileName!, StringComparer.OrdinalIgnoreCase);
+
+    //             foreach (var item in SelectedImageFiles)
+    //             {
+    //                 if (item.Bytes is null) { item.State = FileState.Error; continue; }
+
+    //                 if (byName.TryGetValue(item.FileName!, out var r))
+    //                 {
+    //                     if (!string.IsNullOrWhiteSpace(r.Error))
+    //                     {
+    //                         item.State = FileState.Error;
+    //                         item.ErrorMessage = r.Error;
+    //                     }
+    //                     else
+    //                     {
+    //                         item.Result ??= new DetectResult();
+    //                         item.Result.Barcodes = r.Barcodes?.Select(b => new BarcodeDto
+    //                         {
+    //                             Value = b.Value,
+    //                             Symbology = b.Symbology,
+    //                             Confidence = b.Confidence
+    //                         }).ToList() ?? new();
+    //                         item.State = FileState.Done;
+    //                     }
+    //                 }
+    //                 else
+    //                 {
+    //                     item.Result ??= new DetectResult { Barcodes = new() };
+    //                     item.State = FileState.Done;
+    //                 }
+    //             }
+    //         }
+    //         else
+    //         {
+    //             foreach (var item in SelectedImageFiles)
+    //             {
+    //                 item.State = FileState.Error;
+    //                 item.ErrorMessage ??= $"Server response: {text}";
+    //             }
+    //         }
+
+    //         Progress = 100;
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         foreach (var item in SelectedImageFiles)
+    //         {
+    //             item.State = FileState.Error;
+    //             item.ErrorMessage ??= ex.Message;
+    //         }
+    //     }
+    //     finally
+    //     {
+    //         IsBusy = false;
+    //         StateHasChanged();
+    //     }
+    // }
+
+    private static string FormatBytes(long bytes)
     {
-        [JsonPropertyName("items")] public List<DetectResponseItem>? Items { get; set; }
+        if (bytes <= 0) return "0 B";
+        string[] units = ["B", "KB", "MB", "GB"];
+        var pow = (int)Math.Floor(Math.Log(bytes, 1024));
+        pow = Math.Clamp(pow, 0, units.Length - 1);
+        var val = bytes / Math.Pow(1024, pow);
+        return $"{val:0.##} {units[pow]}";
     }
 
-    private class DetectResponseItem
-    {
-        [JsonPropertyName("fileName")] public string? FileName { get; set; }
-        [JsonPropertyName("barcodes")] public List<DetectResponseBarcode>? Barcodes { get; set; }
-        [JsonPropertyName("error")] public string? Error { get; set; }
-    }
+    // private static JsonSerializerOptions JsonOptions() => new()
+    // {
+    //     PropertyNameCaseInsensitive = true,
+    //     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    // };
 
-    private class DetectResponseBarcode
+    private static Color StateColor(FileState state) => state switch
     {
-        [JsonPropertyName("value")] public string? Value { get; set; }
-        [JsonPropertyName("symbology")] public string? Symbology { get; set; }
-        [JsonPropertyName("confidence")] public double? Confidence { get; set; }
-    }
+        FileState.Ready => Color.Info,
+        FileState.Uploading => Color.Warning,
+        FileState.Done => Color.Success,
+        FileState.Error => Color.Error,
+        _ => Color.Default
+    };
+
+    private static string StateLabel(FileState state) => state switch
+    {
+        FileState.Ready => "Ready",
+        FileState.Uploading => "Uploading…",
+        FileState.Done => "Done",
+        FileState.Error => "Error",
+        _ => "—"
+    };
 }
