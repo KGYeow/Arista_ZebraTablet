@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\Arista_ZebraTablet.props" />
-</Project>

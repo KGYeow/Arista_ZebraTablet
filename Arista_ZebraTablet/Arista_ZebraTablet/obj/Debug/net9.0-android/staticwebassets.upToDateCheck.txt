@@ -1,4 +1,0 @@
-wwwroot\app.css
-wwwroot\index.html
-C:\Users\4093094\source\repos\Arista_ZebraTablet\Arista_ZebraTablet\Arista_ZebraTablet\wwwroot\index.html
-C:\Users\4093094\source\repos\Arista_ZebraTablet\Arista_ZebraTablet\Arista_ZebraTablet\wwwroot\app.css

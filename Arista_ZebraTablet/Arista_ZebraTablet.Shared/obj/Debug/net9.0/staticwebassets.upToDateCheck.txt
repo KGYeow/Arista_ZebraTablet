@@ -1,7 +1,0 @@
-wwwroot\app.css
-wwwroot\bootstrap\bootstrap.min.css
-wwwroot\bootstrap\bootstrap.min.css.map
-wwwroot\favicon.png
-C:\Users\4093094\source\repos\Arista_ZebraTablet\Arista_ZebraTablet\Arista_ZebraTablet.Shared\wwwroot\app.css
-C:\Users\4093094\source\repos\Arista_ZebraTablet\Arista_ZebraTablet\Arista_ZebraTablet.Shared\wwwroot\bootstrap\bootstrap.min.css
-C:\Users\4093094\source\repos\Arista_ZebraTablet\Arista_ZebraTablet\Arista_ZebraTablet.Shared\wwwroot\bootstrap\bootstrap.min.css.map
