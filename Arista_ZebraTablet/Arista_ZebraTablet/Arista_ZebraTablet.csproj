@@ -64,10 +64,24 @@
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+    <PackageReference Include="ZXing.Net.Maui" Version="0.5.2" />
+    <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.5.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Arista_ZebraTablet.Shared\Arista_ZebraTablet.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="ScanPage.xaml.cs">
+      <DependentUpon>ScanPage.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <MauiXaml Update="ScanPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
   </ItemGroup>
 
 </Project>

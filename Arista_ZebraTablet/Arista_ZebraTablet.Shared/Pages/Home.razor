@@ -9,6 +9,7 @@
 @using Arista_ZebraTablet.Shared.Services
 
 @inject IFormFactor FormFactor
+@inject IBarcodeScannerService Scanner
 @* @inject HttpClient Http *@
 
 <PageTitle>ARISTA - Batch Barcode Scanner</PageTitle>
@@ -238,9 +239,12 @@
                 </ActivatorContent>
             </MudFileUpload>
 
-            <MudTooltip Text="Scan Barcodes" Placement="Placement.Top" Delay="250" Arrow>
-                <MudFab Color="Color.Primary" StartIcon="material-symbols-rounded/barcode_scanner"/>
-            </MudTooltip>
+            @if (factor == "Phone")
+            {
+                <MudTooltip Text="Scan Barcodes" Placement="Placement.Top" Delay="250" Arrow>
+                    <MudFab Color="Color.Primary" StartIcon="material-symbols-rounded/barcode_scanner" OnClick="ScanAsync"/>
+                </MudTooltip>
+            }
 
             <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="250" Arrow>
                 <MudFab
@@ -556,6 +560,28 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Failed to open image preview: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ScanAsync()
+    {
+        try
+        {
+            var result = await Scanner.ScanAsync();
+            if (!string.IsNullOrWhiteSpace(result))
+            {
+                // TODO: handle scanned value (navigate, search, etc.)
+                Snackbar.Add($"Scanned: {result}", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("No barcode detected.", Severity.Info);
+            }
+        }
+        catch (TaskCanceledException) { /* user canceled */ }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Scan failed: {ex.Message}", Severity.Error);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using Color = MudBlazor.Color;
 
 namespace Arista_ZebraTablet.Shared.Shared;
 

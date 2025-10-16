@@ -3,6 +3,7 @@ using Arista_ZebraTablet.Shared.Services;
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
+using ZXing.Net.Maui.Controls;
 
 namespace Arista_ZebraTablet
 {
@@ -13,6 +14,7 @@ namespace Arista_ZebraTablet
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseBarcodeReader()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -20,6 +22,7 @@ namespace Arista_ZebraTablet
 
             // Add device-specific services used by the Arista_ZebraTablet.Shared project
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
+            builder.Services.AddScoped<IBarcodeScannerService, MauiBarcodeScannerService>();
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices(config =>
