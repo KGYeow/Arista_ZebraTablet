@@ -2,7 +2,7 @@
 
 namespace Arista_ZebraTablet.Shared.Application.ViewModels;
 
-public sealed class DetectResult
+public sealed class DetectResultViewModel
 {
     public List<BarcodeDto> Barcodes { get; set; } = [];
 }

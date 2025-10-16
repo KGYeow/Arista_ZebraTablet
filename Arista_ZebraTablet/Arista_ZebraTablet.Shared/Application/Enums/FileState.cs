@@ -3,7 +3,7 @@
 public enum FileState
 {
     Ready,
-    Uploading,
+    Detecting,
     Done,
     Error
 }

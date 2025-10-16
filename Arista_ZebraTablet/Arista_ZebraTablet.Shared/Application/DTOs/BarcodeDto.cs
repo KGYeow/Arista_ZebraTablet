@@ -3,6 +3,7 @@
 public sealed class BarcodeDto
 {
     public string? Value { get; set; }
+    public string? Category { get; set; }
     public string? Symbology { get; set; }
-    public double? Confidence { get; set; }
+    public double? ConfidenceScore { get; set; }
 }

@@ -1,0 +1,127 @@
+﻿@using Arista_ZebraTablet.Shared.Application.ViewModels
+
+<ModalDialog ShowActions="false">
+    <ContentArea>
+        <MudToolBar Class="mb-2" Gutters="false" Style="height: 35px !important;" Dense>
+            <MudStack Row AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="w-100">
+
+                <!-- Left-Side: Icon + Truncating Title + (Index/Count) -->
+                <MudStack Row Spacing="2" AlignItems="AlignItems.Center" Style="flex:1 1 auto; min-width:0;">
+                    <MudIcon Icon="@Icons.Material.Rounded.Image" Size="Size.Small"/>
+
+                    <!-- Truncating title with tooltip for full filename -->
+                    <MudTooltip Text="@SelectedImageFile?.FileName" Placement="Placement.Bottom" Delay="250" Arrow>
+                        <MudText Typo="Typo.h6" Class="d-block text-truncate" Style="max-width: 55vw">
+                            @SelectedImageFile?.FileName
+                        </MudText>
+                    </MudTooltip>
+
+                    <!-- Hide index/total on small screens -->
+                    <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                        <MudText Typo="Typo.caption">(@(SelectedFileIndex + 1) / @ImageFiles.Count)</MudText>
+                    </MudHidden>
+                </MudStack>
+
+                <!-- Right-Side: Actions -->
+                <MudStack Row Spacing="2" AlignItems="AlignItems.Center">
+                    <!-- Show these action buttons on xs+ screens -->
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <MudIconButton
+                            Icon="@Icons.Material.Rounded.DeleteOutline"
+                            Disabled="isBusy"
+                            OnClick="@(() => DeleteAsync(SelectedFileIndex))"
+                            Size="Size.Small"
+                        />
+
+                        <MudIconButton
+                            Icon="@Icons.Material.Rounded.Close"
+                            Disabled="isBusy"
+                            OnClick="@(()=> MudDialog.Cancel())"
+                            Size="Size.Small"
+                        />
+                    </MudHidden>
+
+                    <!-- Collapse actions into a kebab menu on small screens -->
+                    <MudHidden Breakpoint="Breakpoint.SmAndUp">
+                        <MudMenu Icon="@Icons.Material.Rounded.MoreVert" Size="Size.Small" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense>
+                            <MudMenuItem
+                                Label="Delete"
+                                Icon="@Icons.Material.Rounded.DeleteOutline"
+                                Disabled="isBusy"
+                                OnClick="@(() => DeleteAsync(SelectedFileIndex))"
+                            />
+                            <MudMenuItem
+                                Label="Close"
+                                Icon="@Icons.Material.Rounded.Close"
+                                Disabled="isBusy"
+                                OnClick="@(() => MudDialog.Cancel())"
+                            />
+                        </MudMenu>
+                    </MudHidden>
+                </MudStack>
+            </MudStack>
+        </MudToolBar>
+
+        <MudDivider Class="mb-2" />
+
+        <MudCarousel
+            ItemsSource="@ImageFiles"
+            @ref="carousel"
+            @bind-SelectedIndex="SelectedFileIndex"
+            Style="height: 50vh;"
+            ShowBullets="false"
+            AutoCycle="false"
+        >
+            <ItemTemplate>
+                <div
+                    class="d-flex flex-column justify-content-start"
+                    style="height: 100%; width: inherit; overflow-y: auto;"
+                >
+                    <MudImage Src="@context.PreviewDataUrl" ObjectFit="ObjectFit.Contain" Style="height: 100%; width: 100%;" Fluid/>
+                </div>
+            </ItemTemplate>
+        </MudCarousel>
+    </ContentArea>
+</ModalDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public int SelectedFileIndex { get; set; }
+    [Parameter] public List<ImgItemViewModel> ImageFiles { get; set; } = new();
+
+    private MudCarousel<ImgItemViewModel> carousel = null!;
+    private bool isBusy;
+
+    private ImgItemViewModel? SelectedImageFile =>
+        (SelectedFileIndex >= 0 && SelectedFileIndex < ImageFiles.Count)
+            ? ImageFiles[SelectedFileIndex]
+            : null;
+
+    // Action on component initialization
+    protected override async Task OnInitializedAsync()
+    {
+    }
+
+    private async Task DeleteAsync(int index)
+    {
+        if (ImageFiles is null || ImageFiles.Count == 0)
+            return;
+
+        if (index >= 0 && index < ImageFiles.Count)
+        {
+            ImageFiles.RemoveAt(index);
+            await Task.Delay(1); // allow UI refresh
+
+            if (ImageFiles.Count == 0)
+            {
+                MudDialog.Cancel();
+                return;
+            }
+
+            // Clamp the selected index to the next valid item
+            SelectedFileIndex = Math.Clamp(index, 0, ImageFiles.Count - 1);
+            StateHasChanged();
+        }
+    }
+}

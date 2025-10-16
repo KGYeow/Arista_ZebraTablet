@@ -25,7 +25,7 @@ namespace Arista_ZebraTablet
             builder.Services.AddMudServices(config =>
             {
                 // Add configurations for snackbar
-                config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
+                config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomCenter;
                 config.SnackbarConfiguration.PreventDuplicates = false;
                 config.SnackbarConfiguration.NewestOnTop = false;
                 config.SnackbarConfiguration.VisibleStateDuration = 4000;

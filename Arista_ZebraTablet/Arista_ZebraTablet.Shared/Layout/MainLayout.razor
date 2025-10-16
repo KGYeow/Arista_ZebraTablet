@@ -13,15 +13,15 @@
 <MudLayout>
     <!-- Topbar -->
     <Topbar Title="Batch Barcode Scanner">
-        <LeftContent>
+        @* <LeftContent>
             <MudToggleIconButton Icon="@Icons.Material.Rounded.Menu" ToggledIcon="@Icons.Material.Rounded.MenuOpen" Color="Color.Inherit" Edge="Edge.Start" @bind-Toggled="drawerOpen" />
-        </LeftContent>
+        </LeftContent> *@
     </Topbar>
 
     <!-- Sidebar -->
-    <MudDrawer Variant="DrawerVariant.Responsive" ClipMode="DrawerClipMode.Never" @bind-Open="@drawerOpen">
+    @* <MudDrawer Variant="DrawerVariant.Responsive" ClipMode="DrawerClipMode.Never" @bind-Open="@drawerOpen">
         <NavMenu DrawerOpen="drawerOpen" />
-    </MudDrawer>
+    </MudDrawer> *@
 
     <!-- Main Content -->
     <MudMainContent Class="min-vh-100">
@@ -32,7 +32,7 @@
     </MudMainContent>
 
     <!-- Footer -->
-    <Footer />
+    @* <Footer /> *@
 </MudLayout>
 
 @code {

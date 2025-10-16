@@ -2,8 +2,8 @@
 
 namespace Arista_ZebraTablet.Shared.Application.DTOs;
 
-public sealed class DetectResponseEnvelope
+public sealed class DetectResponseEnvelopeDto
 {
     [JsonPropertyName("items")]
-    public List<DetectResponseItem>? Items { get; set; }
+    public List<DetectResponseImgItemDto>? Items { get; set; }
 }

@@ -2,7 +2,7 @@
 
 namespace Arista_ZebraTablet.Shared.Application.ViewModels;
 
-public sealed class UploadItem
+public partial class ImgItemViewModel
 {
     public Guid Id { get; set; }
     public string? FileName { get; set; }
@@ -12,5 +12,5 @@ public sealed class UploadItem
     public FileState State { get; set; }
     public string? ErrorMessage { get; set; }
 
-    public DetectResult? Result { get; set; }
+    public DetectResultViewModel? DetectResult { get; set; }
 }

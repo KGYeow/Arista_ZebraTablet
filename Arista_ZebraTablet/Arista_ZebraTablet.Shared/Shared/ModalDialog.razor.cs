@@ -54,12 +54,17 @@ public partial class ModalDialog : ComponentBase
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
 
     /// <summary>
-    /// The title text displayed in the dialog header.
+    /// Overrides the entire header area. If set, this takes precedence over TitleContent and Title.
     /// </summary>
-    [Parameter] public string Title { get; set; } = null!;
+    [Parameter] public RenderFragment? HeaderTemplate { get; set; }
 
     /// <summary>
-    /// Determines whether a divider is shown below the title.
+    /// The title text displayed in the dialog header.
+    /// </summary>
+    [Parameter] public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Determines whether a divider is shown below the title/header.
     /// </summary>
     /// <remarks>
     /// Defaults to <c>true</c>.

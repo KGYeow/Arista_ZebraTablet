@@ -2,14 +2,14 @@
 
 namespace Arista_ZebraTablet.Shared.Application.DTOs;
 
-public sealed class DetectResponseItem
+public sealed class DetectResponseImgItemDto
 {
-    [JsonPropertyName("fileName")]
+    [JsonPropertyName("imageFile")]
     public string? FileName { get; set; }
 
     [JsonPropertyName("barcodes")]
-    public List<DetectResponseBarcode>? Barcodes { get; set; }
+    public List<DetectResponseBarcodeDto>? Barcodes { get; set; }
 
-    [JsonPropertyName("error")]
+    [JsonPropertyName("errorMessage")]
     public string? Error { get; set; }
 }
