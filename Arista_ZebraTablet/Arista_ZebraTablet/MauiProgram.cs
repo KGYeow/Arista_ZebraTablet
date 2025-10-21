@@ -21,8 +21,11 @@ namespace Arista_ZebraTablet
                 });
 
             // Add device-specific services used by the Arista_ZebraTablet.Shared project
+            builder.Services.AddSingleton<ScanResultsService>();
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
             builder.Services.AddScoped<IBarcodeScannerService, MauiBarcodeScannerService>();
+
+            builder.Services.AddTransient<BarcodeScannerPage>();
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices(config =>
@@ -31,10 +34,12 @@ namespace Arista_ZebraTablet
                 config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomCenter;
                 config.SnackbarConfiguration.PreventDuplicates = false;
                 config.SnackbarConfiguration.NewestOnTop = false;
+                config.SnackbarConfiguration.ClearAfterNavigation = false;
                 config.SnackbarConfiguration.VisibleStateDuration = 4000;
                 config.SnackbarConfiguration.HideTransitionDuration = 500;
                 config.SnackbarConfiguration.ShowTransitionDuration = 500;
                 config.SnackbarConfiguration.MaximumOpacity = 90;
+                config.SnackbarConfiguration.MaxDisplayedSnackbars = 4;
             });
 
 #if DEBUG

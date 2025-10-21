@@ -64,6 +64,7 @@
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
+    <PackageReference Include="MudBlazor" Version="8.13.0" />
     <PackageReference Include="ZXing.Net.Maui" Version="0.5.2" />
     <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.5.2" />
   </ItemGroup>
@@ -73,13 +74,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="ScanPage.xaml.cs">
-      <DependentUpon>ScanPage.xaml</DependentUpon>
+    <Compile Update="BarcodeScannerPage.xaml.cs">
+      <DependentUpon>BarcodeScannerPage.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <MauiXaml Update="ScanPage.xaml">
+    <MauiXaml Update="BarcodeScannerPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </MauiXaml>
   </ItemGroup>

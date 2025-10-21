@@ -15,6 +15,7 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomCenter;
     config.SnackbarConfiguration.PreventDuplicates = false;
     config.SnackbarConfiguration.NewestOnTop = false;
+    config.SnackbarConfiguration.ClearAfterNavigation = false;
     config.SnackbarConfiguration.VisibleStateDuration = 4000;
     config.SnackbarConfiguration.HideTransitionDuration = 500;
     config.SnackbarConfiguration.ShowTransitionDuration = 500;
@@ -23,6 +24,7 @@ builder.Services.AddMudServices(config =>
 
 // Add device-specific services used by the Arista_ZebraTablet.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
+builder.Services.AddScoped<IBarcodeScannerService, WebBarcodeScannerService>();
 
 var app = builder.Build();
 

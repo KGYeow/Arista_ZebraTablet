@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:Arista_ZebraTablet"
+    xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
+    xmlns:zx="clr-namespace:ZXing.Net.Maui;assembly=ZXing.Net.MAUI"
+    xmlns:components="clr-namespace:Arista_ZebraTablet.Components;assembly=Arista_ZebraTablet"
+    xmlns:shared="clr-namespace:Arista_ZebraTablet.Shared;assembly=Arista_ZebraTablet.Shared"
+    x:Class="Arista_ZebraTablet.BarcodeScannerPage"
+    Title="Scan Barcodes">
+
+    <!--<ToolbarItems>
+        <ToolbarItem Text="Pause/Resume" Clicked="OnToggleDetecting" />
+        <ToolbarItem Text="Clear" Clicked="OnClear" />
+    </ToolbarItems>-->
+
+    <Grid RowDefinitions="0.6*,0.4*">
+        <!-- Camera -->
+        <Grid Grid.Row="0" HeightRequest="400">
+            <zxing:CameraBarcodeReaderView x:Name="CameraView"
+                                           BarcodesDetected="OnBarcodesDetected"
+                                           CameraLocation="Rear">
+                <zxing:CameraBarcodeReaderView.Options>
+                    <zx:BarcodeReaderOptions AutoRotate="True"/>
+                </zxing:CameraBarcodeReaderView.Options>
+            </zxing:CameraBarcodeReaderView>
+        </Grid>
+
+        <!-- Blazor Web View: Shows Real-Time Results -->
+        <BlazorWebView x:Name="blazorWebView" Grid.Row="1" HostPage="wwwroot/index.html">
+            <BlazorWebView.RootComponents>
+                <RootComponent Selector="#app"  ComponentType="{x:Type components:BarcodeScannerResult}" />
+            </BlazorWebView.RootComponents>
+        </BlazorWebView>
+    </Grid>
+</ContentPage>

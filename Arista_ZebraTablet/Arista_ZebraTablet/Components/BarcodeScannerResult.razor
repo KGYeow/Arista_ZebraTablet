@@ -1,0 +1,95 @@
+﻿@using Arista_ZebraTablet.Shared.Application.ViewModels
+@using Arista_ZebraTablet.Shared.Services
+
+@inject ScanResultsService scanResultsService
+
+<MobileComponentLayout>
+    <Body>
+        <MudStack Spacing="3">
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
+                <MudText Typo="Typo.h6">Scanned Results</MudText>
+                <MudSpacer />
+                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" DropShadow="false" OnClick="Clear">Clear</MudButton>
+            </MudStack>
+
+            <!-- Scanned Barcode's Result Cards -->
+            <MudStack Spacing="2" Style="flex: 1 1 auto; min-height: 0; overflow: auto;">
+                @if (!scanBarcodeItems.Any())
+                {
+                    <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
+                        No scans yet. Aim the camera at a code.
+                    </MudAlert>
+                }
+                else
+                {
+                    @foreach (var barcodeItem in scanBarcodeItems)
+                    {
+                        <MudCard Elevation="0" Outlined>
+                            <MudCardContent Class="d-flex flex-column">
+                                <MudStack Row AlignItems="AlignItems.Center">
+                                    <MudText Typo="Typo.caption">@barcodeItem.Category</MudText>
+                                    <MudSpacer />
+                                    <MudText Typo="Typo.caption">@barcodeItem.Time.ToLocalTime().ToString("hh:mm:ss tt")</MudText>
+                                </MudStack>
+                                <MudText Typo="Typo.body1" Class="fw-bold">@barcodeItem.Value</MudText>
+                            </MudCardContent>   
+                        </MudCard>
+                    }
+                }
+            </MudStack>
+        </MudStack>
+    </Body>
+</MobileComponentLayout>
+
+@code {
+    private IReadOnlyList<ScanBarcodeItemViewModel> scanBarcodeItems = Array.Empty<ScanBarcodeItemViewModel>();
+    private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _sub;
+
+    protected override void OnInitialized()
+    {
+
+        // Sample test data
+        scanBarcodeItems = new List<ScanBarcodeItemViewModel>
+        {
+            new ScanBarcodeItemViewModel
+            {
+                Value = "123456789012",
+                Format = "EAN-13",
+                Time = DateTime.Now.AddSeconds(-30),
+                Category = "Product"
+            },
+            new ScanBarcodeItemViewModel
+            {
+                Value = "ABC-987654",
+                Format = "Code 128",
+                Time = DateTime.Now.AddSeconds(-20),
+                Category = "Box"
+            },
+            new ScanBarcodeItemViewModel
+            {
+                Value = "XYZ-456789",
+                Format = "QR Code",
+                Time = DateTime.Now.AddSeconds(-10),
+                Category = "Pallet"
+            }
+        };
+
+        // scanBarcodeItems = scanResultsService.Results;
+        scanBarcodeItems = new List<ScanBarcodeItemViewModel>(scanBarcodeItems);
+        _sub = (_, __) => InvokeAsync(StateHasChanged);
+        scanResultsService.Results.CollectionChanged += _sub;
+    }
+
+    public void Dispose()
+    {
+        if (_sub is not null)
+            scanResultsService.Results.CollectionChanged -= _sub;
+    }
+
+    // private void Clear() => scanResultsService.Clear();
+
+    private void Clear()
+    {
+        scanResultsService.Clear();
+    }
+}

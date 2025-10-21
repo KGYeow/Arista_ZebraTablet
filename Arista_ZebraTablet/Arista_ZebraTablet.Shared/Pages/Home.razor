@@ -242,7 +242,7 @@
             @if (factor == "Phone")
             {
                 <MudTooltip Text="Scan Barcodes" Placement="Placement.Top" Delay="250" Arrow>
-                    <MudFab Color="Color.Primary" StartIcon="material-symbols-rounded/barcode_scanner" OnClick="ScanAsync"/>
+                    <MudFab Color="Color.Primary" StartIcon="material-symbols-rounded/barcode_scanner" OnClick="OpenScanner"/>
                 </MudTooltip>
             }
 
@@ -273,6 +273,9 @@
     private bool isUploadingImg { get; set; }
     private int decodeProgress { get; set; }
     private int uploadImgProgress { get; set; }
+
+    
+    private async Task OpenScanner() => await Scanner.NavigateToScannerAsync();
 
     // MULTI-FILE handler (preferred)
     private async Task UploadImageFilesAsync(IReadOnlyList<IBrowserFile> files)
@@ -563,25 +566,24 @@
         }
     }
 
-    private async Task ScanAsync()
-    {
-        try
-        {
-            var result = await Scanner.ScanAsync();
-            if (!string.IsNullOrWhiteSpace(result))
-            {
-                // TODO: handle scanned value (navigate, search, etc.)
-                Snackbar.Add($"Scanned: {result}", Severity.Success);
-            }
-            else
-            {
-                Snackbar.Add("No barcode detected.", Severity.Info);
-            }
-        }
-        catch (TaskCanceledException) { /* user canceled */ }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Scan failed: {ex.Message}", Severity.Error);
-        }
-    }
+    // private async Task ScanAsync()
+    // {
+    //     try
+    //     {
+    //         var result = await Scanner.ScanAsync();
+    //         if (!string.IsNullOrWhiteSpace(result))
+    //         {
+    //             Snackbar.Add($"Scanned: {result}", Severity.Success);
+    //         }
+    //         else
+    //         {
+    //             Snackbar.Add("No barcode detected.", Severity.Info);
+    //         }
+    //     }
+    //     catch (TaskCanceledException) { /* user canceled */ }
+    //     catch (Exception ex)
+    //     {
+    //         Snackbar.Add($"Scan failed: {ex.Message}", Severity.Error);
+    //     }
+    // }
 }
