@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Arista_ZebraTablet.ScanResultPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <VerticalStackLayout Padding="20" Spacing="10">
+        <Label Text="Scanned Barcodes" FontSize="24" HorizontalOptions="Center" />
+        <StackLayout Padding="10">
+            <CollectionView x:Name="BarcodeListView">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame BorderColor="Gray" Padding="10" Margin="5">
+                            <Label Text="{Binding}" FontSize="18" />
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Button Text="Continue Scan" Clicked="OnContinueScanClicked" />
+        </StackLayout>
+    </VerticalStackLayout>
+</ContentPage>

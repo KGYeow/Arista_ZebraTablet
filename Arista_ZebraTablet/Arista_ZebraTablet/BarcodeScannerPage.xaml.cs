@@ -1,5 +1,8 @@
-﻿using Arista_ZebraTablet.Shared.Services;
+﻿using Arista_ZebraTablet.Shared.Application.ViewModels;
+using Arista_ZebraTablet.Shared.Services;
 using ZXing.Net.Maui;
+using ZXing.Net.Maui.Controls;
+
 
 namespace Arista_ZebraTablet;
 
@@ -53,15 +56,16 @@ public partial class BarcodeScannerPage : ContentPage
             if (string.IsNullOrWhiteSpace(r.Value))
                 continue;
 
+            var category = BarcodeClassifier.Classify(r.Value);
+
             if (_singleShotTcs is not null)
             {
-                // Single-shot path: complete and close
-                MainThread.BeginInvokeOnMainThread(() => CompleteSingleShotAsync(r.Value));
+                MainThread.BeginInvokeOnMainThread(() => CompleteSingleShotAsync($"{r.Value} | {category}"));
                 return;
             }
 
-            // Hybrid list path: add to service for Blazor table
-            _results.Add(r.Value, r.Format.ToString());
+            // Add to ScanResultsService
+            _results.Add(r.Value, r.Format.ToString(), category);
         }
     }
 
