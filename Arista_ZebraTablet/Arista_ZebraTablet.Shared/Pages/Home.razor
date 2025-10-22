@@ -10,6 +10,7 @@
 
 @inject IFormFactor FormFactor
 @inject IBarcodeScannerService Scanner
+@inject UploadBarcodeDecoderService DecoderService
 @* @inject HttpClient Http *@
 
 <PageTitle>ARISTA - Batch Barcode Scanner</PageTitle>
@@ -177,12 +178,14 @@
                                 }
                                 else if (img.DetectResult?.Barcodes?.Any() ?? false)
                                 {
-                                    <MudTable T="BarcodeDto" Dense Hover Class="mt-2">
+                                    @* <MudTable T="ScanBarcodeItemViewModel" Dense Hover Class="mt-2"> *@
+                                    <MudTable Items="img.DetectResult.Barcodes" Dense Hover Class="mt-2">
                                         <HeaderContent>
                                             <MudTh>#</MudTh>
                                             <MudTh>Value</MudTh>
-                                            <MudTh>Symbology</MudTh>
-                                            <MudTh>ConfidenceScore</MudTh>
+                                            <MudTh>Category</MudTh>
+                                            <MudTh>Barcode Type</MudTh>
+                                            <MudTh>Time</MudTh>
                                         </HeaderContent>
                                         <ChildRowContent>
                                             @for (int i = 0; i < img.DetectResult!.Barcodes.Count; i++)
@@ -191,8 +194,9 @@
                                                 <MudTr>
                                                     <MudTd>@(i + 1)</MudTd>
                                                     <MudTd>@b.Value</MudTd>
-                                                    <MudTd>@(b.Symbology ?? "—")</MudTd>
-                                                    <MudTd>@(b.ConfidenceScore is null ? "—" : $"{b.ConfidenceScore:P0}")</MudTd>
+                                                    <MudTd>@b.Category</MudTd>
+                                                    <MudTd>@b.BarcodeType</MudTd>
+                                                    <MudTd>@b.Time.ToString("g")</MudTd>
                                                 </MudTr>
                                             }
                                         </ChildRowContent>
@@ -224,7 +228,7 @@
             <!-- Image File picker -->
             <MudFileUpload
                 T="IReadOnlyList<IBrowserFile>"
-                Accept=".jpg,.jpeg,.png,.heic,.heif,image/*"
+                Accept="image/jpeg,image/png,image/heic,image/heif"
                 FilesChanged="UploadImageFilesAsync"
             >
                 <ActivatorContent>
@@ -314,6 +318,7 @@
         }
     }
 
+
     // If you change T="IBrowserFile", use this single-file overload instead:
     // private async Task UploadImageFilesAsync(IBrowserFile file) => await AddImageFileAsync(file);
     private async Task AddImageFileAsync(IBrowserFile file)
@@ -368,6 +373,110 @@
         decodeProgress = 0;
     }
 
+    // private async Task DecodeBarcodes()
+    // {
+    //     isBusy = true;
+    //     decodeProgress = 5;
+
+    //     try
+    //     {
+    //         using var form = new MultipartFormDataContent();
+    //         int idx = 0;
+    //         foreach (var item in uploadedImageFiles)
+    //         {
+    //             if (item.Bytes is null) continue;
+    //             item.State = FileState.Detecting;
+
+    //             var content = new ByteArrayContent(item.Bytes);
+    //             content.Headers.ContentType = new MediaTypeHeaderValue(item.ContentType ?? "image/jpeg");
+    //             form.Add(content, "files", item.FileName);
+
+    //             idx++;
+    //             decodeProgress = Math.Clamp(5 + (int)((double)idx / uploadedImageFiles.Count * 40), 5, 50);
+    //         }
+
+    //         await Task.Delay(5000);
+    //         var resp = await Http.PostAsync(ApiEndpoint, form);
+    //         var text = await resp.Content.ReadAsStringAsync();
+
+    //         List<DetectResponseImgItemDto>? items = null;
+    //         try
+    //         {
+    //             items = JsonSerializer.Deserialize<List<DetectResponseItem>>(text, JsonOptions());
+    //         }
+    //         catch
+    //         {
+    //             try
+    //             {
+    //                 var envelope = JsonSerializer.Deserialize<DetectResponseEnvelope>(text, JsonOptions());
+    //                 items = envelope?.Items;
+    //             }
+    //             catch { /* fall through */ }
+    //         }
+
+    //         decodeProgress = 75;
+
+    //         if (items is not null)
+    //         {
+    //             var byName = items
+    //                 .Where(x => !string.IsNullOrWhiteSpace(x.FileName))
+    //                 .ToDictionary(x => x.FileName!, StringComparer.OrdinalIgnoreCase);
+
+    //             foreach (var item in uploadedImageFiles)
+    //             {
+    //                 if (item.Bytes is null) { item.State = FileState.Error; continue; }
+
+    //                 if (byName.TryGetValue(item.FileName!, out var r))
+    //                 {
+    //                     if (!string.IsNullOrWhiteSpace(r.Error))
+    //                     {
+    //                         item.State = FileState.Error;
+    //                         item.ErrorMessage = r.Error;
+    //                     }
+    //                     else
+    //                     {
+    //                         item.DetectResult ??= new DetectResultViewModel();
+    //                         item.DetectResult.Barcodes = r.Barcodes?.Select(b => new ScanBarcodeItemViewModel
+    //                         {
+    //                             Value = b.Value,
+    //                             Category = BarcodeClassifier.Classify(b.Value),
+    //                             BarcodeType = b.Symbology ?? "Unknown",
+    //                             Time = DateTimeOffset.Now
+    //                         }).ToList() ?? new();
+    //                     }
+    //                 }
+    //                 else
+    //                 {
+    //                     item.DetectResult ??= new DetectResultViewModel { Barcodes = new() };
+    //                     item.State = FileState.Done;
+    //                 }
+    //             }
+    //         }
+    //         else
+    //         {
+    //             foreach (var item in uploadedImageFiles)
+    //             {
+    //                 item.State = FileState.Error;
+    //                 item.ErrorMessage ??= $"Server response: {text}";
+    //             }
+    //         }
+    //         decodeProgress = 100;
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         foreach (var item in uploadedImageFiles)
+    //         {
+    //             item.State = FileState.Error;
+    //             item.ErrorMessage ??= ex.Message;
+    //         }
+    //     }
+    //     finally
+    //     {
+    //         isBusy = false;
+    //         StateHasChanged();
+    //     }
+    // }
+
     private async Task DecodeBarcodes()
     {
         isBusy = true;
@@ -375,86 +484,34 @@
 
         try
         {
-            using var form = new MultipartFormDataContent();
             int idx = 0;
             foreach (var item in uploadedImageFiles)
             {
-                if (item.Bytes is null) continue;
-                item.State = FileState.Detecting;
+                if (item.Bytes is null)
+                {
+                    item.State = FileState.Error;
+                    continue;
+                }
 
-                var content = new ByteArrayContent(item.Bytes);
-                //content.Headers.ContentType = new MediaTypeHeaderValue(item.ContentType ?? "image/jpeg");
-                form.Add(content, "files", item.FileName);
+                item.State = FileState.Detecting;
+                StateHasChanged();
+
+                await Task.Delay(100); // Optional delay for UI feedback
+
+                // Use your decoder service
+                var results = DecoderService.DecodeFromImage(item.Bytes);
+
+                item.DetectResult = new DetectResultViewModel
+                {
+                    Barcodes = results
+                };
+
+                item.State = FileState.Done;
 
                 idx++;
-                decodeProgress = Math.Clamp(5 + (int)((double)idx / uploadedImageFiles.Count * 40), 5, 50);
+                decodeProgress = Math.Clamp(5 + (int)((double)idx / uploadedImageFiles.Count * 95), 5, 100);
             }
 
-            await Task.Delay(5000);
-            // var resp = await Http.PostAsync(ApiEndpoint, form);
-            // var text = await resp.Content.ReadAsStringAsync();
-
-            List<DetectResponseImgItemDto>? items = null;
-            try
-            {
-                // items = JsonSerializer.Deserialize<List<DetectResponseItem>>(text, JsonOptions());
-            }
-            catch
-            {
-                try
-                {
-                    // var envelope = JsonSerializer.Deserialize<DetectResponseEnvelope>(text, JsonOptions());
-                    // items = envelope?.Items;
-                }
-                catch { /* fall through */ }
-            }
-
-            decodeProgress = 75;
-
-            if (items is not null)
-            {
-                var byName = items
-                    .Where(x => !string.IsNullOrWhiteSpace(x.FileName))
-                    .ToDictionary(x => x.FileName!, StringComparer.OrdinalIgnoreCase);
-
-                foreach (var item in uploadedImageFiles)
-                {
-                    if (item.Bytes is null) { item.State = FileState.Error; continue; }
-
-                    if (byName.TryGetValue(item.FileName!, out var r))
-                    {
-                        if (!string.IsNullOrWhiteSpace(r.Error))
-                        {
-                            item.State = FileState.Error;
-                            item.ErrorMessage = r.Error;
-                        }
-                        else
-                        {
-                            item.DetectResult ??= new DetectResultViewModel();
-                            item.DetectResult.Barcodes = r.Barcodes?.Select(b => new BarcodeDto
-                            {
-                                Value = b.Value,
-                                Symbology = b.Symbology,
-                                ConfidenceScore = b.ConfidenceScore
-                            }).ToList() ?? new();
-                            item.State = FileState.Done;
-                        }
-                    }
-                    else
-                    {
-                        item.DetectResult ??= new DetectResultViewModel { Barcodes = new() };
-                        item.State = FileState.Done;
-                    }
-                }
-            }
-            else
-            {
-                // foreach (var item in uploadedImageFiles)
-                // {
-                //     item.State = FileState.Error;
-                //     item.ErrorMessage ??= $"Server response: {text}";
-                // }
-            }
             decodeProgress = 100;
         }
         catch (Exception ex)
@@ -580,7 +637,7 @@
     //             Snackbar.Add("No barcode detected.", Severity.Info);
     //         }
     //     }
-    //     catch (TaskCanceledException) { /* user canceled */ }
+    //     catch (TaskCanceledException) { /* user canceled }
     //     catch (Exception ex)
     //     {
     //         Snackbar.Add($"Scan failed: {ex.Message}", Severity.Error);

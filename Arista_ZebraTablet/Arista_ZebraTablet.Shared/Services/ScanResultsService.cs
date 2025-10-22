@@ -35,7 +35,7 @@ namespace Arista_ZebraTablet.Shared.Services
                     Results.Insert(0, new ScanBarcodeItemViewModel()
                     {
                         Value = value,
-                        Format = format,
+                        //BarcodeType = barcodetype,
                         Category = category,
                         Time = DateTimeOffset.Now
                     });
