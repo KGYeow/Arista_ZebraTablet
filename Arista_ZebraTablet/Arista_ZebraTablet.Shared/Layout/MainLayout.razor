@@ -1,5 +1,9 @@
 ﻿@inherits LayoutComponentBase
 
+@using Arista_ZebraTablet.Shared.Services
+
+@inject IFormFactor FormFactor
+
 @* Required *@
 <MudThemeProvider Theme="MyCustomTheme" />
 <MudPopoverProvider />
@@ -13,15 +17,21 @@
 <MudLayout>
     <!-- Topbar -->
     <Topbar Title="Batch Barcode Scanner">
-        @* <LeftContent>
-            <MudToggleIconButton Icon="@Icons.Material.Rounded.Menu" ToggledIcon="@Icons.Material.Rounded.MenuOpen" Color="Color.Inherit" Edge="Edge.Start" @bind-Toggled="drawerOpen" />
-        </LeftContent> *@
+        <LeftContent>
+            @if (factor != "Phone")
+            {
+                <MudToggleIconButton Icon="@Icons.Material.Rounded.Menu" ToggledIcon="@Icons.Material.Rounded.MenuOpen" Color="Color.Inherit" Edge="Edge.Start" @bind-Toggled="drawerOpen" />
+            }
+        </LeftContent>
     </Topbar>
 
-    <!-- Sidebar -->
-    @* <MudDrawer Variant="DrawerVariant.Responsive" ClipMode="DrawerClipMode.Never" @bind-Open="@drawerOpen">
-        <NavMenu DrawerOpen="drawerOpen" />
-    </MudDrawer> *@
+    @if (factor != "Phone")
+    {
+        <!-- Sidebar -->
+        <MudDrawer Variant="DrawerVariant.Responsive" ClipMode="DrawerClipMode.Never" @bind-Open="@drawerOpen">
+            <NavMenu DrawerOpen="drawerOpen" />
+        </MudDrawer>
+    }
 
     <!-- Main Content -->
     <MudMainContent Class="min-vh-100">
@@ -31,13 +41,19 @@
         </MudContainer>
     </MudMainContent>
 
-    <!-- Footer -->
-    @* <Footer /> *@
+    @if (factor != "Phone")
+    {
+        <!-- Footer -->
+        <Footer />
+    }
 </MudLayout>
 
 @code {
     // Variable declaration & initialization
     private bool drawerOpen = false;
+
+    private string factor => FormFactor.GetFormFactor();
+    private string platform => FormFactor.GetPlatform();
 
     private Topbar.NavItemModel[] topNav = new Topbar.NavItemModel[]
     {

@@ -1,6 +1,8 @@
+using Arista_ZebraTablet.Shared.Data;
 using Arista_ZebraTablet.Shared.Services;
 using Arista_ZebraTablet.Web.Components;
 using Arista_ZebraTablet.Web.Services;
+using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using MudBlazor.Services;
 
@@ -25,6 +27,10 @@ builder.Services.AddMudServices(config =>
 // Add device-specific services used by the Arista_ZebraTablet.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 builder.Services.AddScoped<IBarcodeScannerService, WebBarcodeScannerService>();
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
 
 var app = builder.Build();
 

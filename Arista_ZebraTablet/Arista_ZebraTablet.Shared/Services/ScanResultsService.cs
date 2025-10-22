@@ -1,14 +1,19 @@
 ﻿using Arista_ZebraTablet.Shared.Application.ViewModels;
+using Arista_ZebraTablet.Shared.Data;
 using System.Collections.ObjectModel;
 
 namespace Arista_ZebraTablet.Shared.Services
 {
-    public class ScanResultsService
+    public class ScanResultsService : BaseService
     {
         public ObservableCollection<ScanBarcodeItemViewModel> Results { get; } = new();
 
         // Optional session-level de-dup
         private readonly HashSet<string> _seen = new(StringComparer.OrdinalIgnoreCase);
+
+        public ScanResultsService(ApplicationDbContext context) : base(context)
+        {
+        }
 
         public void Add(string value, string format)
         {
