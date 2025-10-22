@@ -22,6 +22,7 @@ namespace Arista_ZebraTablet
 
             // Add device-specific services used by the Arista_ZebraTablet.Shared project
             builder.Services.AddSingleton<ScanResultsService>();
+            builder.Services.AddSingleton<ScanResultPage>();
             builder.Services.AddSingleton<IFormFactor, FormFactor>();
             builder.Services.AddScoped<IBarcodeScannerService, MauiBarcodeScannerService>();
 

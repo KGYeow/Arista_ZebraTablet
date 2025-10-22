@@ -1,5 +1,6 @@
 ﻿@using Arista_ZebraTablet.Shared.Application.ViewModels
 @using Arista_ZebraTablet.Shared.Services
+@using System.Collections.ObjectModel
 
 @inject ScanResultsService scanResultsService
 
@@ -42,44 +43,51 @@
 </MobileComponentLayout>
 
 @code {
-    private IReadOnlyList<ScanBarcodeItemViewModel> scanBarcodeItems = Array.Empty<ScanBarcodeItemViewModel>();
+    private ObservableCollection<ScanBarcodeItemViewModel> scanBarcodeItems = new();
+    // private IReadOnlyList<ScanBarcodeItemViewModel> scanBarcodeItems = Array.Empty<ScanBarcodeItemViewModel>();
     private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _sub;
 
+    // protected override void OnInitialized()
+    // {
+
+    //     Sample test data
+    //     scanBarcodeItems = new List<ScanBarcodeItemViewModel>
+    //     {
+    //         new ScanBarcodeItemViewModel
+    //         {
+    //             Value = "123456789012",
+    //             Format = "EAN-13",
+    //             Time = DateTime.Now.AddSeconds(-30),
+    //             Category = "Product"
+    //         },
+    //         new ScanBarcodeItemViewModel
+    //         {
+    //             Value = "ABC-987654",
+    //             Format = "Code 128",
+    //             Time = DateTime.Now.AddSeconds(-20),
+    //             Category = "Box"
+    //         },
+    //         new ScanBarcodeItemViewModel
+    //         {
+    //             Value = "XYZ-456789",
+    //             Format = "QR Code",
+    //             Time = DateTime.Now.AddSeconds(-10),
+    //             Category = "Pallet"
+    //         }
+    //     };
+
+    //     scanBarcodeItems = scanResultsService.Results;
+    //     scanBarcodeItems = new List<ScanBarcodeItemViewModel>(scanBarcodeItems);
+    //     _sub = (_, __) => InvokeAsync(StateHasChanged);
+    //     scanResultsService.Results.CollectionChanged += _sub;
+    // }
     protected override void OnInitialized()
     {
+        scanBarcodeItems = scanResultsService.Results;
 
-        // Sample test data
-        scanBarcodeItems = new List<ScanBarcodeItemViewModel>
-        {
-            new ScanBarcodeItemViewModel
-            {
-                Value = "123456789012",
-                Format = "EAN-13",
-                Time = DateTime.Now.AddSeconds(-30),
-                Category = "Product"
-            },
-            new ScanBarcodeItemViewModel
-            {
-                Value = "ABC-987654",
-                Format = "Code 128",
-                Time = DateTime.Now.AddSeconds(-20),
-                Category = "Box"
-            },
-            new ScanBarcodeItemViewModel
-            {
-                Value = "XYZ-456789",
-                Format = "QR Code",
-                Time = DateTime.Now.AddSeconds(-10),
-                Category = "Pallet"
-            }
-        };
-
-        // scanBarcodeItems = scanResultsService.Results;
-        scanBarcodeItems = new List<ScanBarcodeItemViewModel>(scanBarcodeItems);
         _sub = (_, __) => InvokeAsync(StateHasChanged);
         scanResultsService.Results.CollectionChanged += _sub;
     }
-
     public void Dispose()
     {
         if (_sub is not null)

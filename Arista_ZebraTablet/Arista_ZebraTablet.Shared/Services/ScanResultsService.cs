@@ -11,14 +11,25 @@ namespace Arista_ZebraTablet.Shared.Services
         // Optional session-level de-dup
         private readonly HashSet<string> _seen = new(StringComparer.OrdinalIgnoreCase);
 
-        public ScanResultsService(ApplicationDbContext context) : base(context)
-        {
-        }
-
-        public void Add(string value, string format)
+        //public void Add(string value, string format)
+        //{
+        //    if (string.IsNullOrWhiteSpace(value)) return;
+        //    // Always mutate ObservableCollection on the UI thread in MAUI
+        //    Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+        //    {
+        //        if (_seen.Add(value))
+        //            Results.Insert(0, new ScanBarcodeItemViewModel()
+        //            {
+        //                Value = value,
+        //                Format = format,
+        //                Time = DateTimeOffset.Now
+        //            });
+        //    });
+        //}
+        public void Add(string value, string format, string category)
         {
             if (string.IsNullOrWhiteSpace(value)) return;
-            // Always mutate ObservableCollection on the UI thread in MAUI
+
             Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
             {
                 if (_seen.Add(value))
@@ -26,6 +37,7 @@ namespace Arista_ZebraTablet.Shared.Services
                     {
                         Value = value,
                         Format = format,
+                        Category = category,
                         Time = DateTimeOffset.Now
                     });
             });

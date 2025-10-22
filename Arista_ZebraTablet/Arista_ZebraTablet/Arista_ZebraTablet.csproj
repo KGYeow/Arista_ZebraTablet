@@ -88,6 +88,9 @@
     <MauiXaml Update="BarcodeScannerPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </MauiXaml>
+    <MauiXaml Update="ScanResultPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
   </ItemGroup>
 
 </Project>
