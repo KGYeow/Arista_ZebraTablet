@@ -11,9 +11,9 @@
 @inject IBarcodeScannerService Scanner
 @* @inject HttpClient Http *@
 
-<PageTitle>ARISTA - Batch Barcode Scanner</PageTitle>
+<PageTitle>Home | @AppConstant.AppTitle</PageTitle>
 
-<MudGrid Spacing="5">
+<MudGrid Spacing="4">
     <MudItem xs="12">
         <MudPaper Class="pa-5" Elevation="0">
             <MudStack Spacing="3" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
@@ -61,9 +61,76 @@
         </MudPaper>
     </MudItem>
 
+    @if (factor == "Phone")
+    {
+        <!-- Phone: Toolbar Section for Uploading Images -->
+        <MudPaper Class="pb-8 w-100 bg-transparent position-fixed bottom-0 start-50 translate-middle-x" Elevation="0">
+            <MudStack Row Spacing="2" AlignItems="AlignItems.Center" Justify="Justify.Center">
+                <!-- Image File picker -->
+                <MudFileUpload
+                    T="IReadOnlyList<IBrowserFile>"
+                    Accept=".jpg,.jpeg,.png,.heic,.heif,image/*"
+                    FilesChanged="UploadImageFilesAsync"
+                >
+                    <ActivatorContent>
+                        <MudTooltip Text="Upload Images" Placement="Placement.Top" Delay="250" Arrow>
+                            <MudFab
+                                Label="@(isUploadingImg ? $"Uploading... {uploadImgProgress}%" : "Upload Images")"
+                                Color="Color.Primary"
+                                StartIcon="@Icons.Material.Outlined.FileUpload"
+                                Disabled="@isUploadingImg"
+                            />
+                        </MudTooltip>
+                    </ActivatorContent>
+                </MudFileUpload>
+
+                <MudTooltip Text="Scan Barcodes" Placement="Placement.Top" Delay="250" Arrow>
+                    <MudFab Color="Color.Primary" StartIcon="material-symbols-rounded/barcode_scanner" OnClick="OpenScanner"/>
+                </MudTooltip>
+
+                <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="250" Arrow>
+                    <MudFab
+                        Color="Color.Warning"
+                        StartIcon="@Icons.Material.Rounded.ClearAll"
+                        Disabled="@(!uploadedImageFiles.Any() || isBusy)"
+                        OnClick="ClearAllUploadedImagesConfirmationAsync"
+                    />
+                </MudTooltip>
+            </MudStack>
+        </MudPaper>
+    }
+    else
+    {
+        <!-- Web: Toolbar Section for Uploading Images -->
+        <MudItem xs="12">
+            <MudStack Row Spacing="2" Justify="Justify.FlexEnd">
+                <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="250" Arrow>
+                    <MudButton StartIcon="@Icons.Material.Rounded.ClearAll" Color="Color.Warning" Variant="Variant.Outlined" Disabled="@(!uploadedImageFiles.Any() || isBusy)" OnClick="ClearAllUploadedImagesConfirmationAsync">
+                        Clear All
+                    </MudButton>
+                </MudTooltip>
+
+                <!-- Image File picker -->
+                <MudFileUpload
+                    T="IReadOnlyList<IBrowserFile>"
+                    Accept=".jpg,.jpeg,.png,.heic,.heif,image/*"
+                    FilesChanged="UploadImageFilesAsync"
+                >
+                    <ActivatorContent>
+                        <MudTooltip Text="Upload Images" Placement="Placement.Top" Delay="250" Arrow>
+                            <MudButton StartIcon="@Icons.Material.Outlined.FileUpload" Color="Color.Primary" Variant="Variant.Filled" DropShadow="false" Disabled="@isUploadingImg">
+                                @(isUploadingImg ? $"Uploading... {uploadImgProgress}%" : "Upload Images")
+                            </MudButton>
+                        </MudTooltip>
+                    </ActivatorContent>
+                </MudFileUpload>
+            </MudStack>
+        </MudItem>
+    }
+
     <MudItem xs="12">
         <MudPaper Elevation="0">
-            <MudTabs Class="pa-5" ActiveTabClass="fw-bold" PanelClass="py-2" Elevation="0" ApplyEffectsToContainer Rounded Centered>
+            <MudTabs Class="pa-3" ActiveTabClass="fw-bold" PanelClass="py-2" Elevation="0" ApplyEffectsToContainer Rounded Centered>
                 <MudTabPanel Text="Uploaded Images">
                     <!-- Uploading Images Progress -->
                     <MudCollapse Class="w-100" Expanded="isUploadingImg">
@@ -217,44 +284,6 @@
             </MudTabs>
         </MudPaper>
     </MudItem>
-
-    <MudPaper Class="pb-8 w-100 bg-transparent position-fixed bottom-0 start-50 translate-middle-x" Elevation="0">
-        <MudStack Row Spacing="2" AlignItems="AlignItems.Center" Justify="Justify.Center">
-            <!-- Image File picker -->
-            <MudFileUpload
-                T="IReadOnlyList<IBrowserFile>"
-                Accept=".jpg,.jpeg,.png,.heic,.heif,image/*"
-                FilesChanged="UploadImageFilesAsync"
-            >
-                <ActivatorContent>
-                    <MudTooltip Text="Upload Images" Placement="Placement.Top" Delay="250" Arrow>
-                        <MudFab
-                            Label="@(isUploadingImg ? $"Uploading... {uploadImgProgress}%" : "Upload Images")"
-                            Color="Color.Primary"
-                            StartIcon="@Icons.Material.Outlined.FileUpload"
-                            Disabled="@isUploadingImg"
-                        />
-                    </MudTooltip>
-                </ActivatorContent>
-            </MudFileUpload>
-
-            @if (factor == "Phone")
-            {
-                <MudTooltip Text="Scan Barcodes" Placement="Placement.Top" Delay="250" Arrow>
-                    <MudFab Color="Color.Primary" StartIcon="material-symbols-rounded/barcode_scanner" OnClick="OpenScanner"/>
-                </MudTooltip>
-            }
-
-            <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="250" Arrow>
-                <MudFab
-                    Color="Color.Warning"
-                    StartIcon="@Icons.Material.Rounded.ClearAll"
-                    Disabled="@(!uploadedImageFiles.Any() || isBusy)"
-                    OnClick="ClearAll"
-                />
-            </MudTooltip>
-        </MudStack>
-    </MudPaper>
 </MudGrid>
 
 @code {
@@ -273,7 +302,7 @@
     private int decodeProgress { get; set; }
     private int uploadImgProgress { get; set; }
 
-    
+
     private async Task OpenScanner() => await Scanner.NavigateToScannerAsync();
 
     // MULTI-FILE handler (preferred)
@@ -360,11 +389,29 @@
         if (indexPosition >= 0) uploadedImageFiles.RemoveAt(indexPosition);
     }
 
-    private void ClearAll()
+    /// <summary>
+    /// Displays a confirmation dialog asking the user to confirm clearing all
+    /// uploaded images currently shown in the list.
+    /// </summary>
+    private async Task ClearAllUploadedImagesConfirmationAsync()
     {
-        uploadedImageFiles.Clear();
-        isBusy = false;
-        decodeProgress = 0;
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { x => x.ContentText, "Clear all uploaded images?" },
+            { x => x.SubmitBtnText, "Clear" },
+            { x => x.DialogIcon, Icons.Material.Rounded.Warning },
+            { x => x.DialogIconColor, Color.Error }
+        };
+        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Clear", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            uploadedImageFiles.Clear();
+            isBusy = false;
+            decodeProgress = 0;
+        }
     }
 
     private async Task DecodeBarcodes()
@@ -523,41 +570,13 @@
             { x => x.ImageFiles, uploadedImageFiles },   // pass the SAME list instance
             { x => x.SelectedFileIndex, index },         // start at resolved index
         };
-        var options = new DialogOptions
-        {
-            NoHeader = true,
-            CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.Large,   // L or XL is nicer for images; you used Medium earlier
-            FullWidth = true
-        };
+        var options = new DialogOptions() { NoHeader = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true };
 
         try
         {
             var dialog = await DialogService.ShowAsync<PreviewImgDialog>("Preview Image", parameters, options);
             var result = await dialog.Result;
             return;
-            // 6) Current behavior:
-            // Your PreviewImgDialog deletes from ImageFiles internally (same list instance),
-            // and the Close button calls MudDialog.Cancel(). So:
-            //  - result.Cancelled is true when "Close" is clicked
-            //  - result.Data is typically null
-            // You don't need to do anything here for the delete case—the list is already updated.
-            // if (!result.Canceled)
-            // {
-            //     7) Optional future behavior:
-            //     If you later decide to CLOSE with a value (e.g., after Delete or Save),
-            //     you can handle it here:
-            //     if (result.Data is bool ok && ok)
-            //     {
-            //         Snackbar.Add("Action completed.", Severity.Success);
-            //     }
-            //     else if (result.Data is PreviewImgResult payload)
-            //     {
-            //         Example payload handling (see "Optional: return a payload" below)
-            //         if (payload.DeletedId is Guid deletedId)
-            //             Snackbar.Add($"Deleted image {deletedId}.", Severity.Info);
-            //     }
-            // }
         }
         catch (Exception ex)
         {
