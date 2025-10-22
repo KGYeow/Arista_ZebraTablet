@@ -1,6 +1,7 @@
-﻿@using Arista_ZebraTablet.Shared.Application.ViewModels
+﻿@using System.Collections.ObjectModel
+@using Arista_ZebraTablet.Services
+@using Arista_ZebraTablet.Shared.Application.ViewModels
 @using Arista_ZebraTablet.Shared.Services
-@using System.Collections.ObjectModel
 
 @inject ScanResultsService scanResultsService
 
@@ -30,7 +31,7 @@
                                 <MudStack Row AlignItems="AlignItems.Center">
                                     <MudText Typo="Typo.caption">@barcodeItem.Category</MudText>
                                     <MudSpacer />
-                                    <MudText Typo="Typo.caption">@barcodeItem.Time.ToLocalTime().ToString("hh:mm:ss tt")</MudText>
+                                    <MudText Typo="Typo.caption">@barcodeItem.ScannedTime.ToLocalTime().ToString("hh:mm:ss tt")</MudText>
                                 </MudStack>
                                 <MudText Typo="Typo.body1" Class="fw-bold">@barcodeItem.Value</MudText>
                             </MudCardContent>   

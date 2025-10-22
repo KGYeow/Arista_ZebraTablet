@@ -4,11 +4,10 @@
 @* @using System.Text.Json
 @using System.Text.Json.Serialization *@
 @using Arista_ZebraTablet.Shared.Application.DTOs
-@using Arista_ZebraTablet.Shared.Application.ViewModels
 @using Arista_ZebraTablet.Shared.Application.Enums
-@using Arista_ZebraTablet.Shared.Services
+@using Arista_ZebraTablet.Shared.Application.ViewModels
 
-@inject IFormFactor FormFactor
+@inject IFormFactorService FormFactor
 @inject IBarcodeScannerService Scanner
 @inject UploadBarcodeDecoderService DecoderService
 @* @inject HttpClient Http *@

@@ -2,10 +2,10 @@ using Arista_ZebraTablet.Shared.Services;
 
 namespace Arista_ZebraTablet.Services
 {
-    public sealed class MauiBarcodeScannerService : IBarcodeScannerService
+    public sealed class BarcodeScannerService : IBarcodeScannerService
     {
         private readonly IServiceProvider _sp;
-        public MauiBarcodeScannerService(IServiceProvider sp) => _sp = sp;
+        public BarcodeScannerService(IServiceProvider sp) => _sp = sp;
 
         public async Task NavigateToScannerAsync()
         {

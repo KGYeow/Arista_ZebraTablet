@@ -1,7 +1,8 @@
 ﻿using Arista_ZebraTablet.Shared.Application.ViewModels;
+using Arista_ZebraTablet.Shared.Data;
 using System.Collections.ObjectModel;
 
-namespace Arista_ZebraTablet.Shared.Services
+namespace Arista_ZebraTablet.Services
 {
     public class ScanResultsService
     {
@@ -29,7 +30,7 @@ namespace Arista_ZebraTablet.Shared.Services
         {
             if (string.IsNullOrWhiteSpace(value)) return;
 
-            Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+            MainThread.BeginInvokeOnMainThread(() =>
             {
                 if (_seen.Add(value))
                     Results.Insert(0, new ScanBarcodeItemViewModel()
@@ -37,14 +38,14 @@ namespace Arista_ZebraTablet.Shared.Services
                         Value = value,
                         //BarcodeType = barcodetype,
                         Category = category,
-                        Time = DateTimeOffset.Now
+                        ScannedTime = DateTime.Now
                     });
             });
         }
 
         public void Clear()
         {
-            Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+            MainThread.BeginInvokeOnMainThread(() =>
             {
                 Results.Clear();
                 _seen.Clear();

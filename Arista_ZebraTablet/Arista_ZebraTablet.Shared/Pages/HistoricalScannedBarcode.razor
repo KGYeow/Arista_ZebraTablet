@@ -1,0 +1,90 @@
+﻿@page "/historical-scanned-barcodes"
+@using Arista_ZebraTablet.Shared.Services
+
+@inject IScannedBarcodeService ScannedBarcodeService
+
+<PageTitle>Historical Scanned Barcodes - @AppConstant.AppTitle</PageTitle>
+
+<!-- Page Header-->
+<PageHeader Title="Historical Scanned Barcodes">
+    <SubtitleContent>
+        <MudText Typo="Typo.body2" Class="text-muted">View the history of the scanned barcode value.</MudText>
+    </SubtitleContent>
+</PageHeader>
+
+<MudGrid Spacing="4">
+    <!-- Scanned Barcode Data Grid -->
+    <MudItem xs="12">
+        <MudCard Elevation="25">
+            <MudCardContent>
+                <MudDataGrid
+                    T="ScannedBarcode"
+                    Items="scannedBarcodeList"
+                    Loading="@isTableLoading"
+                    SortMode="SortMode.Single"
+                    ColumnResizeMode="ResizeMode.Column"
+                    Elevation="0"
+                    Hover
+                    Dense
+                >
+                    <LoadingContent>
+                        <MudText>Loading data...</MudText>
+                    </LoadingContent>
+                    <NoRecordsContent>
+                        <MudText>No data available</MudText>
+                    </NoRecordsContent>
+                    <Columns>
+                        <PropertyColumn Property="x => x.ScannedTime" Title="Scanned Time" HeaderClass="text-nowrap" />
+                        <PropertyColumn Property="x => x.Value" HeaderClass="text-nowrap" />
+                        <PropertyColumn Property="x => x.Category" HeaderClass="text-nowrap" />
+                    </Columns>
+                    <PagerContent>
+                        <MudDataGridPager T="ScannedBarcode" />
+                    </PagerContent>
+                </MudDataGrid>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    // Variable declaration & initialization
+    private bool isTableLoading = true;
+    private List<ScannedBarcode> scannedBarcodeList = new();
+
+    // Action on component initialization
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadScannedBarcodeList();
+    }
+
+    // Load the historical scanned barcode list
+    private async Task LoadScannedBarcodeList()
+    {
+        isTableLoading = true;
+        try
+        {
+            var response = await ScannedBarcodeService.GetScannedBarcodeListAsync();
+            if (!response.Success)
+            {
+                Snackbar.Add(response.Message ?? "Failed to load scanned barcodes.", Severity.Error);
+                return;
+            }
+            scannedBarcodeList = response.Data ?? new();
+        }
+        finally
+        {
+            isTableLoading = false;
+        }
+    }
+
+    // Apply the filter to the list.
+    private async Task ApplyFilter() => await LoadScannedBarcodeList();
+
+    // Reset/clear the list filter
+    // private async Task ResetFilter()
+    // {
+    //     filter = new();
+    //     await LoadScannedBarcodeList();
+    // }
+}

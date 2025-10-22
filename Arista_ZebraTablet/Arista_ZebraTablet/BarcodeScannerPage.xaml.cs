@@ -1,5 +1,5 @@
-﻿using Arista_ZebraTablet.Shared.Application.ViewModels;
-using Arista_ZebraTablet.Shared.Services;
+﻿using Arista_ZebraTablet.Services;
+using Arista_ZebraTablet.Shared.Application.ViewModels;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 
