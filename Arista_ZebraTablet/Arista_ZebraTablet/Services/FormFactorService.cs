@@ -2,7 +2,7 @@ using Arista_ZebraTablet.Shared.Services;
 
 namespace Arista_ZebraTablet.Services
 {
-    public class FormFactor : IFormFactor
+    public class FormFactorService : IFormFactorService
     {
         public string GetFormFactor()
         {

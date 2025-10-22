@@ -4,7 +4,7 @@ using Arista_ZebraTablet.Shared.Data;
 using Arista_ZebraTablet.Shared.Services;
 using Microsoft.EntityFrameworkCore;
 
-namespace Arista_ZebraTablet.Web.Services
+namespace Arista_ZebraTablet.Services
 {
     public class ScannedBarcodeService : BaseService, IScannedBarcodeService
     {
@@ -13,24 +13,20 @@ namespace Arista_ZebraTablet.Web.Services
         }
 
         /// <summary>
-        /// Get the list of historical scanned barcodes from the DB (read-only).
+        /// Gets the list of historical scanned barcodes.
         /// </summary>
-        public async Task<ServiceResponse<List<ScannedBarcode>>> GetScannedBarcodeListAsync(CancellationToken ct = default)
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>
+        /// A <see cref="ServiceResponse{T}"/> containing an empty list.
+        /// </returns>
+        public Task<ServiceResponse<List<ScannedBarcode>>> GetScannedBarcodeListAsync(CancellationToken ct = default)
         {
-            try
-            {
-                var list = await context.ScannedBarcodes.AsNoTracking().OrderByDescending(u => u.Id).ToListAsync(ct);
-
-                return ServiceResponse<List<ScannedBarcode>>.Ok(list);
-            }
-            catch (OperationCanceledException)
-            {
-                return ServiceResponse<List<ScannedBarcode>>.Fail("Operation cancelled.");
-            }
-            catch (Exception)
-            {
-                return ServiceResponse<List<ScannedBarcode>>.Fail("Unexpected error occurred. Please try again later.");
-            }
+            // No DB access on mobile: return an empty list.
+            var empty = new List<ScannedBarcode>();
+            return Task.FromResult(ServiceResponse<List<ScannedBarcode>>.Ok(
+                empty,
+                "Mobile no-op: returning empty list."
+            ));
         }
 
         /// <summary>
@@ -112,43 +108,15 @@ namespace Arista_ZebraTablet.Web.Services
         /// Deletes a single scanned barcode.
         /// </summary>
         /// <returns>
-        /// A <see cref="ServiceResponse{T}"/> containing the number of rows affected (0 or 1),
-        /// or an error message if the operation fails.
+        /// A <see cref="ServiceResponse{T}"/> with <c>0</c> rows affected.
         /// </returns>
         /// <remarks>
-        /// This operation is idempotent. If the specified <paramref name="id"/> does not exist,
-        /// the method returns <c>Ok(0)</c> with a descriptive message.
+        /// <b>Mobile no-op:</b> This method intentionally does nothing on mobile and returns <c>Ok(0)</c>.
         /// </remarks>
-        public async Task<ServiceResponse<int>> DeleteScannedBarcodeAsync(int id, CancellationToken ct = default)
+        public Task<ServiceResponse<int>> DeleteScannedBarcodeAsync(int id, CancellationToken ct = default)
         {
-            if (id <= 0)
-                return ServiceResponse<int>.Fail("Invalid barcode ID.");
-
-            try
-            {
-                var scannedBarcode = await context.ScannedBarcodes.FindAsync([id], ct);
-                if (scannedBarcode == null)
-                {
-                    // Idempotent behavior: nothing to delete; report 0 rows affected.
-                    return ServiceResponse<int>.Ok(0, $"Barcode (Id={id}) not found. Nothing to delete.");
-                }
-                context.ScannedBarcodes.Remove(scannedBarcode);
-
-                var affected = await context.SaveChangesAsync(ct);
-                return ServiceResponse<int>.Ok(affected, $"Barcode value ({scannedBarcode.Value}) deleted.");
-            }
-            catch (OperationCanceledException)
-            {
-                return ServiceResponse<int>.Fail("Operation cancelled.");
-            }
-            catch (DbUpdateException)
-            {
-                return ServiceResponse<int>.Fail("Unable to delete the barcode due to a database constraint or concurrency issue.");
-            }
-            catch (Exception)
-            {
-                return ServiceResponse<int>.Fail("Unexpected error occurred. Please try again later.");
-            }
+            // No DB access on mobile: do nothing, report 0 affected.
+            return Task.FromResult(ServiceResponse<int>.Ok(0, "Mobile no-op: delete skipped."));
         }
     }
 }

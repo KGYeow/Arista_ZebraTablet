@@ -1,6 +1,7 @@
-﻿@page "/historical-scanned-barcode"
+﻿@page "/historical-scanned-barcodes"
+@using Arista_ZebraTablet.Shared.Services
 
-@* @inject JabilUserService JabilUserService *@
+@inject IScannedBarcodeService ScannedBarcodeService
 
 <PageTitle>Historical Scanned Barcodes - @AppConstant.AppTitle</PageTitle>
 
@@ -21,7 +22,7 @@
                     Items="scannedBarcodeList"
                     Loading="@isTableLoading"
                     SortMode="SortMode.Single"
-                    ColumnResizeMode="ResizeMode.Container"
+                    ColumnResizeMode="ResizeMode.Column"
                     Elevation="0"
                     Hover
                     Dense
@@ -32,13 +33,6 @@
                     <NoRecordsContent>
                         <MudText>No data available</MudText>
                     </NoRecordsContent>
-                    <ColGroup>
-                        <col style="min-width: 350px" />
-                        <col style="min-width: 300px" />
-                        <col style="min-width: 210px" />
-                        <col style="min-width: 200px" />
-                        <col style="width: 0" />
-                    </ColGroup>
                     <Columns>
                         <PropertyColumn Property="x => x.ScannedTime" Title="Scanned Time" HeaderClass="text-nowrap" />
                         <PropertyColumn Property="x => x.Value" HeaderClass="text-nowrap" />
@@ -64,24 +58,24 @@
         await LoadScannedBarcodeList();
     }
 
-    // Load the user list
+    // Load the historical scanned barcode list
     private async Task LoadScannedBarcodeList()
     {
-        // isTableLoading = true;
-        // try
-        // {
-        //     var response = await JabilUserService.GetJabilUserListAsync();
-        //     if (!response.Success)
-        //     {
-        //         Snackbar.Add(response.Message ?? "Failed to load users.", Severity.Error);
-        //         return;
-        //     }
-        //     scannedBarcodeList = response.Data ?? new();
-        // }
-        // finally
-        // {
-        //     isTableLoading = false;
-        // }
+        isTableLoading = true;
+        try
+        {
+            var response = await ScannedBarcodeService.GetScannedBarcodeListAsync();
+            if (!response.Success)
+            {
+                Snackbar.Add(response.Message ?? "Failed to load scanned barcodes.", Severity.Error);
+                return;
+            }
+            scannedBarcodeList = response.Data ?? new();
+        }
+        finally
+        {
+            isTableLoading = false;
+        }
     }
 
     // Apply the filter to the list.

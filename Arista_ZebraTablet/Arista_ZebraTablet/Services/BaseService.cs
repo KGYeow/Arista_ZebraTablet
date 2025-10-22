@@ -1,6 +1,6 @@
 ﻿using Arista_ZebraTablet.Shared.Data;
 
-namespace Arista_ZebraTablet.Shared.Services
+namespace Arista_ZebraTablet.Services
 {
     public class BaseService
     {
