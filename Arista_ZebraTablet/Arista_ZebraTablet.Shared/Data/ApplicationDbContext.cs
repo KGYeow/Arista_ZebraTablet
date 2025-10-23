@@ -21,7 +21,7 @@ namespace Arista_ZebraTablet.Shared.Data
                 entity.HasKey(e => e.Id);
 
                 entity.Property(e => e.Value).IsRequired().HasMaxLength(255);
-                entity.Property(e => e.Format).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.BarcodeType).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Category).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.ScannedTime).IsRequired();
             });

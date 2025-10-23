@@ -21,16 +21,15 @@ namespace Arista_ZebraTablet
                 });
 
             // Add device-specific services used by the Arista_ZebraTablet.Shared project
-            builder.Services.AddSingleton<ScanResultsService>();
             builder.Services.AddSingleton<ScanResultPage>();
             builder.Services.AddSingleton<IFormFactorService, FormFactorService>();
-            builder.Services.AddScoped<IBarcodeScannerService, BarcodeScannerService>();
+            //builder.Services.AddScoped<IBarcodeScannerService, BarcodeScannerService>();
+            builder.Services.AddSingleton<IBarcodeScannerService>(sp => sp.GetRequiredService<BarcodeScannerService>());
             builder.Services.AddScoped<IScannedBarcodeService, ScannedBarcodeService>();
-            builder.Services.AddSingleton<IFormFactor, FormFactor>();
-            builder.Services.AddScoped<IBarcodeScannerService, MauiBarcodeScannerService>();
             builder.Services.AddSingleton<UploadBarcodeDecoderService>();
 
             builder.Services.AddTransient<BarcodeScannerPage>();
+            builder.Services.AddSingleton<BarcodeScannerService>();
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices(config =>

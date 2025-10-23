@@ -48,7 +48,7 @@ namespace Arista_ZebraTablet.Services
                 var inputScannedBarcodes = items.Select(item => new ScannedBarcode
                 {
                     Value = item.Value.Trim(),
-                    Format = item.Format,
+                    BarcodeType = item.BarcodeType,
                     Category = item.Category,
                     ScannedTime = item.ScannedTime
                 }).ToList();

@@ -3,7 +3,8 @@
 @using Arista_ZebraTablet.Shared.Application.ViewModels
 @using Arista_ZebraTablet.Shared.Services
 
-@inject ScanResultsService scanResultsService
+@inject BarcodeScannerService scanResultsService
+@implements IDisposable
 
 <MobileComponentLayout>
     <Body>
@@ -16,7 +17,7 @@
 
             <!-- Scanned Barcode's Result Cards -->
             <MudStack Spacing="2" Style="flex: 1 1 auto; min-height: 0; overflow: auto;">
-                @if (!scanBarcodeItems.Any())
+                @if (!scanResultsService.Results.Any())
                 {
                     <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
                         No scans yet. Aim the camera at a code.
@@ -24,7 +25,7 @@
                 }
                 else
                 {
-                    @foreach (var barcodeItem in scanBarcodeItems)
+                    @foreach (var barcodeItem in scanResultsService.Results)
                     {
                         <MudCard Elevation="0" Outlined>
                             <MudCardContent Class="d-flex flex-column">
@@ -44,7 +45,7 @@
 </MobileComponentLayout>
 
 @code {
-    private ObservableCollection<ScanBarcodeItemViewModel> scanBarcodeItems = new();
+    // private ObservableCollection<ScanBarcodeItemViewModel> scanBarcodeItems = new();
     // private IReadOnlyList<ScanBarcodeItemViewModel> scanBarcodeItems = Array.Empty<ScanBarcodeItemViewModel>();
     private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _sub;
 
@@ -84,7 +85,7 @@
     // }
     protected override void OnInitialized()
     {
-        scanBarcodeItems = scanResultsService.Results;
+        // scanBarcodeItems = scanResultsService.Results;
 
         _sub = (_, __) => InvokeAsync(StateHasChanged);
         scanResultsService.Results.CollectionChanged += _sub;
