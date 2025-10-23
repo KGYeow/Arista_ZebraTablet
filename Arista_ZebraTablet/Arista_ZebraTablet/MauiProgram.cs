@@ -31,8 +31,8 @@ namespace Arista_ZebraTablet
             builder.Services.AddSingleton<IBarcodeScannerService>(sp => sp.GetRequiredService<BarcodeScannerService>());
             builder.Services.AddScoped<IScannedBarcodeService, ScannedBarcodeService>();
             builder.Services.AddSingleton<UploadBarcodeDecoderService>();
-            builder.Services.AddSingleton<IBarcodeScannerService, BarcodeScannerService>();
-            builder.Services.AddSingleton<IScannedBarcodeService, ScannedBarcodeService>();
+            //builder.Services.AddSingleton<IBarcodeScannerService, BarcodeScannerService>();
+            //builder.Services.AddSingleton<IScannedBarcodeService, ScannedBarcodeService>();
 
             var connectionString = "Server=awase1pensql81;Database=Arista_ZebraTablet;Trusted_Connection=True;TrustServerCertificate=True;";
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
