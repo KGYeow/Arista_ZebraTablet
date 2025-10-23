@@ -26,6 +26,7 @@ builder.Services.AddMudServices(config =>
 
 // Add device-specific services used by the Arista_ZebraTablet.Shared project
 builder.Services.AddSingleton<IFormFactorService, FormFactorService>();
+builder.Services.AddSingleton<UploadBarcodeDecoderService>();
 builder.Services.AddScoped<IBarcodeScannerService, BarcodeScannerService>();
 builder.Services.AddScoped<IScannedBarcodeService, ScannedBarcodeService>();
 

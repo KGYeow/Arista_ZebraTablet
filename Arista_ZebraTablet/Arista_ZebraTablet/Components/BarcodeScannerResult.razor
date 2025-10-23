@@ -84,40 +84,6 @@
 
     private bool isSaving;
 
-    // protected override void OnInitialized()
-    // {
-
-    //     Sample test data
-    //     scanBarcodeItems = new List<ScanBarcodeItemViewModel>
-    //     {
-    //         new ScanBarcodeItemViewModel
-    //         {
-    //             Value = "123456789012",
-    //             Format = "EAN-13",
-    //             Time = DateTime.Now.AddSeconds(-30),
-    //             Category = "Product"
-    //         },
-    //         new ScanBarcodeItemViewModel
-    //         {
-    //             Value = "ABC-987654",
-    //             Format = "Code 128",
-    //             Time = DateTime.Now.AddSeconds(-20),
-    //             Category = "Box"
-    //         },
-    //         new ScanBarcodeItemViewModel
-    //         {
-    //             Value = "XYZ-456789",
-    //             Format = "QR Code",
-    //             Time = DateTime.Now.AddSeconds(-10),
-    //             Category = "Pallet"
-    //         }
-    //     };
-
-    //     scanBarcodeItems = ScanResultsService.Results;
-    //     scanBarcodeItems = new List<ScanBarcodeItemViewModel>(scanBarcodeItems);
-    //     _sub = (_, __) => InvokeAsync(StateHasChanged);
-    //     ScanResultsService.Results.CollectionChanged += _sub;
-    // }
     protected override void OnInitialized()
     {
         scanBarcodeItems = ScanResultsService.Results;

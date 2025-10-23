@@ -102,9 +102,10 @@ namespace Arista_ZebraTablet.Web.Services
             {
                 return ServiceResponse<int>.Fail("Operation cancelled.");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return ServiceResponse<int>.Fail("Unexpected error occurred. Please try again later.");
+                return ServiceResponse<int>.Fail(ex.Message);
+                //return ServiceResponse<int>.Fail("Unexpected error occurred. Please try again later.");
             }
         }
 
