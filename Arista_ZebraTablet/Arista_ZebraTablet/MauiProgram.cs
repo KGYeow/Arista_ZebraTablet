@@ -1,5 +1,8 @@
 ﻿using Arista_ZebraTablet.Services;
+using Arista_ZebraTablet.Shared.Data;
 using Arista_ZebraTablet.Shared.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
@@ -22,11 +25,18 @@ namespace Arista_ZebraTablet
 
             // Add device-specific services used by the Arista_ZebraTablet.Shared project
             builder.Services.AddSingleton<ScanResultPage>();
+            builder.Services.AddSingleton<UploadBarcodeDecoderService>();
             builder.Services.AddSingleton<IFormFactorService, FormFactorService>();
             //builder.Services.AddScoped<IBarcodeScannerService, BarcodeScannerService>();
             builder.Services.AddSingleton<IBarcodeScannerService>(sp => sp.GetRequiredService<BarcodeScannerService>());
             builder.Services.AddScoped<IScannedBarcodeService, ScannedBarcodeService>();
             builder.Services.AddSingleton<UploadBarcodeDecoderService>();
+            builder.Services.AddSingleton<IBarcodeScannerService, BarcodeScannerService>();
+            builder.Services.AddSingleton<IScannedBarcodeService, ScannedBarcodeService>();
+
+            var connectionString = "Server=awase1pensql81;Database=Arista_ZebraTablet;Trusted_Connection=True;TrustServerCertificate=True;";
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString));
 
             builder.Services.AddTransient<BarcodeScannerPage>();
             builder.Services.AddSingleton<BarcodeScannerService>();

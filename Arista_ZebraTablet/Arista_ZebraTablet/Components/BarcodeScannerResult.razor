@@ -10,9 +10,42 @@
     <Body>
         <MudStack Spacing="3">
             <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
-                <MudText Typo="Typo.h6">Scanned Results</MudText>
+                <!-- Title + Live Scanned Result Count -->
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+                    <MudText Typo="Typo.h6">Scanned Results</MudText>
+                    
+                    @if (scanBarcodeItems.Count > 0)
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
+                            @scanBarcodeItems.Count
+                        </MudChip>
+                    }
+                </MudStack>
                 <MudSpacer />
-                <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small" DropShadow="false" OnClick="Clear">Clear</MudButton>
+
+                <!-- Submit Button -->
+                <MudButton
+                    Variant="Variant.Filled"
+                    Color="Color.Primary"
+                    Size="Size.Small"
+                    StartIcon="@Icons.Material.Outlined.CloudUpload"
+                    Disabled="@(!scanBarcodeItems.Any() || isSaving)"
+                    DropShadow="false"
+                    OnClick="SaveScannedResultConfirmationAsync"
+                >
+                    @(isSaving ? "Submitting..." : "Submit")
+                </MudButton>
+
+                <!-- Clear Button -->
+                <MudButton
+                    Variant="Variant.Outlined"
+                    Color="Color.Error"
+                    Size="Size.Small"
+                    Disabled="@(!scanBarcodeItems.Any() || isSaving)"
+                    OnClick="ClearScannedResultConfirmationAsync"
+                >
+                    Clear
+                </MudButton>
             </MudStack>
 
             <!-- Scanned Barcode's Result Cards -->
@@ -49,57 +82,124 @@
     // private IReadOnlyList<ScanBarcodeItemViewModel> scanBarcodeItems = Array.Empty<ScanBarcodeItemViewModel>();
     private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _sub;
 
-    // protected override void OnInitialized()
-    // {
+    private bool isSaving;
 
-    //     Sample test data
-    //     scanBarcodeItems = new List<ScanBarcodeItemViewModel>
-    //     {
-    //         new ScanBarcodeItemViewModel
-    //         {
-    //             Value = "123456789012",
-    //             Format = "EAN-13",
-    //             Time = DateTime.Now.AddSeconds(-30),
-    //             Category = "Product"
-    //         },
-    //         new ScanBarcodeItemViewModel
-    //         {
-    //             Value = "ABC-987654",
-    //             Format = "Code 128",
-    //             Time = DateTime.Now.AddSeconds(-20),
-    //             Category = "Box"
-    //         },
-    //         new ScanBarcodeItemViewModel
-    //         {
-    //             Value = "XYZ-456789",
-    //             Format = "QR Code",
-    //             Time = DateTime.Now.AddSeconds(-10),
-    //             Category = "Pallet"
-    //         }
-    //     };
-
-    //     scanBarcodeItems = scanResultsService.Results;
-    //     scanBarcodeItems = new List<ScanBarcodeItemViewModel>(scanBarcodeItems);
-    //     _sub = (_, __) => InvokeAsync(StateHasChanged);
-    //     scanResultsService.Results.CollectionChanged += _sub;
-    // }
     protected override void OnInitialized()
     {
-        // scanBarcodeItems = scanResultsService.Results;
+        scanBarcodeItems = scanResultsService.Results;
 
         _sub = (_, __) => InvokeAsync(StateHasChanged);
-        scanResultsService.Results.CollectionChanged += _sub;
+        ScanResultsService.Results.CollectionChanged += _sub;
     }
     public void Dispose()
     {
         if (_sub is not null)
-            scanResultsService.Results.CollectionChanged -= _sub;
+            ScanResultsService.Results.CollectionChanged -= _sub;
     }
 
-    // private void Clear() => scanResultsService.Clear();
-
-    private void Clear()
+    /// <summary>
+    /// Displays a confirmation dialog asking the user to confirm submitting the
+    /// current scanned barcode results.
+    /// </summary>
+    private async Task SaveScannedResultConfirmationAsync()
     {
-        scanResultsService.Clear();
+        var message = scanBarcodeItems.Count == 1
+            ? "Are you sure you want to submit this scanned barcode result?"
+            : $"Are you sure you want to submit these {scanBarcodeItems.Count} scanned barcode results?";
+
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { x => x.ContentText, message },
+            { x => x.SubmitBtnText, "Submit" },
+            { x => x.DialogIconColor, Color.Info }
+        };
+        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Submit Confirmation", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                await SaveScannedResultAsync();
+            }
+            catch
+            {
+                Snackbar.Add("An unexpected error occurred while submitting the scanned barcode. Please try again.", Severity.Error);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Submits the current scanned results to the database via IScannedBarcodeService.
+    /// Deduplication is handled by the service layer.
+    /// </summary>
+    private async Task SaveScannedResultAsync()
+    {
+        if (isSaving || !scanBarcodeItems.Any())
+            return;
+
+        isSaving = true;
+        try
+        {
+            // Map to a new list to avoid collection mutation during async call
+            var items = scanBarcodeItems.ToList();
+            if (items.Count == 0)
+            {
+                Snackbar.Add("Nothing to submit.", Severity.Info);
+                return;
+            }
+
+            // Short timeout to keep UX snappy on mobile
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+            var response = await ScannedBarcodeService.AddScannedBarcodesAsync(items, cts.Token);
+            if (response.Success)
+            {
+                Snackbar.Add(response.Message ?? $"{response.Data} barcode(s) submitted.", Severity.Success);
+                ScanResultsService.Clear();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Submit failed.", Severity.Error);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Snackbar.Add("Submit cancelled or timed out.", Severity.Warning);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Submit error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Displays a confirmation dialog asking the user to confirm clearing all
+    /// scanned barcode results currently shown in the list.
+    /// </summary>
+    private async Task ClearScannedResultConfirmationAsync()
+    {
+        if (isSaving || !scanBarcodeItems.Any())
+            return;
+
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { x => x.ContentText, "Clear all scanned results?" },
+            { x => x.SubmitBtnText, "Clear" },
+            { x => x.DialogIcon, Icons.Material.Rounded.Warning },
+            { x => x.DialogIconColor, Color.Error }
+        };
+        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Clear", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+            ScanResultsService.Clear();
     }
 }

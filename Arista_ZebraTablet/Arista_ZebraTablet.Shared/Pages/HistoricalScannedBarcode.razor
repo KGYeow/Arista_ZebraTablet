@@ -3,7 +3,7 @@
 
 @inject IScannedBarcodeService ScannedBarcodeService
 
-<PageTitle>Historical Scanned Barcodes - @AppConstant.AppTitle</PageTitle>
+<PageTitle>Historical Scanned Barcodes | @AppConstant.AppTitle</PageTitle>
 
 <!-- Page Header-->
 <PageHeader Title="Historical Scanned Barcodes">
@@ -33,10 +33,29 @@
                     <NoRecordsContent>
                         <MudText>No data available</MudText>
                     </NoRecordsContent>
+                    @* <ColGroup>
+                        <col style="min-width: 350px" />
+                        <col style="min-width: 300px" />
+                        <col style="min-width: 210px" />
+                        <col style="min-width: 200px" />
+                        <col style="width: 0" />
+                    </ColGroup> *@
                     <Columns>
                         <PropertyColumn Property="x => x.ScannedTime" Title="Scanned Time" HeaderClass="text-nowrap" />
                         <PropertyColumn Property="x => x.Value" HeaderClass="text-nowrap" />
                         <PropertyColumn Property="x => x.Category" HeaderClass="text-nowrap" />
+                        <TemplateColumn>
+                            <CellTemplate>
+                                <MudStack Row Spacing="1">
+                                    <MudIconButton
+                                        Size="@Size.Small"
+                                        Icon="@Icons.Material.Rounded.DeleteOutline"
+                                        OnClick="() => DeleteScannedBarcode(context.Item.Id)"
+                                        title="Remove Scanned Barcode"
+                                    />
+                                </MudStack>
+                            </CellTemplate>
+                        </TemplateColumn>
                     </Columns>
                     <PagerContent>
                         <MudDataGridPager T="ScannedBarcode" />
@@ -81,10 +100,43 @@
     // Apply the filter to the list.
     private async Task ApplyFilter() => await LoadScannedBarcodeList();
 
-    // Reset/clear the list filter
-    // private async Task ResetFilter()
-    // {
-    //     filter = new();
-    //     await LoadScannedBarcodeList();
-    // }
+    // Delete the scanned barcode.
+    private async Task DeleteScannedBarcode(int scannedBarcodeId)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { x => x.ContentText, "Are you sure you want to delete this scanned barcode? This action is permanent and cannot be undone." },
+            { x => x.SubmitBtnText, "Delete" },
+            { x => x.DialogIcon, Icons.Material.Rounded.Warning },
+            { x => x.DialogIconColor, Color.Error }
+        };
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Confirmation", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                // Delete the scanned barcode
+                var response = await ScannedBarcodeService.DeleteScannedBarcodeAsync(scannedBarcodeId);
+                if (response.Success)
+                {
+                    Snackbar.Add(response.Message ?? "Scanned barcode deleted successfully.", Severity.Success);
+
+                    // refresh the list of scanned barcode
+                    await LoadScannedBarcodeList();
+                    StateHasChanged();
+                }
+                else
+                {
+                    Snackbar.Add(response.Message ?? "Failed to delete scanned barcode.", Severity.Error);
+                }
+            }
+            catch
+            {
+                Snackbar.Add("An unexpected error occurred while deleting the scanned barcode. Please try again.", Severity.Error);
+            }
+        }
+    }
 }
