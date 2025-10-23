@@ -2,14 +2,17 @@
 using Arista_ZebraTablet.Shared.Application.ViewModels;
 using Arista_ZebraTablet.Shared.Data;
 using Arista_ZebraTablet.Shared.Services;
-using Microsoft.EntityFrameworkCore;
+using System.Net.Http.Json;
 
 namespace Arista_ZebraTablet.Services
 {
-    public class ScannedBarcodeService : BaseService, IScannedBarcodeService
+    public class ScannedBarcodeService : IScannedBarcodeService
     {
-        public ScannedBarcodeService(ApplicationDbContext context) : base(context)
+        private readonly HttpClient _http;
+
+        public ScannedBarcodeService(HttpClient http)
         {
+            _http = http;
         }
 
         /// <summary>
@@ -30,78 +33,19 @@ namespace Arista_ZebraTablet.Services
         }
 
         /// <summary>
-        /// Adds a list of scanned barcode items to the database.
+        /// Adds scanned barcodes by calling <c>POST /api/ScannedBarcodes</c>.
         /// </summary>
         /// <returns>
-        /// A <see cref="ServiceResponse{T}"/> containing the number of rows affected,
-        /// or an error message if the operation fails.
+        /// A <see cref="ServiceResponse{T}"/> with the number of rows affected (dedup handled server-side).
         /// </returns>
         public async Task<ServiceResponse<int>> AddScannedBarcodesAsync(List<ScanBarcodeItemViewModel> items, CancellationToken ct = default)
         {
-            if (items == null || items.Count == 0)
-            {
-                return ServiceResponse<int>.Fail("No barcode items provided.");
-            }
+            using var response = await _http.PostAsJsonAsync("/api/ScannedBarcode", items, ct);
+            if (!response.IsSuccessStatusCode)
+                return ServiceResponse<int>.Fail($"HTTP {(int)response.StatusCode}");
 
-            try
-            {
-                var inputScannedBarcodes = items.Select(item => new ScannedBarcode
-                {
-                    Value = item.Value.Trim(),
-                    Format = item.Format,
-                    Category = item.Category,
-                    ScannedTime = item.ScannedTime
-                }).ToList();
-
-                // De-duplicate within the batch by Value (case-sensitive)
-                var inputDistinctScannedBarcodes = inputScannedBarcodes
-                    .GroupBy(x => x.Value)
-                    .Select(g => g.First())
-                    .ToList();
-
-                // Find existing values already in DB (case-sensitive)
-                var inputValuesToCheck = inputDistinctScannedBarcodes
-                    .Select(i => i.Value.Trim())
-                    .ToList();
-                var existingScannedBarcodes = await context.ScannedBarcodes
-                    .AsNoTracking()
-                    .Where(b => inputValuesToCheck.Contains(b.Value))
-                    .Select(b => b.Value)
-                    .ToListAsync(ct);
-
-                // Build list for only the new (non-existing) barcode values
-                var newScannedBarcodes = inputDistinctScannedBarcodes
-                    .Where(i => !existingScannedBarcodes.Contains(i.Value))
-                    .ToList();
-
-                if (newScannedBarcodes.Count == 0)
-                    return ServiceResponse<int>.Ok(0, "No new barcodes to save. All provided values already exist or are duplicates.");
-
-                await context.ScannedBarcodes.AddRangeAsync(newScannedBarcodes, ct);
-
-                int affectedRows;
-                try
-                {
-                    affectedRows = await context.SaveChangesAsync(ct);
-                }
-                catch (DbUpdateException)
-                {
-                    // Handle race condition: if a unique index exists, we might get here. Re-check and report.
-                    return ServiceResponse<int>.Fail("Some barcodes were already inserted (possibly by another process). Please retry.");
-                }
-
-                var skipped = items.Count - newScannedBarcodes.Count;
-                var message = $"{affectedRows} new barcode(s) saved. {skipped} duplicate/existing value(s) skipped.";
-                return ServiceResponse<int>.Ok(affectedRows, message);
-            }
-            catch (OperationCanceledException)
-            {
-                return ServiceResponse<int>.Fail("Operation cancelled.");
-            }
-            catch (Exception)
-            {
-                return ServiceResponse<int>.Fail("Unexpected error occurred. Please try again later.");
-            }
+            return await response.Content.ReadFromJsonAsync<ServiceResponse<int>>(cancellationToken: ct)
+                   ?? ServiceResponse<int>.Fail("Invalid response.");
         }
 
         /// <summary>
