@@ -181,7 +181,6 @@
             StateHasChanged();
         }
     }
-
     /// <summary>
     /// Displays a confirmation dialog asking the user to confirm clearing all
     /// scanned barcode results currently shown in the list.
@@ -190,7 +189,7 @@
     {
         if (isSaving || !scanResultsService.Results.Any())
             return;
-
+            showPopup = true;
         var parameters = new DialogParameters<ConfirmationDialog>
         {
             { x => x.ContentText, "Clear all scanned results?" },
@@ -205,4 +204,5 @@
         if (!result.Canceled)
             scanResultsService.Clear();
     }
+
 }
