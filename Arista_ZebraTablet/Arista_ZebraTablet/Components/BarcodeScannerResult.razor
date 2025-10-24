@@ -68,7 +68,16 @@
                                     <MudSpacer />
                                     <MudText Typo="Typo.caption">@barcodeItem.ScannedTime.ToLocalTime().ToString("hh:mm:ss tt")</MudText>
                                 </MudStack>
-                                <MudText Typo="Typo.body1" Class="fw-bold">@barcodeItem.Value</MudText>
+                                <MudStack Row AlignItems="AlignItems.Center">
+                                    <MudText Typo="Typo.body1" Class="fw-bold">@barcodeItem.Value</MudText>
+                                    <MudSpacer />
+                                    <MudIconButton
+                                        Icon="@Icons.Material.Filled.Delete"
+                                        Color="Color.Error"
+                                        Size="Size.Small"
+                                        Disabled="@isSaving"
+                                        OnClick="@(() => DeleteBarcode(barcodeItem))" />
+                                    </MudStack>
                             </MudCardContent>   
                         </MudCard>
                     }
@@ -187,7 +196,6 @@
     {
         if (isSaving || !scanResultsService.Results.Any())
             return;
-            showPopup = true;
         var parameters = new DialogParameters<ConfirmationDialog>
         {
             { x => x.ContentText, "Clear all scanned results?" },
@@ -203,4 +211,11 @@
             scanResultsService.Clear();
     }
 
+    private void DeleteBarcode(ScanBarcodeItemViewModel barcode)
+{
+    if (scanResultsService.Results.Contains(barcode))
+    {
+        scanResultsService.Results.Remove(barcode);
+    }
+}
 }

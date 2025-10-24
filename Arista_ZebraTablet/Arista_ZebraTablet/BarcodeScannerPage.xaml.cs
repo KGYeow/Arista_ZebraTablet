@@ -1,5 +1,6 @@
 ﻿using Arista_ZebraTablet.Services;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
+using CommunityToolkit.Maui.Extensions;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 
@@ -77,4 +78,5 @@ public partial class BarcodeScannerPage : ContentPage
 
     private void OnClear(object sender, EventArgs e)
         => _scannerService.Clear();
+
 }
