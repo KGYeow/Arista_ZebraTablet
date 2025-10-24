@@ -8,22 +8,23 @@ namespace Arista_ZebraTablet;
 
 public partial class BarcodeScannerPage : ContentPage
 {
-    private readonly ScanResultsService _results;
+    private readonly BarcodeScannerService _scannerService;
     private readonly TaskCompletionSource<string?>? _singleShotTcs; // null => list mode
 
+
     // Hybrid list mode
-    public BarcodeScannerPage(ScanResultsService results)
+    public BarcodeScannerPage(BarcodeScannerService scannerService)
     {
         InitializeComponent();
-        _results = results;
-    }  
+        _scannerService = scannerService;
+    }
 
-    // Single-shot mode (your original pattern)
-    public BarcodeScannerPage(TaskCompletionSource<string?> singleShotTcs, ScanResultsService results)
+    // Single-shot mode
+    public BarcodeScannerPage(TaskCompletionSource<string?> singleShotTcs, BarcodeScannerService scannerService)
     {
         InitializeComponent();
         _singleShotTcs = singleShotTcs;
-        _results = results;
+        _scannerService = scannerService;
     }
 
     protected override void OnAppearing()
@@ -64,14 +65,18 @@ public partial class BarcodeScannerPage : ContentPage
                 return;
             }
 
-            // Add to ScanResultsService
-            _results.Add(r.Value, r.Format.ToString(), category);
+
+            // Add to BarcodeScannerService
+            _scannerService.Add(r.Value, r.Format.ToString(), category);
+
         }
     }
+
+
 
     private void OnToggleDetecting(object sender, EventArgs e)
         => CameraView.IsDetecting = !CameraView.IsDetecting;
 
     private void OnClear(object sender, EventArgs e)
-        => _results.Clear();
+        => _scannerService.Clear();
 }

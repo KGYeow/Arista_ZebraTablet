@@ -3,7 +3,7 @@
 @* @using System.Net.Http.Headers *@
 @* @using System.Text.Json
 @using System.Text.Json.Serialization *@
-@using Arista_ZebraTablet.Shared.Application.DTOs
+@* @using Arista_ZebraTablet.Shared.Application.DTOs *@
 @using Arista_ZebraTablet.Shared.Application.Enums
 @using Arista_ZebraTablet.Shared.Application.ViewModels
 
@@ -233,7 +233,7 @@
 
                                 <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
                                     <MudText Typo="Typo.subtitle1">@img.FileName</MudText>
-                                    <MudChip T="BarcodeDto" Color="@ImageFileStateColor(img.State)" Variant="Variant.Outlined" Dense>
+                                    <MudChip T="ScanBarcodeItemViewModel" Color="@ImageFileStateColor(img.State)" Variant="Variant.Outlined" Dense>
                                         @ImageFileStateLabel(img.State)
                                     </MudChip>
                                 </MudStack>
@@ -262,7 +262,7 @@
                                                     <MudTd>@b.Value</MudTd>
                                                     <MudTd>@b.Category</MudTd>
                                                     <MudTd>@b.BarcodeType</MudTd>
-                                                    <MudTd>@b.Time.ToString("g")</MudTd>
+                                                    <MudTd>@b.ScannedTime.ToString("g")</MudTd>
                                                 </MudTr>
                                             }
                                         </ChildRowContent>
