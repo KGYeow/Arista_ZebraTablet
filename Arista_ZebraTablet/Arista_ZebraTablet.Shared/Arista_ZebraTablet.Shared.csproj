@@ -7,6 +7,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Application\DTOs\**" />
+    <Content Remove="Application\DTOs\**" />
+    <EmbeddedResource Remove="Application\DTOs\**" />
+    <MauiCss Remove="Application\DTOs\**" />
+    <MauiXaml Remove="Application\DTOs\**" />
+    <None Remove="Application\DTOs\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
 

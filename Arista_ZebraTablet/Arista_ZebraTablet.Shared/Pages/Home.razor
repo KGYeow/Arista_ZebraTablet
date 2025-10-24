@@ -1,16 +1,11 @@
 ﻿@page "/"
 
-@* @using System.Net.Http.Headers *@
-@* @using System.Text.Json
-@using System.Text.Json.Serialization *@
-@* @using Arista_ZebraTablet.Shared.Application.DTOs *@
 @using Arista_ZebraTablet.Shared.Application.Enums
 @using Arista_ZebraTablet.Shared.Application.ViewModels
 
 @inject IFormFactorService FormFactor
 @inject IBarcodeScannerService Scanner
 @inject UploadBarcodeDecoderService DecoderService
-@* @inject HttpClient Http *@
 
 <PageTitle>Home | @AppConstant.AppTitle</PageTitle>
 
