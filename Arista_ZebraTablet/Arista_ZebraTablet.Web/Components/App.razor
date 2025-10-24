@@ -1,10 +1,25 @@
-﻿<!DOCTYPE html>
+﻿@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment hostingEnv
+@inject NavigationManager Nav
+
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="/" />
+    @{
+        if (!hostingEnv.IsDevelopment())
+        {
+            <base href="/Arista_ZebraTablet/" />
+        }
+        else
+        {
+            <base href="/" />
+        }
+    }
+    @* <base href="/" /> *@
+    @* <base href="/Arista_ZebraTablet/" /> *@
+    @* <base href="@Nav.BaseUri" /> *@
     <link rel="stylesheet" href="_content/Arista_ZebraTablet.Shared/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="_content/Arista_ZebraTablet.Shared/app.css" />
     <link rel="stylesheet" href="Arista_ZebraTablet.Web.styles.css" />
