@@ -13,6 +13,8 @@ namespace Arista_ZebraTablet.Shared.Services;
 /// </remarks>
 public interface IScannedBarcodeService
 {
+    public Uri BuildUri(string relative);
+
     /// <summary>
     /// Gets the list of historical scanned barcodes from the data store (read-only).
     /// </summary>
