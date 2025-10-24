@@ -3,7 +3,6 @@ using Arista_ZebraTablet.Shared.Services;
 using Arista_ZebraTablet.Web.Components;
 using Arista_ZebraTablet.Web.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 using MudBlazor;
 using MudBlazor.Services;
 
@@ -15,7 +14,7 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddMudServices(config =>
 {
     // Add configurations for snackbar
-    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomCenter;
+    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
     config.SnackbarConfiguration.PreventDuplicates = false;
     config.SnackbarConfiguration.NewestOnTop = false;
     config.SnackbarConfiguration.ClearAfterNavigation = false;
@@ -42,21 +41,16 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-//app.UsePathBase("/Arista_ZebraTablet");
-
-// Configure the HTTP request pipeline.dd
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseStaticFiles();
+    app.UseMigrationsEndPoint();
 }
 else
 {
-    app.UseStaticFiles(new StaticFileOptions()
-    {
-        FileProvider = new PhysicalFileProvider($@"{AppDomain.CurrentDomain.BaseDirectory}/wwwroot")
-    });
+    app.UsePathBase("/Arista_ZebraTablet");
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
@@ -64,6 +58,7 @@ else
 
 app.UseHttpsRedirection();
 
+app.UseStaticFiles();
 app.UseAntiforgery();
 
 // Map attribute routed controllers (API endpoints)

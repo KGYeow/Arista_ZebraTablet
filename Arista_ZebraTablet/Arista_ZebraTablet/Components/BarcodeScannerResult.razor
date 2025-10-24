@@ -122,7 +122,7 @@
         {
             try
             {
-                // await SaveScannedResultAsync();
+                await SaveScannedResultAsync();
             }
             catch
             {
@@ -135,50 +135,50 @@
     /// Submits the current scanned results to the database via IScannedBarcodeService.
     /// Deduplication is handled by the service layer.
     /// </summary>
-    // private async Task SaveScannedResultAsync()
-    // {
-    //     if (isSaving || !scanResultsService.Results.Any())
-    //         return;
+    private async Task SaveScannedResultAsync()
+    {
+        if (isSaving || !scanResultsService.Results.Any())
+            return;
 
-    //     isSaving = true;
-    //     try
-    //     {
-    //         Map to a new list to avoid collection mutation during async call
-    //         var items = scanResultsService.Results.ToList();
-    //         if (items.Count == 0)
-    //         {
-    //             Snackbar.Add("Nothing to submit.", Severity.Info);
-    //             return;
-    //         }
+        isSaving = true;
+        try
+        {
+            // Map to a new list to avoid collection mutation during async call
+            var items = scanResultsService.Results.ToList();
+            if (items.Count == 0)
+            {
+                Snackbar.Add("Nothing to submit.", Severity.Info);
+                return;
+            }
 
-    //         Short timeout to keep UX snappy on mobile
-    //         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            // Short timeout to keep UX snappy on mobile
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 
-    //         var response = await ScannedBarcodeService.AddScannedBarcodesAsync(items, cts.Token);
-    //         if (response.Success)
-    //         {
-    //             Snackbar.Add(response.Message ?? $"{response.Data} barcode(s) submitted.", Severity.Success);
-    //             scanResultsService.Clear();
-    //         }
-    //         else
-    //         {
-    //             Snackbar.Add(response.Message ?? "Submit failed.", Severity.Error);
-    //         }
-    //     }
-    //     catch (OperationCanceledException)
-    //     {
-    //         Snackbar.Add("Submit cancelled or timed out.", Severity.Warning);
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         Snackbar.Add($"Submit error: {ex.Message}", Severity.Error);
-    //     }
-    //     finally
-    //     {
-    //         isSaving = false;
-    //         StateHasChanged();
-    //     }
-    // }
+            var response = await ScannedBarcodeService.AddScannedBarcodesAsync(items, cts.Token);
+            if (response.Success)
+            {
+                Snackbar.Add(response.Message ?? $"{response.Data} barcode(s) submitted.", Severity.Success);
+                scanResultsService.Clear();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Submit failed.", Severity.Error);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Snackbar.Add("Submit cancelled or timed out.", Severity.Warning);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Submit error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
 
     /// <summary>
     /// Displays a confirmation dialog asking the user to confirm clearing all

@@ -7,22 +7,16 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    @{
-        if (!hostingEnv.IsDevelopment())
-        {
-            <base href="/Arista_ZebraTablet/" />
-        }
-        else
-        {
-            <base href="/" />
-        }
+    @if (hostingEnv.IsDevelopment())
+    {
+        <base href="/" />
     }
-    @* <base href="/" /> *@
-    @* <base href="/Arista_ZebraTablet/" /> *@
-    @* <base href="@Nav.BaseUri" /> *@
+    else
+    {
+        <base href="/Arista_ZebraTablet/" />
+    }
     <link rel="stylesheet" href="_content/Arista_ZebraTablet.Shared/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="_content/Arista_ZebraTablet.Shared/app.css" />
-    <link rel="stylesheet" href="Arista_ZebraTablet.Web.styles.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />

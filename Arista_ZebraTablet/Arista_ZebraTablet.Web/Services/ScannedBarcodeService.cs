@@ -27,9 +27,10 @@ namespace Arista_ZebraTablet.Web.Services
             {
                 return ServiceResponse<List<ScannedBarcode>>.Fail("Operation cancelled.");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return ServiceResponse<List<ScannedBarcode>>.Fail("Unexpected error occurred. Please try again later.");
+                return ServiceResponse<List<ScannedBarcode>>.Fail(ex.Message);
+                //return ServiceResponse<List<ScannedBarcode>>.Fail("Unexpected error occurred. Please try again later.");
             }
         }
 
@@ -104,8 +105,7 @@ namespace Arista_ZebraTablet.Web.Services
             }
             catch (Exception ex)
             {
-                return ServiceResponse<int>.Fail(ex.Message);
-                //return ServiceResponse<int>.Fail("Unexpected error occurred. Please try again later.");
+                return ServiceResponse<int>.Fail("Unexpected error occurred. Please try again later.");
             }
         }
 
