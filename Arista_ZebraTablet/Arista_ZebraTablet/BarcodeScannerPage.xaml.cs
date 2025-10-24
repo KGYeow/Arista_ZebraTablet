@@ -72,8 +72,6 @@ public partial class BarcodeScannerPage : ContentPage
         }
     }
 
-
-
     private void OnToggleDetecting(object sender, EventArgs e)
         => CameraView.IsDetecting = !CameraView.IsDetecting;
 

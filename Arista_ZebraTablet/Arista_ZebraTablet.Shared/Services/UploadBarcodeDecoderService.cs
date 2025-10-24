@@ -79,7 +79,7 @@ namespace Arista_ZebraTablet.Shared.Services
                 Options = new DecodingOptions
                 {
                     TryHarder = true,
-                    PossibleFormats = new List<ZXing.BarcodeFormat> { ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.QR_CODE }
+                    PossibleFormats = new List<ZXing.BarcodeFormat> { ZXing.BarcodeFormat.CODE_128, ZXing.BarcodeFormat.QR_CODE, ZXing.BarcodeFormat.AZTEC, ZXing.BarcodeFormat.DATA_MATRIX, ZXing.BarcodeFormat.PDF_417 }
                 }
             };
 
