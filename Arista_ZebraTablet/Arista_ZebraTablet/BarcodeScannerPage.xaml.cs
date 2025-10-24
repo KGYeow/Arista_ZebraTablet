@@ -1,6 +1,5 @@
 ﻿using Arista_ZebraTablet.Services;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
-using CommunityToolkit.Maui.Extensions;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 
