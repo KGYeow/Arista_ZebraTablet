@@ -61,6 +61,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Resources\raw\Jabil Enterprise KF ICA 1.crt" />
+    <Content Include="Resources\raw\Jabil Enterprise KF RCA 1.crt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.10" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />

@@ -30,7 +30,7 @@
                     Color="Color.Primary"
                     Size="Size.Small"
                     StartIcon="@Icons.Material.Outlined.CloudUpload"
-                           Disabled="@(!scanResultsService.Results.Any() || isSaving)"
+                    Disabled="@(!scanResultsService.Results.Any() || isSaving)"
                     DropShadow="false"
                     OnClick="SaveScannedResultConfirmationAsync"
                 >
@@ -113,13 +113,15 @@
     /// </summary>
     private async Task SaveScannedResultConfirmationAsync()
     {
+        var requestUri = ScannedBarcodeService.BuildUri("api/ScannedBarcode");
+
         var message = scanResultsService.Results.Count == 1
             ? "Are you sure you want to submit this scanned barcode result?"
             : $"Are you sure you want to submit these {scanResultsService.Results.Count} scanned barcode results?";
 
         var parameters = new DialogParameters<ConfirmationDialog>
         {
-            { x => x.ContentText, message },
+            { x => x.ContentText, message + "\n" + requestUri },
             { x => x.SubmitBtnText, "Submit" },
             { x => x.DialogIconColor, Color.Info }
         };
