@@ -5,6 +5,7 @@
 
 @inject IFormFactorService FormFactor
 @inject IBarcodeScannerService Scanner
+@inject IScannedBarcodeService ScannedBarcodeService
 @inject UploadBarcodeDecoderService DecoderService
 
 <PageTitle>Home | @AppConstant.AppTitle</PageTitle>
@@ -278,6 +279,15 @@
                                 </MudText>
                             </MudStack>
                         }
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Size="Size.Small"
+                                   StartIcon="@Icons.Material.Outlined.CloudUpload"
+                                   Disabled="@(!uploadedImageFiles.Any(f => f.DetectResult?.Barcodes?.Any() ?? false) || isSaving)"
+                                   DropShadow="false"
+                                   OnClick="SaveDetectedBarcodesConfirmationAsync">
+                            @(isSaving ? "Submitting..." : "Submit")
+                        </MudButton>
                     </MudPaper>
                 </MudTabPanel>
             </MudTabs>
@@ -300,6 +310,7 @@
     private bool isUploadingImg { get; set; }
     private int decodeProgress { get; set; }
     private int uploadImgProgress { get; set; }
+    private bool isSaving;
 
 
     private async Task OpenScanner() => await Scanner.NavigateToScannerAsync();
@@ -635,7 +646,86 @@
             Snackbar.Add($"Failed to open image preview: {ex.Message}", Severity.Error);
         }
     }
+    private async Task SaveDetectedBarcodesConfirmationAsync()
+    {
+        var totalBarcodes = uploadedImageFiles
+            .Where(f => f.DetectResult?.Barcodes?.Any() ?? false)
+            .Sum(f => f.DetectResult.Barcodes.Count);
 
+        var message = totalBarcodes == 1
+            ? "Are you sure you want to submit this detected barcode?"
+            : $"Are you sure you want to submit these {totalBarcodes} detected barcodes?";
+
+        var parameters = new DialogParameters<ConfirmationDialog>
+    {
+        { x => x.ContentText, message },
+        { x => x.SubmitBtnText, "Submit" },
+        { x => x.DialogIconColor, Color.Info }
+    };
+
+        var options = new DialogOptions { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Submit Confirmation", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                await SaveDetectedBarcodesAsync();
+            }
+            catch
+            {
+                Snackbar.Add("An error occurred while submitting. Please try again.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task SaveDetectedBarcodesAsync()
+    {
+        if (isSaving)
+            return;
+
+        var items = uploadedImageFiles
+            .Where(f => f.DetectResult?.Barcodes?.Any() ?? false)
+            .SelectMany(f => f.DetectResult.Barcodes)
+            .ToList();
+
+        if (items.Count == 0)
+        {
+            Snackbar.Add("No barcodes to submit.", Severity.Info);
+            return;
+        }
+
+        isSaving = true;
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var response = await ScannedBarcodeService.AddScannedBarcodesAsync(items, cts.Token);
+
+            if (response.Success)
+            {
+                Snackbar.Add(response.Message ?? $"{response.Data} barcode(s) submitted.", Severity.Success);
+                uploadedImageFiles.Clear();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Submit failed.", Severity.Error);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Snackbar.Add("Submit cancelled or timed out.", Severity.Warning);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Submit error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isSaving = false;
+            StateHasChanged();
+        }
+    }
     // private async Task ScanAsync()
     // {
     //     try

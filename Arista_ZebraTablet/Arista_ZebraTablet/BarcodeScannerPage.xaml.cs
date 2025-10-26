@@ -77,4 +77,5 @@ public partial class BarcodeScannerPage : ContentPage
 
     private void OnClear(object sender, EventArgs e)
         => _scannerService.Clear();
+
 }
