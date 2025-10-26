@@ -15,14 +15,6 @@ namespace Arista_ZebraTablet.Services
             _http = http;
         }
 
-        public Uri BuildUri(string relative)
-        {
-            var rel = relative ?? string.Empty; // avoid dropping base path
-            return (_http.BaseAddress is not null)
-                ? new Uri(_http.BaseAddress, rel)
-                : new Uri(rel, UriKind.RelativeOrAbsolute);
-        }
-
         /// <summary>
         /// Gets the list of historical scanned barcodes.
         /// </summary>
@@ -48,9 +40,7 @@ namespace Arista_ZebraTablet.Services
         /// </returns>
         public async Task<ServiceResponse<int>> AddScannedBarcodesAsync(List<ScanBarcodeItemViewModel> items, CancellationToken ct = default)
         {
-            var url = "https://awase1penweb81.corp.jabil.org/Arista_ZebraTablet/api/ScannedBarcode";
-            var response = await _http.PostAsJsonAsync(url, items, ct);
-            //var response = await _http.PostAsJsonAsync("/api/ScannedBarcode", items, ct);
+            var response = await _http.PostAsJsonAsync("api/ScannedBarcode", items, ct);
             if (!response.IsSuccessStatusCode)
                 return ServiceResponse<int>.Fail($"HTTP {(int)response.StatusCode}");
 

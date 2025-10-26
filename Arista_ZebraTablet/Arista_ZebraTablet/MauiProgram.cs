@@ -42,11 +42,14 @@ namespace Arista_ZebraTablet
             //    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
             //});
 
+
+            builder.Services.AddTransient<HttpLoggingHandler>();
+
             builder.Services.AddHttpClient<IScannedBarcodeService, ScannedBarcodeService>(client =>
             {
-                // IMPORTANT: include your base path (earlier we aligned on /Arista_ZebraTablet/)
                 client.BaseAddress = new Uri("https://awase1penweb81.corp.jabil.org/Arista_ZebraTablet/");
             })
+            .AddHttpMessageHandler<HttpLoggingHandler>()
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
                 // On Android, MAUI will map this to Android’s native handler under the hood

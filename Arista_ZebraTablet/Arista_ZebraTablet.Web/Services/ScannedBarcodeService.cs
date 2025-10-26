@@ -3,19 +3,12 @@ using Arista_ZebraTablet.Shared.Application.ViewModels;
 using Arista_ZebraTablet.Shared.Data;
 using Arista_ZebraTablet.Shared.Services;
 using Microsoft.EntityFrameworkCore;
-using static System.Net.WebRequestMethods;
-
 namespace Arista_ZebraTablet.Web.Services
 {
     public class ScannedBarcodeService : BaseService, IScannedBarcodeService
     {
         public ScannedBarcodeService(ApplicationDbContext context) : base(context)
         {
-        }
-
-        public Uri BuildUri(string relative)
-        {
-            return new Uri("");
         }
 
         /// <summary>

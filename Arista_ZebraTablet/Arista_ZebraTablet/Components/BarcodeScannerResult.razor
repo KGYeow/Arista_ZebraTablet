@@ -48,7 +48,7 @@
                     Clear
                 </MudButton>
             </MudStack>
-
+            
             <!-- Scanned Barcode's Result Cards -->
             <MudStack Spacing="2" Style="flex: 1 1 auto; min-height: 0; overflow: auto;">
                 @if (!scanResultsService.Results.Any())
@@ -88,7 +88,6 @@
     protected override void OnInitialized()
     {
         // scanBarcodeItems = scanResultsService.Results;
-
         _sub = (_, __) => InvokeAsync(StateHasChanged);
         scanResultsService.Results.CollectionChanged += _sub;
     }
@@ -104,15 +103,13 @@
     /// </summary>
     private async Task SaveScannedResultConfirmationAsync()
     {
-        var requestUri = ScannedBarcodeService.BuildUri("api/ScannedBarcode");
-
         var message = scanResultsService.Results.Count == 1
             ? "Are you sure you want to submit this scanned barcode result?"
             : $"Are you sure you want to submit these {scanResultsService.Results.Count} scanned barcode results?";
 
         var parameters = new DialogParameters<ConfirmationDialog>
         {
-            { x => x.ContentText, message + "\n" + requestUri },
+            { x => x.ContentText, message },
             { x => x.SubmitBtnText, "Submit" },
             { x => x.DialogIconColor, Color.Info }
         };
@@ -189,7 +186,7 @@
     {
         if (isSaving || !scanResultsService.Results.Any())
             return;
-            showPopup = true;
+
         var parameters = new DialogParameters<ConfirmationDialog>
         {
             { x => x.ContentText, "Clear all scanned results?" },
