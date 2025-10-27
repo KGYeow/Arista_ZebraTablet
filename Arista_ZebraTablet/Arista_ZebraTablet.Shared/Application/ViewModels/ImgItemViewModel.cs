@@ -12,5 +12,5 @@ public partial class ImgItemViewModel
     public FileState State { get; set; }
     public string? ErrorMessage { get; set; }
 
-    public DetectResultViewModel? DetectResult { get; set; }
+    public DetectResultViewModel DetectResult { get; set; } = null!;
 }

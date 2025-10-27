@@ -58,10 +58,10 @@
         </MudPaper>
     </MudItem>
 
-    @if (factor == "Phone")
+    @if (factor != "Web")
     {
         <!-- Phone: Toolbar Section for Uploading Images -->
-        <MudPaper Class="pb-8 w-100 bg-transparent position-fixed bottom-0 start-50 translate-middle-x" Elevation="0">
+        <MudPaper Class="pb-8 w-100 bg-transparent position-fixed bottom-0 start-50 translate-middle-x" Elevation="0" Style="z-index: 9000">
             <MudStack Row Spacing="2" AlignItems="AlignItems.Center" Justify="Justify.Center">
                 <!-- Image File picker -->
                 <MudFileUpload
@@ -70,19 +70,26 @@
                     FilesChanged="UploadImageFilesAsync"
                 >
                     <ActivatorContent>
-                        <MudTooltip Text="Upload Images" Placement="Placement.Top" Delay="250" Arrow>
-                            <MudFab
-                                Label="@(isUploadingImg ? $"Uploading... {uploadImgProgress}%" : "Upload Images")"
-                                Color="Color.Primary"
-                                StartIcon="@Icons.Material.Outlined.FileUpload"
-                                Disabled="@isUploadingImg"
-                            />
-                        </MudTooltip>
+                        <MudFab
+                            Label="@(isUploadingImg ? $"Uploading... {uploadImgProgress}%" : (isSaving ? "Submitting Results..." : "Upload Images"))"
+                            Color="Color.Primary"
+                            StartIcon="@Icons.Material.Outlined.FileUpload"
+                            Disabled="@(isUploadingImg || isSaving)"
+                        />
                     </ActivatorContent>
                 </MudFileUpload>
 
                 <MudTooltip Text="Scan Barcodes" Placement="Placement.Top" Delay="250" Arrow>
                     <MudFab Color="Color.Primary" StartIcon="material-symbols-rounded/barcode_scanner" OnClick="OpenScanner"/>
+                </MudTooltip>
+
+                <MudTooltip Text="Submit" Placement="Placement.Top" Delay="250" Arrow>
+                    <MudFab
+                        Color="Color.Primary"
+                        StartIcon="material-symbols-rounded/database_upload"
+                        OnClick="SaveDetectedBarcodesConfirmationAsync"
+                        Disabled="@(!uploadedImageFiles.Any(f => f.DetectResult?.Barcodes?.Any() ?? false) || isSaving)"
+                    />
                 </MudTooltip>
 
                 <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="250" Arrow>
@@ -102,9 +109,24 @@
         <MudItem xs="12">
             <MudStack Row Spacing="2" Justify="Justify.FlexEnd">
                 <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="250" Arrow>
-                    <MudButton StartIcon="@Icons.Material.Rounded.ClearAll" Color="Color.Warning" Variant="Variant.Outlined" Disabled="@(!uploadedImageFiles.Any() || isBusy)" OnClick="ClearAllUploadedImagesConfirmationAsync">
-                        Clear All
-                    </MudButton>
+                    <MudIconButton
+                        Color="Color.Warning"
+                        Icon="@Icons.Material.Rounded.ClearAll"
+                        Variant="Variant.Outlined"
+                        Disabled="@(!uploadedImageFiles.Any() || isBusy)"
+                        OnClick="ClearAllUploadedImagesConfirmationAsync"
+                    />
+                </MudTooltip>
+
+                <MudTooltip Text="Submit" Placement="Placement.Top" Delay="250" Arrow>
+                    <MudIconButton
+                        Color="Color.Primary"
+                        Icon="material-symbols-rounded/database_upload"
+                        Variant="Variant.Filled"
+                        DropShadow="false"
+                        OnClick="SaveDetectedBarcodesConfirmationAsync"
+                        Disabled="@(!uploadedImageFiles.Any(f => f.DetectResult?.Barcodes?.Any() ?? false) || isSaving)"
+                    />
                 </MudTooltip>
 
                 <!-- Image File picker -->
@@ -114,11 +136,9 @@
                     FilesChanged="UploadImageFilesAsync"
                 >
                     <ActivatorContent>
-                        <MudTooltip Text="Upload Images" Placement="Placement.Top" Delay="250" Arrow>
-                            <MudButton StartIcon="@Icons.Material.Outlined.FileUpload" Color="Color.Primary" Variant="Variant.Filled" DropShadow="false" Disabled="@isUploadingImg">
-                                @(isUploadingImg ? $"Uploading... {uploadImgProgress}%" : "Upload Images")
-                            </MudButton>
-                        </MudTooltip>
+                        <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Outlined.FileUpload" Variant="Variant.Filled" DropShadow="false" Disabled="@isUploadingImg">
+                            @(isUploadingImg ? $"Uploading... {uploadImgProgress}%" : (isSaving ? "Submitting Results..." : "Upload Images"))
+                        </MudButton>
                     </ActivatorContent>
                 </MudFileUpload>
             </MudStack>
@@ -126,24 +146,29 @@
     }
 
     <MudItem xs="12">
-        <MudPaper Elevation="0">
-            <MudTabs Class="pa-3" ActiveTabClass="fw-bold" PanelClass="py-2" Elevation="0" ApplyEffectsToContainer Rounded Centered>
-                <MudTabPanel Text="Uploaded Images">
-                    <!-- Uploading Images Progress -->
-                    <MudCollapse Class="w-100" Expanded="isUploadingImg">
-                        <MudProgressLinear class="my-1" Color="Color.Info" Indeterminate Rounded/>
-                    </MudCollapse>
+        <MudCard Elevation="0">
+            <MudCardHeader Class="pb-0">
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Uploaded Images</MudText>
+                </CardHeaderContent>
+            </MudCardHeader>
+            <MudCardContent>
+                <!-- Uploading Images Progress -->
+                <MudCollapse Class="w-100" Expanded="isUploadingImg">
+                    <MudProgressLinear class="my-1" Color="Color.Info" Indeterminate Rounded />
+                </MudCollapse>
 
-                    <MudPaper Class="py-2" Elevation="0" MaxHeight="50vh" Style="overflow: auto">
-                        <!-- Uploaded Image File Preview Cards -->
-                        @if (uploadedImageFiles.Any())
-                        {
-                            <MudStack Class="h-100 px-2" Spacing="2">
-                                @foreach (var img in uploadedImageFiles)
-                                {
-                                    <!-- Image File Preview Card -->
-                                    <MudCard Elevation="0" Style="max-height:84px; min-height:72px;" Outlined>
-                                        <MudCardContent Class="d-flex flex-row align-center px-5 py-3">
+                <MudPaper Elevation="0" MaxHeight="50vh" Style="overflow: auto">
+                    <!-- Uploaded Image File Preview Cards -->
+                    @if (uploadedImageFiles.Any())
+                    {
+                        <MudStack Class="h-100 px-1" Spacing="2">
+                            @foreach (var img in uploadedImageFiles)
+                            {
+                                <!-- Image File Preview Card -->
+                                <MudCard Elevation="0" Outlined>
+                                    <MudCardContent Class="pa-3">
+                                        <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
                                             <!-- Thumbnail Image -->
                                             @if (!string.IsNullOrWhiteSpace(img.PreviewDataUrl))
                                             {
@@ -165,20 +190,26 @@
                                             }
 
                                             <!-- Image Information -->
-                                            <MudStack Spacing="1" Class="overflow-hidden">
+                                            <MudStack Spacing="0" Class="overflow-hidden">
                                                 <MudText Typo="Typo.subtitle2" Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                                     @img.FileName
                                                 </MudText>
 
-                                                <MudStack Row Spacing="1">
+                                                <MudStack Row Spacing="0">
                                                     <MudChip T="ImgItemViewModel" Color="@ImageFileStateColor(img.State)" Size="Size.Small">
                                                         @ImageFileStateLabel(img.State)
                                                     </MudChip>
 
-                                                    @if (img.State == FileState.Done && (img.DetectResult?.Barcodes?.Any() ?? false))
+                                                    @if (img.State == FileState.Done)
                                                     {
-                                                        <MudChip T="ImgItemViewModel" Color="Color.Success" Variant="Variant.Outlined">
-                                                            @($"{img.DetectResult!.Barcodes.Count} barcode(s) detected")
+                                                        <MudChip
+                                                            T="ImgItemViewModel"DD
+                                                            Color="Color.Primary"
+                                                            Size="Size.Small"
+                                                            Icon="@(IsExpanded(img.Id) && img.DetectResult.Barcodes.Count > 0 ? @Icons.Material.Rounded.Visibility : @Icons.Material.Rounded.VisibilityOff)"
+                                                            OnClick="@(() => ToggleResults(img.Id))"
+                                                        >
+                                                            @($"{img.DetectResult!.Barcodes.Count} barcode(s)")
                                                         </MudChip>
                                                     }
                                                 </MudStack>
@@ -201,97 +232,49 @@
                                                     OnClick="@(() => Remove(img.Id))"
                                                 />
                                             </MudTooltip>
-                                        </MudCardContent>
-                                    </MudCard>
-                                }
-                            </MudStack>
-                        }
-                        else
-                        {
-                            <MudStack Spacing="2" AlignItems="AlignItems.Center">
-                                <MudIcon Icon="material-symbols-rounded/hide_image" Class="text-muted" Style="font-size: 5rem;" />
-                                <MudText Typo="Typo.subtitle2" Class="text-muted">
-                                    No Uploaded Images
-                                </MudText>
-                            </MudStack>
-                        }
-                    </MudPaper>
-                </MudTabPanel>
+                                        </MudStack>
 
-                <MudTabPanel Text="Results">
-                    <MudPaper Class="py-2" Elevation="0" MaxHeight="50vh" Style="overflow: auto">
-                        <!-- Results -->
-                        @if (uploadedImageFiles.Any(s => s.DetectResult != null || s.State == FileState.Error))
-                        {
-                            @foreach (var img in uploadedImageFiles)
-                            {
-                                <MudDivider Class="my-3" />
+                                        @if (img.State == FileState.Error && !string.IsNullOrWhiteSpace(img.ErrorMessage))
+                                        {
+                                            <MudAlert Class="mt-2" Severity="Severity.Error" Dense NoIcon>
+                                                <MudText Typo="Typo.caption">This is an error message for testing purpose.</MudText>
+                                            </MudAlert>
+                                        }
 
-                                <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
-                                    <MudText Typo="Typo.subtitle1">@img.FileName</MudText>
-                                    <MudChip T="ScanBarcodeItemViewModel" Color="@ImageFileStateColor(img.State)" Variant="Variant.Outlined" Dense>
-                                        @ImageFileStateLabel(img.State)
-                                    </MudChip>
-                                </MudStack>
-
-                                @if (img.State == FileState.Error)
-                                {
-                                    <MudAlert Severity="Severity.Error" Class="mt-2">@img.ErrorMessage</MudAlert>
-                                }
-                                else if (img.DetectResult?.Barcodes?.Any() ?? false)
-                                {
-                                    @* <MudTable T="ScanBarcodeItemViewModel" Dense Hover Class="mt-2"> *@
-                                    <MudTable Items="img.DetectResult.Barcodes" Dense Hover Class="mt-2">
-                                        <HeaderContent>
-                                            <MudTh>#</MudTh>
-                                            <MudTh>Value</MudTh>
-                                            <MudTh>Category</MudTh>
-                                            <MudTh>Barcode Type</MudTh>
-                                            <MudTh>Time</MudTh>
-                                        </HeaderContent>
-                                        <ChildRowContent>
-                                            @for (int i = 0; i < img.DetectResult!.Barcodes.Count; i++)
+                                        <!-- Collapsible results inside the card -->
+                                        <MudCollapse Expanded="IsExpanded(img.Id) && img.DetectResult.Barcodes.Count > 0">
+                                            @if (img.State == FileState.Done)
                                             {
-                                                var b = img.DetectResult.Barcodes[i];
-                                                <MudTr>
-                                                    <MudTd>@(i + 1)</MudTd>
-                                                    <MudTd>@b.Value</MudTd>
-                                                    <MudTd>@b.Category</MudTd>
-                                                    <MudTd>@b.BarcodeType</MudTd>
-                                                    <MudTd>@b.ScannedTime.ToString("g")</MudTd>
-                                                </MudTr>
+                                                <MudSimpleTable Class="mt-3" Dense Bordered Hover Outlined>
+                                                    <tbody>
+                                                        @foreach (var detectedBarcode in img.DetectResult.Barcodes)
+                                                        {
+                                                            <tr>
+                                                                <td>@detectedBarcode.Category</td>
+                                                                <td>@detectedBarcode.Value</td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </MudSimpleTable>
                                             }
-                                        </ChildRowContent>
-                                    </MudTable>
-                                }
-                                else if (img.State == FileState.Done)
-                                {
-                                    <MudText Typo="Typo.body2" Class="text-secondary mt-1">No barcodes</MudText>
-                                }
+                                        </MudCollapse>
+                                    </MudCardContent>
+                                </MudCard>
                             }
-                        }
-                        else
-                        {
-                            <MudStack Spacing="2" AlignItems="AlignItems.Center">
-                                <MudIcon Icon="@Icons.Material.Rounded.SearchOff" Class="text-muted" Style="font-size: 5rem;" />
-                                <MudText Typo="Typo.subtitle2" Class="text-muted">
-                                    No Result Found
-                                </MudText>
-                            </MudStack>
-                        }
-                        <MudButton Variant="Variant.Filled"
-                                   Color="Color.Primary"
-                                   Size="Size.Small"
-                                   StartIcon="@Icons.Material.Outlined.CloudUpload"
-                                   Disabled="@(!uploadedImageFiles.Any(f => f.DetectResult?.Barcodes?.Any() ?? false) || isSaving)"
-                                   DropShadow="false"
-                                   OnClick="SaveDetectedBarcodesConfirmationAsync">
-                            @(isSaving ? "Submitting..." : "Submit")
-                        </MudButton>
-                    </MudPaper>
-                </MudTabPanel>
-            </MudTabs>
-        </MudPaper>
+                        </MudStack>
+                    }
+                    else
+                    {
+                        <MudStack Spacing="2" AlignItems="AlignItems.Center">
+                            <MudIcon Icon="material-symbols-rounded/hide_image" Class="text-muted" Style="font-size: 5rem;" />
+                            <MudText Typo="Typo.subtitle2" Class="text-muted">
+                                No Uploaded Images
+                            </MudText>
+                        </MudStack>
+                    }
+                </MudPaper>
+            </MudCardContent>
+        </MudCard>
     </MudItem>
 </MudGrid>
 
@@ -306,14 +289,31 @@
     private static readonly string[] allowedContentTypes = { "image/jpeg", "image/png", "image/heic", "image/heif" };
 
     private List<ImgItemViewModel> uploadedImageFiles { get; } = new();
+    private HashSet<Guid> expandedResults = new();
     private bool isBusy { get; set; }
     private bool isUploadingImg { get; set; }
     private int decodeProgress { get; set; }
     private int uploadImgProgress { get; set; }
     private bool isSaving;
 
+    private bool IsExpanded(Guid imgId) => expandedResults.Contains(imgId);
+    private void CollapseAll() => expandedResults.Clear();
 
     private async Task OpenScanner() => await Detector.NavigateToScannerAsync();
+
+    private void ToggleResults(Guid imgId)
+    {
+        if (!expandedResults.Add(imgId))
+            expandedResults.Remove(imgId);
+    }
+
+    // Optional bulk actions (handy if you add toolbar buttons)
+    private void ExpandAll()
+    {
+        expandedResults = uploadedImageFiles.Where(f => f.DetectResult?.Barcodes?.Any() == true)
+            .Select(f => f.Id)
+            .ToHashSet();
+    }
 
     // MULTI-FILE handler (preferred)
     private async Task UploadImageFilesAsync(IReadOnlyList<IBrowserFile> files)
@@ -455,6 +455,9 @@
                 };
 
                 item.State = FileState.Done;
+
+                if (!IsExpanded(item.Id) && item.DetectResult.Barcodes.Count > 0)
+                    ToggleResults(item.Id);
 
                 idx++;
                 decodeProgress = Math.Clamp(5 + (int)((double)idx / uploadedImageFiles.Count * 95), 5, 100);
