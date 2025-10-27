@@ -3,7 +3,7 @@
 @using Arista_ZebraTablet.Shared.Application.ViewModels
 @using Arista_ZebraTablet.Shared.Services
 
-@inject BarcodeScannerService scanResultsService
+@inject BarcodeDetectorService scanResultsService
 @inject IScannedBarcodeService ScannedBarcodeService
 @implements IDisposable
 
@@ -54,7 +54,7 @@
                 @if (!scanResultsService.Results.Any())
                 {
                     <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
-                        No scans yet. Aim the camera at a code.
+                        No scans yet. Aim the camera at a barcode.
                     </MudAlert>
                 }
                 else
@@ -88,18 +88,27 @@
 </MobileComponentLayout>
 
 @code {
-    // private ObservableCollection<ScanBarcodeItemViewModel> scanResultsService = new();
-    // private IReadOnlyList<ScanBarcodeItemViewModel> scanBarcodeItems = Array.Empty<ScanBarcodeItemViewModel>();
-    private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _sub;
 
+    // Event handler field for observing collection changes (nullable)
+    private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _sub;
+    // Flag to track whether a save operation is in progress
     private bool isSaving;
 
+    /// <summary>
+    /// This code makes a Blazor component automatically refresh when a data collection changes,
+    /// and cleans up the subscription when the component is destroyed.
+    /// </summary>
     protected override void OnInitialized()
     {
-        // scanBarcodeItems = scanResultsService.Results;
+        // Create an event handler that triggers a UI re-render on collection changes
         _sub = (_, __) => InvokeAsync(StateHasChanged);
+        // Subscribe the handler to the collection's change event
         scanResultsService.Results.CollectionChanged += _sub;
     }
+    /// <summary>
+    /// Called when the component is disposed (removed from the UI)
+    /// Unsubscribes from the collection change event to prevent memory leaks
+    /// </summary>
     public void Dispose()
     {
         if (_sub is not null)
@@ -212,10 +221,10 @@
     }
 
     private void DeleteBarcode(ScanBarcodeItemViewModel barcode)
-{
-    if (scanResultsService.Results.Contains(barcode))
     {
-        scanResultsService.Results.Remove(barcode);
+        if (scanResultsService.Results.Contains(barcode))
+        {
+            scanResultsService.Results.Remove(barcode);
+        }
     }
-}
 }

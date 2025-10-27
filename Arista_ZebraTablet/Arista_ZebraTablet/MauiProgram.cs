@@ -23,13 +23,13 @@ namespace Arista_ZebraTablet
                 });
 
             // Add device-specific services used by the Arista_ZebraTablet.Shared project
-            builder.Services.AddSingleton<ScanResultPage>();
-            builder.Services.AddSingleton<UploadBarcodeDecoderService>();
+            //builder.Services.AddSingleton<ScanResultPage>();
+            //builder.Services.AddSingleton<UploadBarcodeDecoderService>();
             builder.Services.AddSingleton<IFormFactorService, FormFactorService>();
             //builder.Services.AddScoped<IBarcodeScannerService, BarcodeScannerService>();
-            builder.Services.AddSingleton<IBarcodeScannerService>(sp => sp.GetRequiredService<BarcodeScannerService>());
+            builder.Services.AddSingleton<IBarcodeDetectorService>(sp => sp.GetRequiredService<BarcodeDetectorService>());
             builder.Services.AddScoped<IScannedBarcodeService, ScannedBarcodeService>();
-            builder.Services.AddSingleton<UploadBarcodeDecoderService>();
+            //builder.Services.AddSingleton<UploadBarcodeDecoderService>();
             //builder.Services.AddSingleton<IBarcodeScannerService, BarcodeScannerService>();
             //builder.Services.AddSingleton<IScannedBarcodeService, ScannedBarcodeService>();
 
@@ -43,13 +43,12 @@ namespace Arista_ZebraTablet
             //});
 
 
-            builder.Services.AddTransient<HttpLoggingHandler>();
+            
 
             builder.Services.AddHttpClient<IScannedBarcodeService, ScannedBarcodeService>(client =>
             {
                 client.BaseAddress = new Uri("https://awase1penweb81.corp.jabil.org/Arista_ZebraTablet/");
             })
-            .AddHttpMessageHandler<HttpLoggingHandler>()
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
                 // On Android, MAUI will map this to Android’s native handler under the hood
@@ -143,8 +142,8 @@ namespace Arista_ZebraTablet
                 return col;
             }
 
-            builder.Services.AddTransient<BarcodeScannerPage>();
-            builder.Services.AddSingleton<BarcodeScannerService>();
+            builder.Services.AddTransient<LiveBarcodeScannerPage>();
+            builder.Services.AddSingleton<BarcodeDetectorService>();
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices(config =>
