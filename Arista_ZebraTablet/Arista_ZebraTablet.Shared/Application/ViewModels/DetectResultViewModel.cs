@@ -1,6 +1,4 @@
-﻿//using Arista_ZebraTablet.Shared.Application.DTOs;
-
-namespace Arista_ZebraTablet.Shared.Application.ViewModels;
+﻿namespace Arista_ZebraTablet.Shared.Application.ViewModels;
 
 public sealed class DetectResultViewModel
 {
