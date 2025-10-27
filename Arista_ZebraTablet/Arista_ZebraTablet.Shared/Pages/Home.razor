@@ -4,9 +4,9 @@
 @using Arista_ZebraTablet.Shared.Application.ViewModels
 
 @inject IFormFactorService FormFactor
-@inject IBarcodeScannerService Scanner
+@inject IBarcodeDetectorService Detector
 @inject IScannedBarcodeService ScannedBarcodeService
-@inject UploadBarcodeDecoderService DecoderService
+@* @inject UploadBarcodeDecoderService DecoderService *@
 
 <PageTitle>Home | @AppConstant.AppTitle</PageTitle>
 
@@ -308,7 +308,7 @@
     private bool IsExpanded(Guid imgId) => expandedResults.Contains(imgId);
     private void CollapseAll() => expandedResults.Clear();
 
-    private async Task OpenScanner() => await Scanner.NavigateToScannerAsync();
+    private async Task OpenScanner() => await Detector.NavigateToScannerAsync();
 
     private void ToggleResults(Guid imgId)
     {
@@ -456,7 +456,7 @@
                 await Task.Delay(100); // Optional delay for UI feedback
 
                 // Use your decoder service
-                var results = DecoderService.DecodeFromImage(item.Bytes);
+                var results = Detector.DecodeFromImage(item.Bytes);
 
                 item.DetectResult = new DetectResultViewModel
                 {

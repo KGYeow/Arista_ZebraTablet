@@ -88,16 +88,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="BarcodeScannerPage.xaml.cs">
-      <DependentUpon>BarcodeScannerPage.xaml</DependentUpon>
+    <Compile Update="LiveBarcodeScannerPage.xaml.cs">
+      <DependentUpon>LiveBarcodeScannerPage.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <MauiXaml Update="BarcodeScannerPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </MauiXaml>
-    <MauiXaml Update="ScanResultPage.xaml">
+    <MauiXaml Update="LiveBarcodeScannerPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </MauiXaml>
   </ItemGroup>
