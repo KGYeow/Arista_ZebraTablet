@@ -9,75 +9,73 @@
 
 <MobileComponentLayout>
     <Body>
-        @* <MudCard Class="bg-transparent" Elevation="0">
-            <MudCardHeader Class="p-0 align-items-center">
-                <CardHeaderContent>
-                    <!-- Title + Live Scanned Result Count -->
-                    <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
-                        <MudText Typo="Typo.h6">Scanned Results</MudText>
+        <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
+            <!-- Title + Live Scanned Result Count -->
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+                <MudText Typo="Typo.h6">Scanned Results</MudText>
 
-                        @if (scanResultsService.Results.Count > 0)
-                        {
-                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
-                                @scanResultsService.Results.Count
-                            </MudChip>
-                        }
-                    </MudStack>
-                </CardHeaderContent>
-                <CardHeaderActions>
-                    <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                        <!-- Submit Button -->
-                        <MudTooltip Text="Submit" Placement="Placement.Top" Delay="250" Arrow>
-                            <MudIconButton
-                                Color="Color.Primary"
-                                Icon="material-symbols-rounded/database_upload"
-                                Variant="Variant.Filled"
-                                Size="Size.Small"
-                                Disabled="@(!scanResultsService.Results.Any() || isSaving)"
-                                DropShadow="false"
-                                OnClick="SaveScannedResultConfirmationAsync"
-                            />
-                        </MudTooltip>
+                @if (scanResultsService.Results.Count > 0)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
+                        @scanResultsService.Results.Count
+                    </MudChip>
+                }
+            </MudStack>
 
-                        <!-- Clear Button -->
-                        <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="250" Arrow>
-                            <MudIconButton
-                                Color="Color.Warning"
-                                Icon="@Icons.Material.Rounded.ClearAll"
-                                Variant="Variant.Outlined"
-                                Size="Size.Small"
-                                DropShadow="false"
-                                Disabled="@(!scanResultsService.Results.Any() || isSaving)"
-                                OnClick="ClearScannedResultConfirmationAsync"
-                            />
-                        </MudTooltip>
-                    </MudStack>
-                </CardHeaderActions>
-            </MudCardHeader>
-            <MudCardContent Class="px-0">
-                <!-- Scanned Barcode's Result Cards -->
-                <MudStack Spacing="2" Style="flex: 1 1 auto; min-height: 0; overflow: auto;">
-                    @if (!scanResultsService.Results.Any())
+            <MudSpacer/>
+
+            <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                <!-- Submit Button -->
+                <MudTooltip Text="Submit" Placement="Placement.Left" Delay="250" Arrow>
+                    <MudIconButton
+                        Color="Color.Primary"
+                        Icon="material-symbols-rounded/database_upload"
+                        Variant="Variant.Filled"
+                        Size="Size.Small"
+                        Disabled="@(!scanResultsService.Results.Any() || isSaving)"
+                        DropShadow="false"
+                        OnClick="SaveScannedResultConfirmationAsync"
+                    />
+                </MudTooltip>
+
+                <!-- Clear Button -->
+                <MudTooltip Text="Clear All" Placement="Placement.Left" Delay="250" Arrow>
+                    <MudIconButton
+                        Color="Color.Warning"
+                        Icon="@Icons.Material.Rounded.ClearAll"
+                        Variant="Variant.Outlined"
+                        Size="Size.Small"
+                        DropShadow="false"
+                        Disabled="@(!scanResultsService.Results.Any() || isSaving)"
+                        OnClick="ClearScannedResultConfirmationAsync"
+                    />
+                </MudTooltip>
+            </MudStack>
+        </MudStack>
+        <MudItem>
+            <!-- Scanned Barcode's Result Cards -->
+            <MudStack Spacing="2">
+                @if (!scanResultsService.Results.Any())
+                {
+                    <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
+                        No scans yet. Aim the camera at a code.
+                    </MudAlert>
+                }
+                else
+                {
+                    @foreach (var barcodeItem in scanResultsService.Results)
                     {
-                        <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
-                            No scans yet. Aim the camera at a code.
-                        </MudAlert>
-                    }
-                    else
-                    {
-                        @foreach (var barcodeItem in scanResultsService.Results)
-                        {
-                            <MudCard Elevation="0" Outlined>
-                                <MudCardContent Class="d-flex gap-2">
-                                    <MudStack AlignItems="AlignItems.Center">
-                                        <MudText Typo="Typo.caption">@barcodeItem.ScannedTime.ToLocalTime().ToString("hh:mm:ss tt")</MudText>
-                                        <MudSpacer />
-                                        <MudText Typo="Typo.caption">@barcodeItem.Category</MudText>
-                                        <MudText Typo="Typo.body1" Class="fw-bold">@barcodeItem.Value</MudText>
-                                    </MudStack>
+                        <MudPaper Class="pa-3" Elevation="0" Outlined>
+                            <MudStack Row Spacing="2">
+                                <MudStack>
+                                    <MudText Typo="Typo.caption" Class="pb-2">@barcodeItem.ScannedTime.ToLocalTime().ToString("hh:mm:ss tt")</MudText>
+                                    <MudText Typo="Typo.subtitle2" GutterBottom="false">@barcodeItem.Category</MudText>
+                                    <MudText Typo="Typo.body1" Class="fw-bold" GutterBottom="false">@barcodeItem.Value</MudText>
+                                </MudStack>
 
-                                    <MudSpacer />
+                                <MudSpacer />
 
+                                <MudStack Row Spacing="2" AlignItems="AlignItems.Center">
                                     <!-- Edit Scanned Result Button -->
                                     <MudTooltip Text="Edit" Placement="Placement.Left" Delay="250" Arrow>
                                         <MudIconButton
@@ -95,91 +93,16 @@
                                             Color="Color.Error"
                                             Size="Size.Small"
                                             Disabled="@isSaving"
-                                            OnClick="@(() => DeleteBarcode(barcodeItem))" 
+                                            OnClick="@(() => DeleteBarcode(barcodeItem))"
                                         />
                                     </MudTooltip>
-                                </MudCardContent>
-                            </MudCard>
-                        }
-                    }
-                </MudStack>
-            </MudCardContent>
-        </MudCard> *@
-        <MudStack Spacing="3">
-            <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mb-2">
-                <!-- Title + Live Scanned Result Count -->
-                <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
-                    <MudText Typo="Typo.h6">Scanned Results</MudText>
-                    
-                    @if (scanResultsService.Results.Count > 0)
-                    {
-                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
-                            @scanResultsService.Results.Count
-                        </MudChip>
-                    }
-                </MudStack>
-                <MudSpacer />
-
-                <!-- Submit Button -->
-                <MudButton
-                    Variant="Variant.Filled"
-                    Color="Color.Primary"
-                    Size="Size.Small"
-                    StartIcon="@Icons.Material.Outlined.CloudUpload"
-                    Disabled="@(!scanResultsService.Results.Any() || isSaving)"
-                    DropShadow="false"
-                    OnClick="SaveScannedResultConfirmationAsync"
-                >
-                    @(isSaving ? "Submitting..." : "Submit")
-                </MudButton>
-
-                <!-- Clear Button -->
-                <MudButton
-                    Variant="Variant.Outlined"
-                    Color="Color.Error"
-                    Size="Size.Small"
-                           Disabled="@(!scanResultsService.Results.Any() || isSaving)"
-                    OnClick="ClearScannedResultConfirmationAsync"
-                >
-                    Clear
-                </MudButton>
-            </MudStack>
-            
-            <!-- Scanned Barcode's Result Cards -->
-            <MudStack Spacing="2" Style="flex: 1 1 auto; min-height: 0; overflow: auto;">
-                @if (!scanResultsService.Results.Any())
-                {
-                    <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
-                        No scans yet. Aim the camera at a code.
-                    </MudAlert>
-                }
-                else
-                {
-                    @foreach (var barcodeItem in scanResultsService.Results)
-                    {
-                        <MudCard Elevation="0" Outlined>
-                            <MudCardContent Class="d-flex flex-column">
-                                <MudStack Row AlignItems="AlignItems.Center">
-                                    <MudText Typo="Typo.caption">@barcodeItem.Category</MudText>
-                                    <MudSpacer />
-                                    <MudText Typo="Typo.caption">@barcodeItem.ScannedTime.ToLocalTime().ToString("hh:mm:ss tt")</MudText>
                                 </MudStack>
-                                <MudStack Row AlignItems="AlignItems.Center">
-                                    <MudText Typo="Typo.body1" Class="fw-bold">@barcodeItem.Value</MudText>
-                                    <MudSpacer />
-                                    <MudIconButton
-                                        Icon="@Icons.Material.Filled.Delete"
-                                        Color="Color.Error"
-                                        Size="Size.Small"
-                                        Disabled="@isSaving"
-                                        OnClick="@(() => DeleteBarcode(barcodeItem))" />
-                                    </MudStack>
-                            </MudCardContent>   
-                        </MudCard>
+                            </MudStack>
+                        </MudPaper>
                     }
                 }
             </MudStack>
-        </MudStack>
+        </MudItem>
     </Body>
 </MobileComponentLayout>
 
