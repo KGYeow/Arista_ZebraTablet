@@ -6,7 +6,6 @@
 @inject IFormFactorService FormFactor
 @inject IBarcodeDetectorService Detector
 @inject IScannedBarcodeService ScannedBarcodeService
-@* @inject UploadBarcodeDecoderService DecoderService *@
 
 <PageTitle>Home | @AppConstant.AppTitle</PageTitle>
 
@@ -14,6 +13,9 @@
     <MudItem xs="12">
         <MudPaper Class="pa-5" Elevation="0">
             <MudStack Spacing="3" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <!-- ===============================
+                     🔹 Instruction Section
+                     =============================== -->
                 <MudStack Spacing="2" AlignItems="AlignItems.Center">
                     <MudText Typo="Typo.h5" Class="fw-bold">Scan Barcodes</MudText>
                     <MudText Typo="Typo.body2" Class="text-center">

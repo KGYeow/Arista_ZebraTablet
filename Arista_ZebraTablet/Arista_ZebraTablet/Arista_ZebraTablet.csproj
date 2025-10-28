@@ -61,6 +61,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AndroidResource Remove="bin\**" />
+    <AndroidResource Remove="obj\**" />
+    <Compile Remove="bin\**" />
+    <Compile Remove="obj\**" />
+    <Content Remove="bin\**" />
+    <Content Remove="obj\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <MauiXaml Remove="bin\**" />
+    <MauiXaml Remove="obj\**" />
+    <None Remove="bin\**" />
+    <None Remove="obj\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Resources\raw\Jabil Enterprise KF ICA 1.crt" />
     <Content Include="Resources\raw\Jabil Enterprise KF RCA 1.crt" />
   </ItemGroup>

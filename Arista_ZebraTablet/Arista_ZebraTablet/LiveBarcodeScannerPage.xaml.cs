@@ -24,6 +24,18 @@ public partial class LiveBarcodeScannerPage : ContentPage
     {
         InitializeComponent();            // Load XAML UI
         _scannerService = scannerService; // Assign service for storing results
+
+        CameraView.Options = new BarcodeReaderOptions
+        {
+            AutoRotate = true,
+            Multiple = true,
+            TryHarder = true,
+            Formats = BarcodeFormats.All
+        };
+
+        // Trigger autofocus when the page is initialized
+        CameraView.AutoFocus(); // This calls the AutoFocus method internally
+
     }
 
     /// ===============================
@@ -34,6 +46,18 @@ public partial class LiveBarcodeScannerPage : ContentPage
         InitializeComponent();              // Load XAML UI
         _singleShotTcs = singleShotTcs;     // Assign task completion source for returning result
         _scannerService = scannerService;   // Assign service for storing results
+
+        CameraView.Options = new BarcodeReaderOptions
+        {
+            AutoRotate = true,
+            Multiple = true,
+            TryHarder = true,
+            Formats = BarcodeFormats.All
+        };
+
+        // Trigger autofocus when the page is initialized
+        CameraView.AutoFocus(); // This calls the AutoFocus method internally
+
     }
 
     /// ===============================
