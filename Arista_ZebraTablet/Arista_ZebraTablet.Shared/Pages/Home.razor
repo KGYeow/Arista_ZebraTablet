@@ -10,6 +10,20 @@
 <PageTitle>Home | @AppConstant.AppTitle</PageTitle>
 
 <MudGrid Spacing="4">
+    <!-- Hide Barcode Mode on sm++ screen -->
+    <MudHidden Breakpoint="Breakpoint.SmAndUp">
+        <MudItem xs="12">
+            <MudCard Elevation="0">
+                <MudCardContent Class="p-2">
+                    <MudToggleGroup T="BarcodeMode" @bind-Value="barcodeMode" SelectionMode="SelectionMode.SingleSelection" Size="Size.Small" Outlined="false">
+                        <MudToggleItem Text="Standard" Value="BarcodeMode.Standard" />
+                        <MudToggleItem Text="Unique" Value="BarcodeMode.Unique" />
+                    </MudToggleGroup>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudHidden>
+
     <MudItem xs="12">
         <MudPaper Class="pa-5" Elevation="0">
             <MudStack Spacing="3" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
@@ -60,83 +74,77 @@
         </MudPaper>
     </MudItem>
 
-    @if (factor != "Web")
-    {
-        <!-- Phone: Toolbar Section for Uploading Images -->
+    <!-- Toolbar Section for Uploading Images (Hide on sm++ screen) -->
+    <MudHidden Breakpoint="Breakpoint.SmAndUp">
         <MudPaper Class="pb-8 w-100 bg-transparent position-fixed bottom-0 start-50 translate-middle-x" Elevation="0" Style="z-index: 9000">
             <MudStack Row Spacing="2" AlignItems="AlignItems.Center" Justify="Justify.Center">
                 <!-- Image File picker -->
-                <MudFileUpload
-                    T="IReadOnlyList<IBrowserFile>"
-                    Accept=".jpg,.jpeg,.png,.heic,.heif,image/*"
-                    FilesChanged="UploadImageFilesAsync"
-                >
+                <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                               Accept=".jpg,.jpeg,.png,.heic,.heif,image/*"
+                               FilesChanged="UploadImageFilesAsync"
+                               MaximumFileCount="50">
                     <ActivatorContent>
-                        <MudFab
-                            Label="@(isUploadingImg ? $"Uploading... {uploadImgProgress}%" : (isSaving ? "Submitting Results..." : "Upload Images"))"
-                            Color="Color.Primary"
-                            StartIcon="@Icons.Material.Outlined.FileUpload"
-                            Disabled="@(isUploadingImg || isSaving)"
-                        />
+                        <MudFab Label="@(isUploadingImg ? $"Uploading... {uploadImgProgress}%" : (isSaving ? "Submitting Results..." : "Upload Images"))"
+                                Color="Color.Primary"
+                                StartIcon="@Icons.Material.Outlined.FileUpload"
+                                Disabled="@(isUploadingImg || isSaving)" />
                     </ActivatorContent>
                 </MudFileUpload>
 
                 <MudTooltip Text="Scan Barcodes" Placement="Placement.Top" Delay="250" Arrow>
-                    <MudFab Color="Color.Primary" StartIcon="material-symbols-rounded/barcode_scanner" OnClick="OpenScanner"/>
+                    <MudFab Color="Color.Primary" StartIcon="material-symbols-rounded/barcode_scanner" OnClick="OpenScanner" />
                 </MudTooltip>
 
                 <MudTooltip Text="Submit" Placement="Placement.Top" Delay="250" Arrow>
-                    <MudFab
-                        Color="Color.Primary"
-                        StartIcon="material-symbols-rounded/database_upload"
-                        OnClick="SaveDetectedBarcodesConfirmationAsync"
-                        Disabled="@(!uploadedImageFiles.Any(f => f.DetectResult?.Barcodes?.Any() ?? false) || isSaving)"
-                    />
+                    <MudFab Color="Color.Primary"
+                            StartIcon="material-symbols-rounded/database_upload"
+                            OnClick="SaveDetectedBarcodesConfirmationAsync"
+                            Disabled="@(!uploadedImageFiles.Any(f => f.DetectResult?.Barcodes?.Any() ?? false) || isSaving)" />
                 </MudTooltip>
 
                 <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="250" Arrow>
-                    <MudFab
-                        Color="Color.Warning"
-                        StartIcon="@Icons.Material.Rounded.ClearAll"
-                        Disabled="@(!uploadedImageFiles.Any() || isBusy)"
-                        OnClick="ClearAllUploadedImagesConfirmationAsync"
-                    />
+                    <MudFab Color="Color.Warning"
+                            StartIcon="@Icons.Material.Rounded.ClearAll"
+                            Disabled="@(!uploadedImageFiles.Any() || isBusy)"
+                            OnClick="ClearAllUploadedImagesConfirmationAsync" />
                 </MudTooltip>
             </MudStack>
         </MudPaper>
-    }
-    else
-    {
-        <!-- Web: Toolbar Section for Uploading Images -->
+    </MudHidden>
+
+    <!-- Toolbar Section for Uploading Images (Show on xs++ screen) -->
+    <MudHidden Breakpoint="Breakpoint.Xs">
         <MudItem xs="12">
             <MudStack Row Spacing="2" Justify="Justify.FlexEnd">
+                <MudToggleGroup T="BarcodeMode" @bind-Value="barcodeMode" SelectionMode="SelectionMode.SingleSelection" Class="">
+                    <MudToggleItem Text="Standard" Value="BarcodeMode.Standard" Class="px-3"/>
+                    <MudToggleItem Text="Unique" Value="BarcodeMode.Unique" />
+                </MudToggleGroup>
+
+                <MudSpacer />
+
                 <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="250" Arrow>
-                    <MudIconButton
-                        Color="Color.Warning"
-                        Icon="@Icons.Material.Rounded.ClearAll"
-                        Variant="Variant.Outlined"
-                        Disabled="@(!uploadedImageFiles.Any() || isBusy)"
-                        OnClick="ClearAllUploadedImagesConfirmationAsync"
-                    />
+                    <MudIconButton Color="Color.Warning"
+                                   Icon="@Icons.Material.Rounded.ClearAll"
+                                   Variant="Variant.Outlined"
+                                   Disabled="@(!uploadedImageFiles.Any() || isBusy)"
+                                   OnClick="ClearAllUploadedImagesConfirmationAsync" />
                 </MudTooltip>
 
                 <MudTooltip Text="Submit" Placement="Placement.Top" Delay="250" Arrow>
-                    <MudIconButton
-                        Color="Color.Primary"
-                        Icon="material-symbols-rounded/database_upload"
-                        Variant="Variant.Filled"
-                        DropShadow="false"
-                        OnClick="SaveDetectedBarcodesConfirmationAsync"
-                        Disabled="@(!uploadedImageFiles.Any(f => f.DetectResult?.Barcodes?.Any() ?? false) || isSaving)"
-                    />
+                    <MudIconButton Color="Color.Primary"
+                                   Icon="material-symbols-rounded/database_upload"
+                                   Variant="Variant.Filled"
+                                   DropShadow="false"
+                                   OnClick="SaveDetectedBarcodesConfirmationAsync"
+                                   Disabled="@(!uploadedImageFiles.Any(f => f.DetectResult?.Barcodes?.Any() ?? false) || isSaving)" />
                 </MudTooltip>
 
                 <!-- Image File picker -->
-                <MudFileUpload
-                    T="IReadOnlyList<IBrowserFile>"
-                    Accept=".jpg,.jpeg,.png,.heic,.heif,image/*"
-                    FilesChanged="UploadImageFilesAsync"
-                >
+                <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                               Accept=".jpg,.jpeg,.png,.heic,.heif,image/*"
+                               FilesChanged="UploadImageFilesAsync"
+                               MaximumFileCount="50">
                     <ActivatorContent>
                         <MudButton Color="Color.Primary" StartIcon="@Icons.Material.Outlined.FileUpload" Variant="Variant.Filled" DropShadow="false" Disabled="@isUploadingImg">
                             @(isUploadingImg ? $"Uploading... {uploadImgProgress}%" : (isSaving ? "Submitting Results..." : "Upload Images"))
@@ -145,7 +153,7 @@
                 </MudFileUpload>
             </MudStack>
         </MudItem>
-    }
+    </MudHidden>
 
     <MudItem xs="12">
         <MudCard Elevation="0">
@@ -292,6 +300,7 @@
 
     private List<ImgItemViewModel> uploadedImageFiles { get; } = new();
     private HashSet<Guid> expandedResults = new();
+    private BarcodeMode barcodeMode = BarcodeMode.Standard;
     private bool isBusy { get; set; }
     private bool isUploadingImg { get; set; }
     private int decodeProgress { get; set; }

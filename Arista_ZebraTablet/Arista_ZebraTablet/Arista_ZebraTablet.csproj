@@ -47,7 +47,7 @@
     <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
 
     <!-- Splash Screen -->
-    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#512BD4" BaseSize="128,128" />
+    <MauiSplashScreen Include="Resources\Splash\jabil_white_sky_blue_rgb.png" Color="#003865"/>
 
     <!-- Images -->
     <MauiImage Include="Resources\Images\*" />
@@ -78,6 +78,10 @@
   <ItemGroup>
     <Content Include="Resources\raw\Jabil Enterprise KF ICA 1.crt" />
     <Content Include="Resources\raw\Jabil Enterprise KF RCA 1.crt" />
+    <Content Include="Resources\Splash\jabil_white_sky_blue_rgb.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
