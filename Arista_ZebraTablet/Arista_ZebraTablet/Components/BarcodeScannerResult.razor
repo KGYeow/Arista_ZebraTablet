@@ -67,9 +67,8 @@
                     {
                         <MudPaper Class="pa-3" Elevation="0" Outlined>
                             <MudStack Row Spacing="2">
-                                <MudStack>
-                                    <MudText Typo="Typo.caption" Class="pb-2">@barcodeItem.ScannedTime.ToLocalTime().ToString("hh:mm:ss tt")</MudText>
-                                    <MudText Typo="Typo.subtitle2" GutterBottom="false">@barcodeItem.Category</MudText>
+                                <MudStack Spacing="2">
+                                    <MudText Typo="Typo.caption" GutterBottom="false">@barcodeItem.Category</MudText>
                                     <MudText Typo="Typo.body1" Class="fw-bold" GutterBottom="false">@barcodeItem.Value</MudText>
                                 </MudStack>
 
