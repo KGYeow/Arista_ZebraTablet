@@ -16,14 +16,14 @@
     <!-- Topbar -->
     <Topbar Title="Batch Barcode Scanner">
         <LeftContent>
-            @if (factor != "Phone")
+            @if (factor == "Web")
             {
                 <MudToggleIconButton Icon="@Icons.Material.Rounded.Menu" ToggledIcon="@Icons.Material.Rounded.MenuOpen" Color="Color.Inherit" Edge="Edge.Start" @bind-Toggled="drawerOpen" />
             }
         </LeftContent>
     </Topbar>
 
-    @if (factor != "Phone")
+    @if (factor == "Web")
     {
         <!-- Sidebar -->
         <MudDrawer Variant="DrawerVariant.Responsive" ClipMode="DrawerClipMode.Never" @bind-Open="@drawerOpen">
@@ -32,14 +32,14 @@
     }
 
     <!-- Main Content -->
-    <MudMainContent Class="min-vh-100">
+    <MudMainContent Class="min-vh-100 d-flex">
         <!-- Page Content -->
         <MudContainer Class="py-6" MaxWidth="MaxWidth.Large">
             @Body
         </MudContainer>
     </MudMainContent>
 
-    @if (factor != "Phone")
+    @if (factor == "Web")
     {
         <!-- Footer -->
         <Footer />
