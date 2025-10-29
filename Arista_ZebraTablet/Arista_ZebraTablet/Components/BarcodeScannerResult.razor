@@ -143,7 +143,7 @@
     {
         var parameters = new DialogParameters<CategoryEditDialog>
         {
-            { x => x.BarcodeItem, barcodeItem },
+            { x => x.BarcodeItem, barcodeItem }
         };
         var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
         var dialog = await DialogService.ShowAsync<CategoryEditDialog>("Edit Category", parameters, options);
@@ -201,7 +201,7 @@
         isSaving = true;
         try
         {
-            Map to a new list to avoid collection mutation during async call
+            // Map to a new list to avoid collection mutation during async call
             var barcodeItems = scanResultsService.Results.ToList();
             if (barcodeItems.Count == 0)
             {
@@ -209,7 +209,7 @@
                 return;
             }
 
-            Short timeout to keep UX snappy on mobile
+            // Short timeout to keep UX snappy on mobile
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 
             var response = await ScannedBarcodeService.AddScannedBarcodesAsync(barcodeItems, cts.Token);

@@ -8,18 +8,18 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <!-- Topbar -->
-    <Topbar Title="Batch Barcode Scanner">
-        <LeftContent>
-            @if (factor == "Web")
-            {
-                <MudToggleIconButton Icon="@Icons.Material.Rounded.Menu" ToggledIcon="@Icons.Material.Rounded.MenuOpen" Color="Color.Inherit" Edge="Edge.Start" @bind-Toggled="drawerOpen" />
-            }
-        </LeftContent>
-    </Topbar>
-
     @if (factor == "Web")
     {
+        <!-- Topbar -->
+        <Topbar Title="Batch Barcode Scanner">
+            <LeftContent>
+                @if (factor == "Web")
+                {
+                    <MudToggleIconButton Icon="@Icons.Material.Rounded.Menu" ToggledIcon="@Icons.Material.Rounded.MenuOpen" Color="Color.Inherit" Edge="Edge.Start" @bind-Toggled="drawerOpen" />
+                }
+            </LeftContent>
+        </Topbar>
+
         <!-- Sidebar -->
         <MudDrawer Variant="DrawerVariant.Responsive" ClipMode="DrawerClipMode.Never" @bind-Open="@drawerOpen">
             <NavMenu DrawerOpen="drawerOpen" />
@@ -37,9 +37,7 @@
     <!-- Main Content -->
     <MudMainContent Class="vh-100 d-flex flex-column overflow-hidden">
         <!-- Page Content -->
-        <MudContainer Class="py-6 d-flex flex-column gap-3" MaxWidth="MaxWidth.Large" Style="flex: 1 1 auto; min-height: 0;">
-            @Body
-        </MudContainer>
+        @Body
     </MudMainContent>
 
     @* <!-- Footer -->
