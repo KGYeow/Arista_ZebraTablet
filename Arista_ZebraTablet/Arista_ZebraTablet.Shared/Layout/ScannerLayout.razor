@@ -2,9 +2,14 @@
 
 @inject IFormFactorService FormFactor
 
+@* Required *@
 <MudThemeProvider Theme="MyCustomTheme" />
 <MudPopoverProvider />
+
+@* Needed for dialogs *@
 <MudDialogProvider />
+
+@* Needed for snackbars *@
 <MudSnackbarProvider />
 
 <MudLayout>
@@ -27,23 +32,12 @@
     }
 
     <!-- Main Content -->
-    @* <MudMainContent Class="min-vh-100 d-flex">
-        <!-- Page Content -->
-        <MudContainer Class="py-6" MaxWidth="MaxWidth.Large">
-            @Body
-        </MudContainer>
-    </MudMainContent> *@
-
-    <!-- Main Content -->
     <MudMainContent Class="vh-100 d-flex flex-column overflow-hidden">
         <!-- Page Content -->
-        <MudContainer Class="py-6 d-flex flex-column gap-3" MaxWidth="MaxWidth.Large" Style="flex: 1 1 auto; min-height: 0;">
+        <MudContainer Class="py-6 d-flex flex-column" MaxWidth="MaxWidth.Large" Style="flex: 1 1 auto; min-height: 0;">
             @Body
         </MudContainer>
     </MudMainContent>
-
-    @* <!-- Footer -->
-    <Footer /> *@
 </MudLayout>
 
 @code {

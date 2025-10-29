@@ -2,6 +2,7 @@
 
 public sealed class ScanBarcodeItemViewModel
 {
+    public Guid Id { get; set; }
     public string Value { get; set; } = null!;
     public string Category { get; set; } = null!;
     public DateTime ScannedTime { get; set; }

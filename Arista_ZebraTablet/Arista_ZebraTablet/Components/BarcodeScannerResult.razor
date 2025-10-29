@@ -47,7 +47,7 @@
                         Size="Size.Small"
                         DropShadow="false"
                         Disabled="@(!scanResultsService.Results.Any() || isSaving)"
-                        OnClick="ClearScannedResultConfirmationAsync"
+                        OnClick="ClearAllScannedResultConfirmationAsync"
                     />
                 </MudTooltip>
             </MudStack>
@@ -66,15 +66,15 @@
                     @foreach (var barcodeItem in scanResultsService.Results)
                     {
                         <MudPaper Class="pa-3" Elevation="0" Outlined>
-                            <MudStack Row Spacing="2">
-                                <MudStack Spacing="2">
+                            <MudStack Row Spacing="3">
+                                <MudStack Spacing="0">
                                     <MudText Typo="Typo.caption" GutterBottom="false">@barcodeItem.Category</MudText>
                                     <MudText Typo="Typo.body1" Class="fw-bold" GutterBottom="false">@barcodeItem.Value</MudText>
                                 </MudStack>
 
                                 <MudSpacer />
 
-                                <MudStack Row Spacing="2" AlignItems="AlignItems.Center">
+                                <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
                                     <!-- Edit Scanned Result Button -->
                                     <MudTooltip Text="Edit" Placement="Placement.Left" Delay="250" Arrow>
                                         <MudIconButton
@@ -82,6 +82,7 @@
                                             Color="Color.Primary"
                                             Size="Size.Small"
                                             Disabled="@isSaving"
+                                            OnClick="@(() => OpenCategoryEditDialogAsync(barcodeItem))"
                                         />
                                     </MudTooltip>
 
@@ -92,7 +93,7 @@
                                             Color="Color.Error"
                                             Size="Size.Small"
                                             Disabled="@isSaving"
-                                            OnClick="@(() => DeleteBarcode(barcodeItem))"
+                                            OnClick="@(() => DeleteScannedResultConfirmationAsync(barcodeItem))"
                                         />
                                     </MudTooltip>
                                 </MudStack>
@@ -106,9 +107,9 @@
 </MobileComponentLayout>
 
 @code {
-
-    // Event handler field for observing collection changes (nullable)
+    // Event handler field for observing collection changes
     private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _sub;
+
     // Flag to track whether a save operation is in progress
     private bool isSaving;
 
@@ -123,6 +124,7 @@
         // Subscribe the handler to the collection's change event
         scanResultsService.Results.CollectionChanged += _sub;
     }
+
     /// <summary>
     /// Called when the component is disposed (removed from the UI)
     /// Unsubscribes from the collection change event to prevent memory leaks
@@ -134,23 +136,44 @@
     }
 
     /// <summary>
-    /// Displays a confirmation dialog asking the user to confirm submitting the
-    /// current scanned barcode results.
+    /// Displays a dialog prompting the user to edit the
+    /// current scanned barcode result's category.
+    /// </summary>
+    private async Task OpenCategoryEditDialogAsync(ScanBarcodeItemViewModel barcodeItem)
+    {
+        var parameters = new DialogParameters<CategoryEditDialog>
+        {
+            { x => x.BarcodeItem, barcodeItem },
+        };
+        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<CategoryEditDialog>("Edit Category", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            StateHasChanged();
+            Snackbar.Add("Category updated.", Severity.Success);
+        }
+    }
+
+    /// <summary>
+    /// Displays a confirmation dialog asking the user to confirm uploading all the
+    /// scanned barcode results.
     /// </summary>
     private async Task SaveScannedResultConfirmationAsync()
     {
         var message = scanResultsService.Results.Count == 1
-            ? "Are you sure you want to submit this scanned barcode result?"
-            : $"Are you sure you want to submit these {scanResultsService.Results.Count} scanned barcode results?";
+            ? "Are you sure you want to upload this scanned barcode result?"
+            : $"Are you sure you want to upload these {scanResultsService.Results.Count} scanned barcode results?";
 
         var parameters = new DialogParameters<ConfirmationDialog>
         {
             { x => x.ContentText, message },
-            { x => x.SubmitBtnText, "Submit" },
+            { x => x.SubmitBtnText, "Upload" },
             { x => x.DialogIconColor, Color.Info }
         };
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
-        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Submit Confirmation", parameters, options);
+        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Upload Confirmation", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
@@ -161,13 +184,13 @@
             }
             catch
             {
-                Snackbar.Add("An unexpected error occurred while submitting the scanned barcode. Please try again.", Severity.Error);
+                Snackbar.Add("An unexpected error occurred while uploading the scanned barcode results. Please try again.", Severity.Error);
             }
         }
     }
 
     /// <summary>
-    /// Submits the current scanned results to the database via IScannedBarcodeService.
+    /// Uploads the current scanned results to the database via IScannedBarcodeService.
     /// Deduplication is handled by the service layer.
     /// </summary>
     private async Task SaveScannedResultAsync()
@@ -178,35 +201,35 @@
         isSaving = true;
         try
         {
-            // Map to a new list to avoid collection mutation during async call
-            var items = scanResultsService.Results.ToList();
-            if (items.Count == 0)
+            Map to a new list to avoid collection mutation during async call
+            var barcodeItems = scanResultsService.Results.ToList();
+            if (barcodeItems.Count == 0)
             {
-                Snackbar.Add("Nothing to submit.", Severity.Info);
+                Snackbar.Add("Nothing to upload.", Severity.Info);
                 return;
             }
 
-            // Short timeout to keep UX snappy on mobile
+            Short timeout to keep UX snappy on mobile
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 
-            var response = await ScannedBarcodeService.AddScannedBarcodesAsync(items, cts.Token);
+            var response = await ScannedBarcodeService.AddScannedBarcodesAsync(barcodeItems, cts.Token);
             if (response.Success)
             {
-                Snackbar.Add(response.Message ?? $"{response.Data} barcode(s) submitted.", Severity.Success);
+                Snackbar.Add(response.Message ?? $"{response.Data} barcode(s) uploaded.", Severity.Success);
                 scanResultsService.Clear();
             }
             else
             {
-                Snackbar.Add(response.Message ?? "Submit failed.", Severity.Error);
+                Snackbar.Add(response.Message ?? "Upload failed.", Severity.Error);
             }
         }
         catch (OperationCanceledException)
         {
-            Snackbar.Add("Submit cancelled or timed out.", Severity.Warning);
+            Snackbar.Add("Upload cancelled or timed out.", Severity.Warning);
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Submit error: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Upload error: {ex.Message}", Severity.Error);
         }
         finally
         {
@@ -214,35 +237,55 @@
             StateHasChanged();
         }
     }
+
     /// <summary>
-    /// Displays a confirmation dialog asking the user to confirm clearing all
-    /// scanned barcode results currently shown in the list.
+    /// Displays a confirmation dialog asking the user to confirm deleting the
+    /// current scanned barcode result.
     /// </summary>
-    private async Task ClearScannedResultConfirmationAsync()
+    private async Task DeleteScannedResultConfirmationAsync(ScanBarcodeItemViewModel barcodeItem)
     {
         if (isSaving || !scanResultsService.Results.Any())
             return;
 
         var parameters = new DialogParameters<ConfirmationDialog>
         {
-            { x => x.ContentText, "Clear all scanned results?" },
+            { x => x.ContentText, "Are you sure you want to delete this scanned result? This action is permanent and cannot be undone." },
+            { x => x.SubmitBtnText, "Delete" },
+            { x => x.DialogIcon, Icons.Material.Rounded.Warning },
+            { x => x.DialogIconColor, Color.Error }
+        };
+        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Confirmation", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            if (scanResultsService.Results.Contains(barcodeItem))
+                scanResultsService.Results.Remove(barcodeItem);
+        }
+    }
+
+    /// <summary>
+    /// Displays a confirmation dialog asking the user to confirm clearing all
+    /// scanned barcode results currently shown in the list.
+    /// </summary>
+    private async Task ClearAllScannedResultConfirmationAsync()
+    {
+        if (isSaving || !scanResultsService.Results.Any())
+            return;
+
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { x => x.ContentText, "Are you sure you want to clear all the scanned results? This action is permanent and cannot be undone." },
             { x => x.SubmitBtnText, "Clear" },
             { x => x.DialogIcon, Icons.Material.Rounded.Warning },
             { x => x.DialogIconColor, Color.Error }
         };
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall };
-        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Clear", parameters, options);
+        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Clear All Confirmation", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
             scanResultsService.Clear();
-    }
-
-    private void DeleteBarcode(ScanBarcodeItemViewModel barcode)
-    {
-        if (scanResultsService.Results.Contains(barcode))
-        {
-            scanResultsService.Results.Remove(barcode);
-        }
     }
 }
