@@ -124,6 +124,11 @@ public partial class Home : ComponentBase
     /// Navigates to the native/hybrid barcode scanner screen for the current <see cref="barcodeMode"/>.
     /// </summary>
     private async Task OpenBarcodeScanner() => await Detector.NavigateToScannerAsync(barcodeMode);
+    
+    /// <summary>
+    /// Navigates to the native/hybrid zebra tablet barcode scanner screen for the current <see cref="barcodeMode"/>.
+    /// </summary>
+    private async Task OpenZebraScanner() => await Detector.NavigateToZebraScannerAsync();
 
     /// <summary>
     /// Maps a file processing state to an appropriate MudBlazor color.

@@ -125,11 +125,11 @@ using ZXing.Net.Maui.Controls; // UI controls for barcode scanning
 
 namespace Arista_ZebraTablet;
 
-public partial class ZebraScannerPage : ContentPage
+public partial class ZebraBarcodeScannerPage : ContentPage
 {
     private readonly BarcodeDetectorService _scannerService;
 
-    public ZebraScannerPage(BarcodeDetectorService scannerService)
+    public ZebraBarcodeScannerPage(BarcodeDetectorService scannerService)
     {
         InitializeComponent();
         _scannerService = scannerService;
