@@ -3,10 +3,6 @@
 @using Arista_ZebraTablet.Shared.Application.Enums
 @using Arista_ZebraTablet.Shared.Application.ViewModels
 
-@inject IFormFactorService FormFactor
-@inject IBarcodeDetectorService Detector
-@inject IScannedBarcodeService ScannedBarcodeService
-
 <PageTitle>Home | @AppConstant.AppTitle</PageTitle>
 
 <MudBreakpointProvider OnBreakpointChanged="HandleBreakpointChanged">
@@ -29,15 +25,15 @@
         </MudGrid>
     </MudContainer>
 
-    <MudContainer Class="py-4 d-flex flex-column gap-3 position-relativ" MaxWidth="MaxWidth.Large" Style="flex: 1 1 auto; min-height: 0;">
+    <MudContainer Class="py-4 d-flex flex-column gap-3 position-relative" MaxWidth="MaxWidth.Large" Style="flex: 1 1 auto; min-height: 0;">
         <!-- Uploading Images Progress / Uploading Detected Barcodes Progress / Processing Progress -->
         <LoadingOverlay
-            Visible="@(isUploadingImg || isSaving || isBusy)"
-            Text="@(isUploadingImg ? $"Uploading images... {uploadImgProgress}%" : (isSaving ? "Uploading detected barcodes" : "Detecting barcodes..."))"
+            Visible="@(isUploadingImg || isUploadingResults || isBusy)"
+            Text="@(isUploadingImg ? $"Uploading images... {uploadImgProgress}%" : (isUploadingResults ? "Uploading detected barcodes" : "Detecting barcodes..."))"
         />
 
         <MudContainer Class="p-0 overflow-auto" Style="flex: 1 1 auto; min-height: 0;">
-            @if (!uploadedImageFiles.Any() && !isUploadingImg)
+            @if (!uploadedImgFiles.Any() && !isUploadingImg)
             {
                 <MudStack Class="h-100" Spacing="4" Justify="Justify.FlexEnd" AlignItems="AlignItems.Center">
                     <MudItem xs="12" sm="6" Class="@($"{(currentBreakpoint == Breakpoint.Xs ? "align-content-center" : "align-content-end")}")">
@@ -69,7 +65,7 @@
             {
                 <!-- Uploaded Image File Preview Cards -->
                 <MudStack Class="h-100 px-0" Spacing="2">
-                    @foreach (var img in uploadedImageFiles)
+                    @foreach (var img in uploadedImgFiles)
                     {
                         <!-- Image File Preview Card -->
                         <MudCard Elevation="0">
@@ -100,8 +96,8 @@
                                         </MudText>
 
                                         <MudStack Row Spacing="0">
-                                            <MudChip T="ImgItemViewModel" Color="@ImageFileStateColor(img.State)" Size="Size.Small">
-                                                @ImageFileStateLabel(img.State)
+                                            <MudChip T="ImgItemViewModel" Color="@ImgFileStateColor(img.State)" Size="Size.Small">
+                                                @ImgFileStateLabel(img.State)
                                             </MudChip>
 
                                             @if (img.State == FileState.Done)
@@ -109,8 +105,8 @@
                                                 <MudChip T="ImgItemViewModel"
                                                             Color="Color.Primary"
                                                             Size="Size.Small"
-                                                            Icon="@(IsExpanded(img.Id) && img.DetectResult.Barcodes.Count > 0 ? @Icons.Material.Rounded.Visibility : @Icons.Material.Rounded.VisibilityOff)"
-                                                            OnClick="@(() => ToggleResults(img.Id))">
+                                                            Icon="@(IsDetectedBarcodesDisplayed(img.Id) && img.DetectResult.Barcodes.Count > 0 ? @Icons.Material.Rounded.Visibility : @Icons.Material.Rounded.VisibilityOff)"
+                                                            OnClick="@(() => ToggleDisplayDetectedBarcodes(img.Id))">
                                                     @($"{img.DetectResult!.Barcodes.Count} barcode(s)")
                                                 </MudChip>
                                             }
@@ -137,7 +133,7 @@
                                 }
 
                                 <!-- Collapsible Detected Barcode Results inside the Card -->
-                                <MudCollapse Expanded="IsExpanded(img.Id) && img.DetectResult.Barcodes.Count > 0">
+                                <MudCollapse Expanded="IsDetectedBarcodesDisplayed(img.Id) && img.DetectResult.Barcodes.Count > 0">
                                     @if (img.State == FileState.Done)
                                     {
                                         <MudSimpleTable Class="mt-3" Dense Bordered Hover Outlined>
@@ -173,7 +169,7 @@
                                                                         <MudIconButton Icon="@Icons.Material.Rounded.Edit"
                                                                                         Color="Color.Primary"
                                                                                         Size="Size.Small"
-                                                                                        Disabled="@isSaving"
+                                                                                        Disabled="@isUploadingResults"
                                                                                         OnClick="@(() => OpenCategoryEditDialogAsync(detectedBarcode))" />
                                                                     </MudTooltip>
 
@@ -182,7 +178,7 @@
                                                                         <MudIconButton Icon="@Icons.Material.Rounded.DeleteOutline"
                                                                                         Color="Color.Error"
                                                                                         Size="Size.Small"
-                                                                                        Disabled="@isSaving"
+                                                                                        Disabled="@isUploadingResults"
                                                                                         OnClick="@(() => DeleteDetectedBarcodeConfirmationAsync(img, detectedBarcode))" />
                                                                     </MudTooltip>
                                                                 </MudHidden>
@@ -202,7 +198,7 @@
         </MudContainer>
     </MudContainer>
 
-    <MudContainer Class="@($"pt-0 pb-6 {(currentBreakpoint == Breakpoint.Xs || isUploadingImg || uploadedImageFiles.Any() ? "" : "flex-grow-1")}")" MaxWidth="MaxWidth.Large" Style="height:fit-content;">
+    <MudContainer Class="@($"pt-0 pb-6 {(currentBreakpoint == Breakpoint.Xs || isUploadingImg || uploadedImgFiles.Any() ? "" : "flex-grow-1")}")" MaxWidth="MaxWidth.Large" Style="height:fit-content;">
         <!-- Toolbar Section for Uploading Images -->
         <MudItem Class="position-sticky">
             <MudPaper Class="px-3 py-2 mud-theme-primary" Elevation="0" Style="border-radius: 40px">
@@ -213,7 +209,7 @@
                             <MudFab Color="Color.Secondary"
                                     Size="Size.Small"
                                     StartIcon="material-symbols-rounded/barcode_scanner"
-                                    OnClick="OpenScanner"
+                                    OnClick="OpenBarcodeScanner"
                                     DropShadow="false" />
                         </MudTooltip>
                     }
@@ -223,7 +219,7 @@
                                    Accept=".jpg,.jpeg,.png,.heic,.heif,image/*"
                                    FilesChanged="UploadImageFilesAsync"
                                    MaximumFileCount="50"
-                                   Disabled="@(isUploadingImg || isSaving)">
+                                   Disabled="@(isUploadingImg || isUploadingResults)">
                         <ActivatorContent>
                             <MudFab Class="text-white"
                                     Label="Upload Images"
@@ -252,7 +248,7 @@
                                 StartIcon="material-symbols-rounded/database_upload"
                                 OnClick="SaveDetectedBarcodesConfirmationAsync"
                                 DropShadow="false"
-                                Disabled="isSaving" />
+                                Disabled="isUploadingResults" />
                     </MudTooltip>
 
                     <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="250" Arrow>
@@ -268,437 +264,3 @@
         </MudItem>
     </MudContainer>
 </MudBreakpointProvider>
-
-@code {
-    private const long maxFileBytes = 20L * 1024 * 1024; // 20 MB per file
-    private static readonly string[] allowedContentTypes = { "image/jpeg", "image/png", "image/heic", "image/heif" };
-
-    private List<ImgItemViewModel> uploadedImageFiles { get; } = new();
-    private HashSet<Guid> expandedResults { get; set; } = new();
-    private BarcodeMode barcodeMode { get; set; } = BarcodeMode.Standard;
-    private Breakpoint currentBreakpoint { get; set; } = Breakpoint.Xs;
-    private bool isBusy { get; set; }
-    private bool isUploadingImg { get; set; }
-    private bool isSaving { get; set; }
-    private int decodeProgress { get; set; }
-    private int uploadImgProgress { get; set; }
-
-    private string factor => FormFactor.GetFormFactor();
-    private string platform => FormFactor.GetPlatform();
-
-    private Task HandleBreakpointChanged(Breakpoint bp)
-    {
-        currentBreakpoint = bp;
-        // re-render when breakpoint changes
-        return InvokeAsync(StateHasChanged);
-    }
-
-    private bool IsExpanded(Guid imgId) => expandedResults.Contains(imgId);
-
-    private void CollapseAll() => expandedResults.Clear();
-
-    // private async Task OpenScanner() => await Detector.NavigateToScannerAsync();
-    private async Task OpenScanner()
-    {
-        await Detector.NavigateToScannerAsync(barcodeMode); // Pass current mode
-    }
-
-    private static Color ImageFileStateColor(FileState state) => state switch
-    {
-        FileState.Ready => Color.Info,
-        FileState.Detecting => Color.Warning,
-        FileState.Done => Color.Success,
-        FileState.Error => Color.Error,
-        _ => Color.Default
-    };
-
-    private static string ImageFileStateLabel(FileState state) => state switch
-    {
-        FileState.Ready => "Ready",
-        FileState.Detecting => "Detecting...",
-        FileState.Done => "Done",
-        FileState.Error => "Error",
-        _ => "—"
-    };
-
-    private void ToggleResults(Guid imgId)
-    {
-        if (!expandedResults.Add(imgId))
-            expandedResults.Remove(imgId);
-    }
-
-    // Optional bulk actions (handy if you add toolbar buttons)
-    private void ExpandAll()
-    {
-        expandedResults = uploadedImageFiles.Where(f => f.DetectResult?.Barcodes?.Any() == true)
-            .Select(f => f.Id)
-            .ToHashSet();
-    }
-
-    // MULTI-FILE handler (preferred)
-    private async Task UploadImageFilesAsync(IReadOnlyList<IBrowserFile> files)
-    {
-        if (files == null || files.Count == 0)
-            return;
-
-        isUploadingImg = true;
-        uploadImgProgress = 0;
-
-        var totalFiles = files.Count;
-        double processedFile = 0;
-
-        try
-        {
-            foreach (var file in files)
-            {
-                await AddImageFileAsync(file);
-
-                processedFile++;
-                uploadImgProgress = Math.Clamp(
-                    (int)Math.Round(processedFile / totalFiles * 100.0),
-                    0, 100);
-
-                StateHasChanged();
-                await Task.Yield();
-            }
-
-            // Ensure it lands on 100 after loop (even if rounding)
-            uploadImgProgress = 100;
-        }
-        finally
-        {
-            isUploadingImg = false;
-            StateHasChanged();
-        }
-    }
-
-
-    // If you change T="IBrowserFile", use this single-file overload instead:
-    // private async Task UploadImageFilesAsync(IBrowserFile file) => await AddImageFileAsync(file);
-    private async Task AddImageFileAsync(IBrowserFile file)
-    {
-        var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "image/jpeg" : file.ContentType.ToLowerInvariant();
-        if (!allowedContentTypes.Contains(contentType) && !contentType.StartsWith("image/"))
-            return;
-
-        try
-        {
-            await using var readFile = file.OpenReadStream(maxFileBytes);
-            using var ms = new MemoryStream();
-            await readFile.CopyToAsync(ms);
-
-            var bytes = ms.ToArray();
-            var preview = $"data:{contentType};base64,{Convert.ToBase64String(bytes)}";
-
-            uploadedImageFiles.Add(new ImgItemViewModel
-            {
-                Id = Guid.NewGuid(),
-                FileName = string.IsNullOrWhiteSpace(file.Name) ? $"{Guid.NewGuid():N}.jpg" : file.Name,
-                ContentType = contentType,
-                Bytes = bytes,
-                PreviewDataUrl = preview,
-                State = FileState.Ready
-            });
-        }
-        catch (Exception ex)
-        {
-            uploadedImageFiles.Add(new ImgItemViewModel
-            {
-                Id = Guid.NewGuid(),
-                FileName = file.Name ?? "image",
-                ContentType = contentType,
-                State = FileState.Error,
-                ErrorMessage = ex.Message
-            });
-        }
-        StateHasChanged();
-    }
-
-    /// <summary>
-    /// Displays a confirmation dialog asking the user to confirm deleting the
-    /// current uploaded image.
-    /// </summary>
-    private async Task DeleteUploadedImgConfirmationAsync(ImgItemViewModel imgItem)
-    {
-        if (isUploadingImg || isSaving || isBusy)
-            return;
-
-        var parameters = new DialogParameters<ConfirmationDialog>
-        {
-            { x => x.ContentText, "Are you sure you want to delete this uploaded image? This action is permanent and cannot be undone." },
-            { x => x.SubmitBtnText, "Delete" },
-            { x => x.DialogIcon, Icons.Material.Rounded.Warning },
-            { x => x.DialogIconColor, Color.Error }
-        };
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Confirmation", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            uploadedImageFiles.Remove(imgItem);
-        }
-    }
-
-    /// <summary>
-    /// Displays a dialog prompting the user to edit the
-    /// current detected barcode's category.
-    /// </summary>
-    private async Task OpenCategoryEditDialogAsync(ScanBarcodeItemViewModel barcodeItem)
-    {
-        var parameters = new DialogParameters<CategoryEditDialog>
-        {
-            { x => x.BarcodeItem, barcodeItem },
-        };
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<CategoryEditDialog>("Edit Category", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            StateHasChanged();
-            Snackbar.Add("Category updated.", Severity.Success);
-        }
-    }
-
-    /// <summary>
-    /// Displays a confirmation dialog asking the user to confirm deleting the
-    /// current detected barcode result.
-    /// </summary>
-    private async Task DeleteDetectedBarcodeConfirmationAsync(ImgItemViewModel imgItem, ScanBarcodeItemViewModel barcodeItem)
-    {
-        if (isUploadingImg || isSaving || isBusy)
-            return;
-
-        var parameters = new DialogParameters<ConfirmationDialog>
-        {
-            { x => x.ContentText, "Are you sure you want to delete this detected barcode? This action is permanent and cannot be undone." },
-            { x => x.SubmitBtnText, "Delete" },
-            { x => x.DialogIcon, Icons.Material.Rounded.Warning },
-            { x => x.DialogIconColor, Color.Error }
-        };
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Confirmation", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            if (imgItem.DetectResult.Barcodes.Contains(barcodeItem))
-                imgItem.DetectResult.Barcodes.Remove(barcodeItem);
-        }
-    }
-
-    /// <summary>
-    /// Displays a confirmation dialog asking the user to confirm clearing all
-    /// uploaded images currently shown in the list.
-    /// </summary>
-    private async Task ClearAllUploadedImagesConfirmationAsync()
-    {
-        var parameters = new DialogParameters<ConfirmationDialog>
-        {
-            { x => x.ContentText, "Are you sure you want to clear all the uploaded images? This action is permanent and cannot be undone." },
-            { x => x.SubmitBtnText, "Clear" },
-            { x => x.DialogIcon, Icons.Material.Rounded.Warning },
-            { x => x.DialogIconColor, Color.Error }
-        };
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Clear All Confirmation", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            uploadedImageFiles.Clear();
-            isBusy = false;
-            decodeProgress = 0;
-        }
-    }
-
-    private async Task DecodeBarcodes()
-    {
-        if (!uploadedImageFiles.Any() || isBusy)
-            return;
-
-        isBusy = true;
-        decodeProgress = 5;
-
-        try
-        {
-            int idx = 0;
-            foreach (var item in uploadedImageFiles)
-            {
-                if (item.Bytes is null)
-                {
-                    item.State = FileState.Error;
-                    continue;
-                }
-
-                item.State = FileState.Detecting;
-                StateHasChanged();
-
-                await Task.Delay(100); // Optional delay for UI feedback
-
-                // Use your decoder service
-                var results = Detector.DecodeFromImage(item.Bytes, barcodeMode);
-
-                item.DetectResult = new DetectResultViewModel
-                {
-                    Barcodes = results
-                };
-
-                item.State = FileState.Done;
-
-                if (!IsExpanded(item.Id) && item.DetectResult.Barcodes.Count > 0)
-                    ToggleResults(item.Id);
-
-                idx++;
-                decodeProgress = Math.Clamp(5 + (int)((double)idx / uploadedImageFiles.Count * 95), 5, 100);
-            }
-
-            decodeProgress = 100;
-        }
-        catch (Exception ex)
-        {
-            foreach (var item in uploadedImageFiles)
-            {
-                item.State = FileState.Error;
-                item.ErrorMessage ??= ex.Message;
-            }
-        }
-        finally
-        {
-            isBusy = false;
-            StateHasChanged();
-        }
-    }
-
-    private static string FormatBytes(long bytes)
-    {
-        if (bytes <= 0) return "0 B";
-        string[] units = ["B", "KB", "MB", "GB"];
-        var pow = (int)Math.Floor(Math.Log(bytes, 1024));
-        pow = Math.Clamp(pow, 0, units.Length - 1);
-        var val = bytes / Math.Pow(1024, pow);
-        return $"{val:0.##} {units[pow]}";
-    }
-
-    // Open dialog for previewing images.
-    private async Task OpenPreviewImgDialogAsync(Guid imgFileId)
-    {
-        if (uploadedImageFiles == null || uploadedImageFiles.Count == 0)
-        {
-            Snackbar.Add("No images to preview.", Severity.Warning);
-            return;
-        }
-
-        // Resolve starting index; default to 0 if the id is not found
-        var index = uploadedImageFiles.FindIndex(x => x.Id == imgFileId);
-        if (index < 0) index = 0;
-
-        var parameters = new DialogParameters<PreviewImgDialog>
-        {
-            { x => x.ImageFiles, uploadedImageFiles },   // pass the SAME list instance
-            { x => x.SelectedFileIndex, index },         // start at resolved index
-        };
-        var options = new DialogOptions() { NoHeader = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true };
-
-        try
-        {
-            var dialog = await DialogService.ShowAsync<PreviewImgDialog>("Preview Image", parameters, options);
-            var result = await dialog.Result;
-            return;
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Failed to open image preview: {ex.Message}", Severity.Error);
-        }
-    }
-
-    /// <summary>
-    /// Displays a confirmation dialog asking the user to confirm uploading all the
-    /// detected barcodes.
-    /// </summary>
-    private async Task SaveDetectedBarcodesConfirmationAsync()
-    {
-        var totalBarcodes = uploadedImageFiles
-            .Where(f => f.DetectResult?.Barcodes?.Any() ?? false)
-            .Sum(f => f.DetectResult.Barcodes.Count);
-
-        var message = totalBarcodes == 1
-            ? "Are you sure you want to upload this detected barcode?"
-            : $"Are you sure you want to upload these {totalBarcodes} detected barcodes?";
-
-        var parameters = new DialogParameters<ConfirmationDialog>
-        {
-            { x => x.ContentText, message },
-            { x => x.SubmitBtnText, "Upload" },
-            { x => x.DialogIconColor, Color.Info }
-        };
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Upload Confirmation", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            try
-            {
-                await SaveDetectedBarcodesAsync();
-            }
-            catch
-            {
-                Snackbar.Add("An unexpected error occurred while uploading the detected barcodes. Please try again.", Severity.Error);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Uploads the current detected barcode results to the database via IScannedBarcodeService.
-    /// Deduplication is handled by the service layer.
-    /// </summary>
-    private async Task SaveDetectedBarcodesAsync()
-    {
-        if (isSaving)
-            return;
-
-        var barcodeItems = uploadedImageFiles
-            .Where(f => f.DetectResult?.Barcodes?.Any() ?? false)
-            .SelectMany(f => f.DetectResult.Barcodes)
-            .ToList();
-
-        if (barcodeItems.Count == 0)
-        {
-            Snackbar.Add("No detected barcodes to upload.", Severity.Normal);
-            return;
-        }
-
-        isSaving = true;
-        try
-        {
-            // Short timeout to keep UX snappy on mobile
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-
-            var response = await ScannedBarcodeService.AddScannedBarcodesAsync(barcodeItems, cts.Token);
-            if (response.Success)
-            {
-                Snackbar.Add(response.Message ?? $"{response.Data} barcode(s) uploaded.", Severity.Success);
-                uploadedImageFiles.Clear();
-            }
-            else
-            {
-                Snackbar.Add(response.Message ?? "Upload failed.", Severity.Error);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            Snackbar.Add("Upload cancelled or timed out.", Severity.Warning);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Upload error: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isSaving = false;
-            StateHasChanged();
-        }
-    }
-}
