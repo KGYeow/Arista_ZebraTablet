@@ -26,7 +26,7 @@
 
             <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
                 <!-- Submit Button -->
-                <MudTooltip Text="Submit" Placement="Placement.Left" Delay="250" Arrow>
+                <MudTooltip Text="Upload to Database" Placement="Placement.Left" Delay="250" Arrow>
                     <MudIconButton
                         Color="Color.Primary"
                         Icon="material-symbols-rounded/database_upload"
@@ -107,11 +107,14 @@
 </MobileComponentLayout>
 
 @code {
-    // Event handler field for observing collection changes
-    private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _sub;
+    // Event handler field or subscribes for observing collection changes
+    private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _collectionChangedSub;
 
     // Flag to track whether a save operation is in progress
     private bool isSaving;
+
+    // Event-based refresh is more reliable with BlazorWebView
+    private void OnScanReceived(object? sender, ScanBarcodeItemViewModel e) => InvokeAsync(StateHasChanged);
 
     /// <summary>
     /// This code makes a Blazor component automatically refresh when a data collection changes,
@@ -119,10 +122,13 @@
     /// </summary>
     protected override void OnInitialized()
     {
+        // Subscribe to service event (recommended)
+        scanResultsService.ScanReceived += OnScanReceived;
+
         // Create an event handler that triggers a UI re-render on collection changes
-        _sub = (_, __) => InvokeAsync(StateHasChanged);
+        _collectionChangedSub = (_, __) => InvokeAsync(StateHasChanged);
         // Subscribe the handler to the collection's change event
-        scanResultsService.Results.CollectionChanged += _sub;
+        scanResultsService.Results.CollectionChanged += _collectionChangedSub;
     }
 
     /// <summary>
@@ -131,8 +137,9 @@
     /// </summary>
     public void Dispose()
     {
-        if (_sub is not null)
-            scanResultsService.Results.CollectionChanged -= _sub;
+        scanResultsService.ScanReceived -= OnScanReceived;
+        if (_collectionChangedSub is not null)
+            scanResultsService.Results.CollectionChanged -= _collectionChangedSub;
     }
 
     /// <summary>
@@ -205,7 +212,7 @@
             var barcodeItems = scanResultsService.Results.ToList();
             if (barcodeItems.Count == 0)
             {
-                Snackbar.Add("Nothing to upload.", Severity.Info);
+                Snackbar.Add("Nothing to upload.", Severity.Normal);
                 return;
             }
 
@@ -268,7 +275,7 @@
     /// <summary>
     /// Displays a confirmation dialog asking the user to confirm clearing all
     /// scanned barcode results currently shown in the list.
-    /// </summary>
+    /// </summary> 
     private async Task ClearAllScannedResultConfirmationAsync()
     {
         if (isSaving || !scanResultsService.Results.Any())

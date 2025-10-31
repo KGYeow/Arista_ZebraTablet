@@ -2,5 +2,5 @@
 
 public partial class AppConstant
 {
-    public const string AppTitle = "ARISTA - Batch Barcode Scanner";
+    public const string AppTitle = "ARISTA Batch Barcode Scanner";
 }

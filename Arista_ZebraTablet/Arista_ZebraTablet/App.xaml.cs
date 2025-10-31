@@ -9,7 +9,7 @@
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
-            return new Window(new MainPage()) { Title = "Arista - Zebra Tablet" };
+            return new Window(new MainPage()) { Title = "ARISTA Batch Barcode Scanner" };
         }
     }
 }

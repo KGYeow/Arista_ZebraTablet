@@ -9,15 +9,10 @@
     xmlns:shared="clr-namespace:Arista_ZebraTablet.Shared;assembly=Arista_ZebraTablet.Shared"
     x:Class="Arista_ZebraTablet.LiveBarcodeScannerPage"
     Title="Scan Barcodes">
-
-    <!--<ToolbarItems>
-        <ToolbarItem Text="Pause/Resume" Clicked="OnToggleDetecting" />
-        <ToolbarItem Text="Clear" Clicked="OnClear" />
-    </ToolbarItems>-->
-
+    
     <Grid RowDefinitions="0.6*,0.4*">
         <!-- Camera -->
-        <Grid Grid.Row="0" HeightRequest="400">
+        <!--<Grid Grid.Row="0" HeightRequest="400">
             <zxing:CameraBarcodeReaderView x:Name="CameraView"
                                            BarcodesDetected="OnBarcodesDetected"
                                            CameraLocation="Rear">
@@ -25,6 +20,16 @@
                     <zx:BarcodeReaderOptions AutoRotate="True"/>
                 </zxing:CameraBarcodeReaderView.Options>
             </zxing:CameraBarcodeReaderView>
+        </Grid>-->
+
+        <!-- Optional status / instructions row -->
+        <Grid Grid.Row="0" Padding="12">
+            <Label Text="Press the hardware trigger or tap the buttons below." FontAttributes="Bold"/>
+            <VerticalStackLayout Spacing="12">
+                <Button Text="Scan" Clicked="OnScanClicked"/>
+                <Button Text="Stop" Clicked="OnStopClicked"/>
+                <Button Text="Toggle" Clicked="OnToggleClicked"/>
+            </VerticalStackLayout>
         </Grid>
 
         <!-- Blazor Web View: Shows Real-Time Results -->

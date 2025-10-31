@@ -16,13 +16,17 @@ namespace Arista_ZebraTablet.Services
     /// </summary>
     public sealed class BarcodeDetectorService : IBarcodeDetectorService
     {
-        private readonly IServiceProvider _sp;
+        private readonly HashSet<string> _seen = new(StringComparer.OrdinalIgnoreCase);
+        public ObservableCollection<ScanBarcodeItemViewModel> Results { get; } = []; // Scan using Camera Result Management
+        public event EventHandler<ScanBarcodeItemViewModel>? ScanReceived;  // <--- ADD
 
-        public BarcodeDetectorService(IServiceProvider sp) => _sp = sp;
+        public BarcodeDetectorService()
+        {
+        }
 
-        // =========================================
-        // Navigation to live camera Scanner Page
-        // =========================================
+        /// <summary>
+        /// Navigation to live camera Scanner Page
+        /// </summary>
         public async Task NavigateToScannerAsync()
         {
             await MainThread.InvokeOnMainThreadAsync(async () =>
@@ -40,53 +44,28 @@ namespace Arista_ZebraTablet.Services
             });
         }
 
-        // ============================
-        // Scan using Camera
-        // ============================
-        public async Task<string?> ScanAsync(CancellationToken ct = default)
-        {
-            var tcs = new TaskCompletionSource<string?>();
-
-            await MainThread.InvokeOnMainThreadAsync(async () =>
-            {
-                try
-                {
-                    var page = new LiveBarcodeScannerPage(tcs, this); // Manual creation
-                    await Application.Current!.MainPage!.Navigation.PushModalAsync(page, animated: true);
-                }
-                catch (Exception ex)
-                {
-                    tcs.TrySetException(ex);
-                }
-            });
-
-            using (ct.Register(() => tcs.TrySetCanceled()))
-                return await tcs.Task.ConfigureAwait(false);
-        }
-
-        // ======================================
-        // Scan using Camera Result Management
-        // ======================================
-        public ObservableCollection<ScanBarcodeItemViewModel> Results { get; } = new();
-        private readonly HashSet<string> _seen = new(StringComparer.OrdinalIgnoreCase);
-
         /// <summary>
         /// Adds a scanned barcode to the result list if not already added.
         /// </summary>
-        public void Add(string value, string BarcodeType, string category)
+        public void Add(string value, string barcodeType, string category)
         {
             if (string.IsNullOrWhiteSpace(value)) return;
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 if (_seen.Add(value))
-                    Results.Insert(0, new ScanBarcodeItemViewModel()
+                {
+                    var vm = new ScanBarcodeItemViewModel
                     {
                         Value = value,
-                        BarcodeType = BarcodeType,
+                        BarcodeType = barcodeType,
                         Category = category,
                         ScannedTime = DateTime.Now
-                    });
+                    };
+                    Results.Insert(0, vm);
+                    ScanReceived?.Invoke(this, vm); // <--- TELL UI
+                }
+
             });
         }
 
@@ -102,11 +81,8 @@ namespace Arista_ZebraTablet.Services
             });
         }
 
-        // ===================================
-        // Decode Barcode from Upload Image
-        // ===================================
         /// <summary>
-        /// Decodes multiple barcodes from an image byte array using ZXing and SkiaSharp.
+        /// Decodes multiple barcodes from an uploaded image byte array using ZXing and SkiaSharp.
         /// </summary>
         public List<ScanBarcodeItemViewModel> DecodeFromImage(byte[] imageBytes)
         {
