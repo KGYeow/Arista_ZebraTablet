@@ -20,7 +20,7 @@ namespace Arista_ZebraTablet.Web.Services
         /// <summary>
         /// No-op on web: does not navigate to any scanner UI.
         /// </summary>
-        public Task NavigateToScannerAsync() => Task.CompletedTask;
+        public Task NavigateToScannerAsync(BarcodeMode mode) => Task.CompletedTask;
 
         /// <summary>
         /// Decodes barcodes from an image byte array.

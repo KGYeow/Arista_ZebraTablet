@@ -28,7 +28,7 @@ namespace Arista_ZebraTablet.Services
         /// <summary>
         /// Navigation to live camera Scanner Page
         /// </summary>
-        public async Task NavigateToScannerAsync()
+        public async Task NavigateToScannerAsync(BarcodeMode mode)
         {
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
@@ -84,12 +84,6 @@ namespace Arista_ZebraTablet.Services
         /// <summary>
         /// Decodes multiple barcodes from an uploaded image byte array using ZXing and SkiaSharp.
         /// </summary>
-        public List<ScanBarcodeItemViewModel> DecodeFromImage(byte[] imageBytes)
-        {
-
-            //return results;
-            return DecodeFromImage(imageBytes, BarcodeMode.Standard);
-        }
         public List<ScanBarcodeItemViewModel> DecodeFromImage(byte[] imageBytes, BarcodeMode mode)
         {
             var results = new List<ScanBarcodeItemViewModel>();
