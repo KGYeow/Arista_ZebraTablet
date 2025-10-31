@@ -1,6 +1,7 @@
 using Arista_ZebraTablet.Shared.Application.Enums;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
 using Arista_ZebraTablet.Shared.Services;
+using Microsoft.AspNetCore.Components;
 using SkiaSharp;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -42,6 +43,12 @@ namespace Arista_ZebraTablet.Services
                     await App.Current.Windows[0].Page.DisplayAlert("Navigation error", ex.Message, "OK");
                 }
             });
+        }
+
+        public async Task NavigateToZebraScannerAsync()
+        {
+            //_navigationManager.NavigateTo("/zebra-scanner");
+            await Task.CompletedTask;
         }
 
         /// <summary>

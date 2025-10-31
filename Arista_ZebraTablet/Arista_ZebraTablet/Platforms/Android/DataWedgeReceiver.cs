@@ -17,7 +17,7 @@ public class DataWedgeReceiver : BroadcastReceiver
     public override void OnReceive(Context? context, Intent? intent)
     {
         //base.OnReceive(context, intent);
-        throw new Exception($"TESTING: {intent?.Action}");
+        //throw new Exception($"TESTING: {intent?.Action}");
 
         if (intent?.Action != DataWedgeClient.ScanAction) return;
 

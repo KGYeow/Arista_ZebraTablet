@@ -52,67 +52,67 @@ public partial class LiveBarcodeScannerPage : ContentPage
     }
 
 #if ANDROID
-    private DataWedgeReceiver? dataWedgeReceiver;
+    //private DataWedgeReceiver? dataWedgeReceiver;
 
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-        // Force DataWedge to use your profile
-        Android.App.Application.Context.SendBroadcast(DataWedgeClient.BuildSwitchProfileIntent("ARISTAZebraTablet")); // <-- match your DW profile name
+    //protected override void OnAppearing()
+    //{
+    //    base.OnAppearing();
+    //    // Force DataWedge to use your profile
+    //    Android.App.Application.Context.SendBroadcast(DataWedgeClient.BuildSwitchProfileIntent("ARISTAZebraTablet")); // <-- match your DW profile name
 
-        // OPTIONAL: auto-start a scan when the page becomes visible.
-        // If you prefer manual scan via a button, comment this out.
-        StartSoftScan();
-    }
+    //    // OPTIONAL: auto-start a scan when the page becomes visible.
+    //    // If you prefer manual scan via a button, comment this out.
+    //    StartSoftScan();
+    //}
 
-    protected override void OnDisappearing()
-    {
-        StopSoftScan();
-        base.OnDisappearing();
-    }
+    //protected override void OnDisappearing()
+    //{
+    //    StopSoftScan();
+    //    base.OnDisappearing();
+    //}
 
-    // ----- Optional UI event handlers (hook these to buttons in XAML) -----
-    private void OnScanClicked(object? sender, EventArgs e) => StartSoftScan();
-    private void OnStopClicked(object? sender, EventArgs e) => StopSoftScan();
-    private void OnToggleClicked(object? sender, EventArgs e) => ToggleSoftScan();
+    //// ----- Optional UI event handlers (hook these to buttons in XAML) -----
+    //private void OnScanClicked(object? sender, EventArgs e) => StartSoftScan();
+    //private void OnStopClicked(object? sender, EventArgs e) => StopSoftScan();
+    //private void OnToggleClicked(object? sender, EventArgs e) => ToggleSoftScan();
 
-    // ----- Soft Scan Trigger helpers -----
-    private static void StartSoftScan()
-    {
-        var i = DataWedgeClient.BuildApiIntent("START_SCANNING");
-        Android.App.Application.Context.SendBroadcast(i);
-    }
+    //// ----- Soft Scan Trigger helpers -----
+    //private static void StartSoftScan()
+    //{
+    //    var i = DataWedgeClient.BuildApiIntent("START_SCANNING");
+    //    Android.App.Application.Context.SendBroadcast(i);
+    //}
 
-    private static void StopSoftScan()
-    {
-        var i = DataWedgeClient.BuildApiIntent("STOP_SCANNING");
-        Android.App.Application.Context.SendBroadcast(i);
-    }
+    //private static void StopSoftScan()
+    //{
+    //    var i = DataWedgeClient.BuildApiIntent("STOP_SCANNING");
+    //    Android.App.Application.Context.SendBroadcast(i);
+    //}
 
-    private static void ToggleSoftScan()
-    {
-        var i = new Android.Content.Intent("com.symbol.datawedge.api.ACTION");
-        i.PutExtra("com.symbol.datawedge.api.SOFT_SCAN_TRIGGER", "TOGGLE_SCANNING");
-        Android.App.Application.Context.SendBroadcast(i);
-    }
+    //private static void ToggleSoftScan()
+    //{
+    //    var i = new Android.Content.Intent("com.symbol.datawedge.api.ACTION");
+    //    i.PutExtra("com.symbol.datawedge.api.SOFT_SCAN_TRIGGER", "TOGGLE_SCANNING");
+    //    Android.App.Application.Context.SendBroadcast(i);
+    //}
 #endif
 
     /// <summary>
     /// Barcode Detection Handler: called when barcodes are detected by the camera
     /// </summary>
-    //private void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
-    //{
-    //    var list = e.Results ?? Enumerable.Empty<BarcodeResult>(); // Get detected barcodes
+    private void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
+    {
+        var list = e.Results ?? Enumerable.Empty<BarcodeResult>(); // Get detected barcodes
 
-    //    foreach (var r in list)
-    //    {
-    //        if (string.IsNullOrWhiteSpace(r.Value))
-    //            continue; // Skip empty results
+        foreach (var r in list)
+        {
+            if (string.IsNullOrWhiteSpace(r.Value))
+                continue; // Skip empty results
 
-    //        var category = BarcodeClassifier.Classify(r.Value); // Classify barcode using regex
+            var category = BarcodeClassifier.Classify(r.Value); // Classify barcode using regex
 
-    //        // In list mode, add result to scanner service
-    //        _scannerService.Add(r.Value, r.Format.ToString(), category);
-    //    }
-    //}
+            // In list mode, add result to scanner service
+            _scannerService.Add(r.Value, r.Format.ToString(), category);
+        }
+    }
 }

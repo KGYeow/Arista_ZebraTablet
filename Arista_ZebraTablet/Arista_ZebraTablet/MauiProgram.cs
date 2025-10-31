@@ -28,6 +28,7 @@ namespace Arista_ZebraTablet
             builder.Services.AddSingleton<IBarcodeDetectorService>(sp => sp.GetRequiredService<BarcodeDetectorService>());
             builder.Services.AddScoped<IScannedBarcodeService, ScannedBarcodeService>();
             builder.Services.AddSingleton<BarcodeDetectorService>();
+            builder.Services.AddTransient<ZebraScannerPage>();
 
             //builder.Services.AddHttpClient<IScannedBarcodeService, ScannedBarcodeService>(client =>
             //{
@@ -37,7 +38,7 @@ namespace Arista_ZebraTablet
             //{
             //    ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
             //});
-            
+
             builder.Services.AddHttpClient<IScannedBarcodeService, ScannedBarcodeService>(client =>
             {
                 client.BaseAddress = new Uri("https://awase1penweb81.corp.jabil.org/Arista_ZebraTablet/");

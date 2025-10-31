@@ -246,6 +246,15 @@
                                 DropShadow="false" />
                     </MudTooltip>
 
+                    <!-- Zebra Scanner -->
+                    <MudTooltip Text="Zebra Scanner" Placement="Placement.Top" Delay="250" Arrow>
+                        <MudFab Color="Color.Secondary"
+                                Size="Size.Small"
+                                StartIcon="material-symbols-rounded/barcode_scanner"
+                                OnClick="OpenZebraScanner"
+                                DropShadow="false" />
+                    </MudTooltip>
+
                     <MudTooltip Text="Upload to Database" Placement="Placement.Top" Delay="250" Arrow>
                         <MudFab Color="Color.Secondary"
                                 Size="Size.Small"
@@ -302,6 +311,10 @@
     {
         await Detector.NavigateToScannerAsync(barcodeMode); // Pass current mode
     }
+
+
+    private async Task OpenZebraScanner() => await Detector.NavigateToZebraScannerAsync();
+
 
     private static Color ImageFileStateColor(FileState state) => state switch
     {

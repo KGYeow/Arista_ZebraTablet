@@ -109,6 +109,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <MauiXaml Update="ZebraBarcodeScannerPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
     <MauiXaml Update="LiveBarcodeScannerPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </MauiXaml>
