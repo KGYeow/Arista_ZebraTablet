@@ -27,6 +27,7 @@ namespace Arista_ZebraTablet
             builder.Services.AddSingleton<BarcodeDetectorService>();
             builder.Services.AddSingleton<IBarcodeDetectorService>(sp => sp.GetRequiredService<BarcodeDetectorService>());
             builder.Services.AddScoped<IScannedBarcodeService, ScannedBarcodeService>();
+            builder.Services.AddSingleton<BarcodeDetectorService>();
 
             //builder.Services.AddHttpClient<IScannedBarcodeService, ScannedBarcodeService>(client =>
             //{

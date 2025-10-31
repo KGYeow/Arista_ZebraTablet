@@ -297,7 +297,11 @@
 
     private void CollapseAll() => expandedResults.Clear();
 
-    private async Task OpenScanner() => await Detector.NavigateToScannerAsync();
+    // private async Task OpenScanner() => await Detector.NavigateToScannerAsync();
+    private async Task OpenScanner()
+    {
+        await Detector.NavigateToScannerAsync(barcodeMode); // Pass current mode
+    }
 
     private static Color ImageFileStateColor(FileState state) => state switch
     {
@@ -534,7 +538,7 @@
                 await Task.Delay(100); // Optional delay for UI feedback
 
                 // Use your decoder service
-                var results = Detector.DecodeFromImage(item.Bytes);
+                var results = Detector.DecodeFromImage(item.Bytes, barcodeMode);
 
                 item.DetectResult = new DetectResultViewModel
                 {

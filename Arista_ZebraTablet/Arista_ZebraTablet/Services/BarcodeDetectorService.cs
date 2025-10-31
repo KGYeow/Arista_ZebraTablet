@@ -1,13 +1,14 @@
+using Arista_ZebraTablet.Shared.Application.Enums;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
 using Arista_ZebraTablet.Shared.Services;
 using SkiaSharp;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using ZXing;
-using ZXing.SkiaSharp;
 using ZXing.Common;
 using ZXing.Net.Maui;
+using ZXing.SkiaSharp;
 
 namespace Arista_ZebraTablet.Services
 {
@@ -33,13 +34,12 @@ namespace Arista_ZebraTablet.Services
             {
                 try
                 {
-                    // Create scanner page via DI
-                    var page = new LiveBarcodeScannerPage(this);
-                    await Application.Current!.MainPage!.Navigation.PushModalAsync(page, animated: true);
+                    var page = new LiveBarcodeScannerPage(this, mode);
+                    await App.Current.Windows[0].Page.Navigation.PushModalAsync(page, true);
                 }
                 catch (Exception ex)
                 {
-                    await Application.Current!.MainPage!.DisplayAlert("Navigation error", ex.Message, "OK");
+                    await App.Current.Windows[0].Page.DisplayAlert("Navigation error", ex.Message, "OK");
                 }
             });
         }
@@ -86,43 +86,40 @@ namespace Arista_ZebraTablet.Services
         /// </summary>
         public List<ScanBarcodeItemViewModel> DecodeFromImage(byte[] imageBytes)
         {
-            var results = new List<ScanBarcodeItemViewModel>();
 
+            //return results;
+            return DecodeFromImage(imageBytes, BarcodeMode.Standard);
+        }
+        public List<ScanBarcodeItemViewModel> DecodeFromImage(byte[] imageBytes, BarcodeMode mode)
+        {
+            var results = new List<ScanBarcodeItemViewModel>();
             using var stream = new MemoryStream(imageBytes);
             using var originalBitmap = SKBitmap.Decode(stream);
-
             if (originalBitmap == null)
                 return results;
 
-            // Resize image to improve performance
             var resizedBitmap = originalBitmap.Resize(new SKImageInfo(800, 600), SKFilterQuality.Medium);
-
-            // Convert to grayscale for better barcode detection
             using var surface = SKSurface.Create(new SKImageInfo(resizedBitmap.Width, resizedBitmap.Height));
             var canvas = surface.Canvas;
-
             using var paint = new SKPaint
             {
                 ColorFilter = SKColorFilter.CreateColorMatrix(new float[]
                 {
-                    0.3f, 0.3f, 0.3f, 0, 0,
-                    0.59f, 0.59f, 0.59f, 0, 0,
-                    0.11f, 0.11f, 0.11f, 0, 0,
-                    0,    0,    0,    1, 0
+            0.3f, 0.3f, 0.3f, 0, 0,
+            0.59f, 0.59f, 0.59f, 0, 0,
+            0.11f, 0.11f, 0.11f, 0, 0,
+            0, 0, 0, 1, 0
                 })
             };
-
             canvas.Clear(SKColors.White);
             canvas.DrawBitmap(resizedBitmap, 0, 0, paint);
             canvas.Flush();
 
-            // Convert processed surface to bitmap
             using var image = surface.Snapshot();
             using var pixmap = image.PeekPixels();
             var processedBitmap = new SKBitmap(image.Width, image.Height);
             pixmap?.ReadPixels(processedBitmap.Info, processedBitmap.GetPixels(), processedBitmap.RowBytes, 0, 0);
 
-            // Setup ZXing barcode reader
             var reader = new BarcodeReader
             {
                 AutoRotate = true,
@@ -131,33 +128,76 @@ namespace Arista_ZebraTablet.Services
                 {
                     TryHarder = true,
                     PossibleFormats = new List<ZXing.BarcodeFormat>
-                    {
-                        ZXing.BarcodeFormat.CODE_128,
-                        ZXing.BarcodeFormat.QR_CODE,
-                        ZXing.BarcodeFormat.AZTEC,
-                        ZXing.BarcodeFormat.DATA_MATRIX,
-                        ZXing.BarcodeFormat.PDF_417
-                    }
+            {
+                ZXing.BarcodeFormat.CODE_128,
+                ZXing.BarcodeFormat.QR_CODE,
+                ZXing.BarcodeFormat.AZTEC,
+                ZXing.BarcodeFormat.DATA_MATRIX,
+                ZXing.BarcodeFormat.PDF_417
+            }
                 }
             };
 
-            // Decode multiple barcodes
             var decodedResults = reader.DecodeMultiple(processedBitmap);
-
             if (decodedResults != null)
             {
                 foreach (var r in decodedResults)
                 {
+                    string category = mode switch
+                    {
+                        BarcodeMode.Standard => BarcodeClassifier.Classify(r.Text),
+                        BarcodeMode.Unique => UniqueBarcodeClassifier.Classify(r.Text),
+                        _ => "Unknown"
+                    };
+
                     results.Add(new ScanBarcodeItemViewModel
                     {
                         Value = r.Text,
                         BarcodeType = r.BarcodeFormat.ToString(),
-                        Category = BarcodeClassifier.Classify(r.Text),
+                        Category = category,
                         ScannedTime = DateTime.Now
                     });
                 }
             }
             return results;
         }
+        //public async Task NavigateToScannerAsync()
+        //{
+        //    await MainThread.InvokeOnMainThreadAsync(async () =>
+        //    {
+        //        try
+        //        {
+        //            // Create scanner page via DI
+        //            //var page = new LiveBarcodeScannerPage(this);
+        //            var page = new LiveBarcodeScannerPage(this, mode);
+        //            await Application.Current!.MainPage!.Navigation.PushModalAsync(page, animated: true);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            await Application.Current!.MainPage!.DisplayAlert("Navigation error", ex.Message, "OK");
+        //        }
+        //    });
+        //}
+
+        //public async Task<string?> ScanAsync(CancellationToken ct = default)
+        //{
+        //    var tcs = new TaskCompletionSource<string?>();
+
+        //    await MainThread.InvokeOnMainThreadAsync(async () =>
+        //    {
+        //        try
+        //        {
+        //            var page = new LiveBarcodeScannerPage(tcs, this); // Manual creation
+        //            await Application.Current!.MainPage!.Navigation.PushModalAsync(page, animated: true);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            tcs.TrySetException(ex);
+        //        }
+        //    });
+
+        //    using (ct.Register(() => tcs.TrySetCanceled()))
+        //        return await tcs.Task.ConfigureAwait(false);
+        //}
     }
 }
