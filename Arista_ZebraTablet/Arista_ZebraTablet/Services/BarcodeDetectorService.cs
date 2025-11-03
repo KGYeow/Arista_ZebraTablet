@@ -45,23 +45,24 @@ namespace Arista_ZebraTablet.Services
             });
         }
 
-        public async Task NavigateToZebraScannerAsync()
-        {
-            //_navigationManager.NavigateTo("/zebra-scanner");
-            //await Task.CompletedTask;
-            await MainThread.InvokeOnMainThreadAsync(async () =>
-            {
-                try
-                {
-                    var page = new ZebraBarcodeScannerPage(this);
-                    await App.Current.Windows[0].Page.Navigation.PushModalAsync(page, true);
-                }
-                catch (Exception ex)
-                {
-                    await App.Current.Windows[0].Page.DisplayAlert("Navigation error", ex.Message, "OK");
-                }
-            });
-        }
+        public Task NavigateToZebraScannerAsync() => Task.CompletedTask;
+        //public async Task NavigateToZebraScannerAsync()
+        //{
+        //    //_navigationManager.NavigateTo("/zebra-scanner");
+        //    //await Task.CompletedTask;
+        //    await MainThread.InvokeOnMainThreadAsync(async () =>
+        //    {
+        //        try
+        //        {
+        //            var page = new ZebraBarcodeScannerPage(this);
+        //            await App.Current.Windows[0].Page.Navigation.PushModalAsync(page, true);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            await App.Current.Windows[0].Page.DisplayAlert("Navigation error", ex.Message, "OK");
+        //        }
+        //    });
+        //}
 
         /// <summary>
         /// Adds a scanned barcode to the result list if not already added.

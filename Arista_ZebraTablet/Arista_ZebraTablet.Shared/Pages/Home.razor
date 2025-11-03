@@ -205,13 +205,54 @@
                 <MudStack Row Spacing="2" AlignItems="AlignItems.Center" Justify="Justify.SpaceEvenly">
                     @if (factor != "Web")
                     {
-                        <MudTooltip Text="Scan Barcodes" Placement="Placement.Top" Delay="250" Arrow>
+                        <!-- More Button -->
+                        @* <MudMenu>
+                            <ActivatorContent>
+                                <MudTooltip Text="More" Placement="Placement.Top" Delay="250" Arrow>
+                                    <MudFab Color="Color.Secondary"
+                                            Size="Size.Small"
+                                            StartIcon="material-symbols-rounded/add"
+                                            DropShadow="false" />
+                                </MudTooltip>
+                            </ActivatorContent>
+                            <ChildContent>
+                                <MudContainer Gutters="false">
+                                    <MudButton
+                                        Variant="Variant.Filled"
+                                        StartIcon="material-symbols-rounded/barcode_scanner"
+
+                                        Style="background-color: yellowgreen; color: white; width: 200px; height: 60px;"
+                                    >
+                                        Download Now
+                                    </MudButton>
+
+                                    <MudMenuItem Label="Barcode Scanner"
+                                        Icon="material-symbols-rounded/barcode_scanner"
+                                        OnClick="OpenBarcodeScanner" />
+                                    <MudMenuItem Label="Zebra Scanner"
+                                        Icon="material-symbols-rounded/point_scan"
+                                        OnClick="OpenZebraScanner" />
+                                </MudContainer>
+                            </ChildContent>
+                        </MudMenu> *@
+
+                        <!-- Barcode Scanner Button -->
+                        <MudTooltip Text="Barcode Scanner" Placement="Placement.Top" Delay="250" Arrow>
                             <MudFab Color="Color.Secondary"
                                     Size="Size.Small"
                                     StartIcon="material-symbols-rounded/barcode_scanner"
                                     OnClick="OpenBarcodeScanner"
                                     DropShadow="false" />
                         </MudTooltip>
+
+                        <!-- Zebra Tablet Barcode Scanner Button -->
+                        @* <MudTooltip Text="Zebra Scanner" Placement="Placement.Top" Delay="250" Arrow>
+                            <MudFab Color="Color.Secondary"
+                                    Size="Size.Small"
+                                    StartIcon="material-symbols-rounded/point_scan"
+                                    OnClick="OpenZebraScanner"
+                                    DropShadow="false" />
+                        </MudTooltip> *@
                     }
 
                     <!-- Image File picker -->
@@ -242,15 +283,7 @@
                                 DropShadow="false" />
                     </MudTooltip>
 
-                    <!-- Zebra Scanner -->
-                    <MudTooltip Text="Zebra Scanner" Placement="Placement.Top" Delay="250" Arrow>
-                        <MudFab Color="Color.Secondary"
-                                Size="Size.Small"
-                                StartIcon="material-symbols-rounded/point_scan"
-                                OnClick="OpenZebraScanner"
-                                DropShadow="false" />
-                    </MudTooltip>
-
+                    <!-- Upload to Database Button -->
                     <MudTooltip Text="Upload to Database" Placement="Placement.Top" Delay="250" Arrow>
                         <MudFab Color="Color.Secondary"
                                 Size="Size.Small"
@@ -260,6 +293,7 @@
                                 Disabled="isUploadingResults" />
                     </MudTooltip>
 
+                    <!-- Clear All Button -->
                     <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="250" Arrow>
                         <MudFab Color="Color.Warning"
                                 Size="Size.Small"

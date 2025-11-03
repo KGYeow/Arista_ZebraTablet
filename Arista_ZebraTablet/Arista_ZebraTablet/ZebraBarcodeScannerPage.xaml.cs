@@ -1,133 +1,16 @@
-﻿//using Arista_ZebraTablet.Services; // Import app-level services (e.g., BarcodeDetectorService)
-//using Arista_ZebraTablet.Shared.Application.ViewModels; // Import shared view models
-//using Arista_ZebraTablet.Shared.Application.Enums; // For BarcodeMode enum
-//using ZXing.Net.Maui; // Barcode detection library for MAUI
-//using ZXing.Net.Maui.Controls; // UI controls for barcode scanning
-
-//namespace Arista_ZebraTablet;
-
-///// <summary>
-///// LiveBarcodeScannerPage Component
-///// </summary>
-///// <remarks>
-///// This page handles live camera barcode scanning in MAUI.
-///// It supports two modes:
-///// 1. Single-shot mode: returns one barcode and closes.
-///// 2. List mode: continuously adds detected barcodes to a list.
-///// </remarks>
-//public partial class LiveBarcodeScannerPage : ContentPage
-//{
-//    private readonly BarcodeDetectorService _scannerService; // Service to store and manage scan results
-//    private readonly TaskCompletionSource<string?>? _singleShotTcs; // Used in single-shot mode to return one result
-//    private readonly BarcodeMode _mode; // Mode passed from home page (Standard or Unique)
-
-//    /// <summary>
-//    /// Constructor for List Mode
-//    /// </summary>
-//    public LiveBarcodeScannerPage(BarcodeDetectorService scannerService, BarcodeMode mode)
-//    {
-//        InitializeComponent();            // Load XAML UI
-//        _scannerService = scannerService; // Assign service for storing results
-//        _mode = mode;                     // Assign mode for classification
-
-//        //CameraView.Options = new BarcodeReaderOptions
-//        //{
-//        //    AutoRotate = true,
-//        //    Multiple = true,
-//        //    TryHarder = true,
-//        //    Formats = BarcodeFormats.All
-//        //};
-
-//        //// Trigger autofocus when the page is initialized
-//        //CameraView.AutoFocus(); // This calls the AutoFocus method internally
-
-//        // Simulate continuous autofocus every 3 seconds
-//        //Device.StartTimer(TimeSpan.FromSeconds(3), () =>
-//        //{
-//        //    CameraView.AutoFocus();
-//        //    return true; // Keep running
-//        //});
-
-
-//    }
-
-//#if ANDROID
-//    private DataWedgeReceiver? dataWedgeReceiver;
-
-//    protected override void OnAppearing()
-//    {
-//        base.OnAppearing();
-//        // Force DataWedge to use your profile
-//        Android.App.Application.Context.SendBroadcast(DataWedgeClient.BuildSwitchProfileIntent("ARISTAZebraTablet")); // <-- match your DW profile name
-
-//        // OPTIONAL: auto-start a scan when the page becomes visible.
-//        // If you prefer manual scan via a button, comment this out.
-//        StartSoftScan();
-//    }
-
-//    protected override void OnDisappearing()
-//    {
-//        StopSoftScan();
-//        base.OnDisappearing();
-//    }
-
-//    // ----- Optional UI event handlers (hook these to buttons in XAML) -----
-//    private void OnScanClicked(object? sender, EventArgs e) => StartSoftScan();
-//    private void OnStopClicked(object? sender, EventArgs e) => StopSoftScan();
-//    private void OnToggleClicked(object? sender, EventArgs e) => ToggleSoftScan();
-
-//    // ----- Soft Scan Trigger helpers -----
-//    private static void StartSoftScan()
-//    {
-//        var i = DataWedgeClient.BuildApiIntent("START_SCANNING");
-//        Android.App.Application.Context.SendBroadcast(i);
-//    }
-
-//    private static void StopSoftScan()
-//    {
-//        var i = DataWedgeClient.BuildApiIntent("STOP_SCANNING");
-//        Android.App.Application.Context.SendBroadcast(i);
-//    }
-
-//    private static void ToggleSoftScan()
-//    {
-//        var i = new Android.Content.Intent("com.symbol.datawedge.api.ACTION");
-//        i.PutExtra("com.symbol.datawedge.api.SOFT_SCAN_TRIGGER", "TOGGLE_SCANNING");
-//        Android.App.Application.Context.SendBroadcast(i);
-//    }
-//#endif
-
-//    /// <summary>
-//    /// Barcode Detection Handler: called when barcodes are detected by the camera
-//    /// </summary>
-//    //private void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
-//    //{
-//    //    var list = e.Results ?? Enumerable.Empty<BarcodeResult>(); // Get detected barcodes
-
-//    //    foreach (var r in list)
-//    //    {
-//    //        if (string.IsNullOrWhiteSpace(r.Value))
-//    //            continue; // Skip empty results
-
-//    //        var category = BarcodeClassifier.Classify(r.Value); // Classify barcode using regex
-
-//    //        // In list mode, add result to scanner service
-//    //        _scannerService.Add(r.Value, r.Format.ToString(), category);
-//    //    }
-//    //}
-//}
-
-using Arista_ZebraTablet.Services; // Import app-level services (e.g., BarcodeDetectorService)
-using Arista_ZebraTablet.Shared.Application.ViewModels; // Import shared view models
-using Arista_ZebraTablet.Shared.Application.Enums; // For BarcodeMode enum
-using ZXing.Net.Maui; // Barcode detection library for MAUI
-using ZXing.Net.Maui.Controls; // UI controls for barcode scanning
+﻿using Arista_ZebraTablet.Services; // Import app-level services
+using Arista_ZebraTablet.Shared.Application.ViewModels;
+using Arista_ZebraTablet.Shared.Application.Enums;
 
 namespace Arista_ZebraTablet;
 
 public partial class ZebraBarcodeScannerPage : ContentPage
 {
-    private readonly BarcodeDetectorService _scannerService;
+    private readonly BarcodeDetectorService _scannerService;    // Service to store and manage scan results
+
+#if ANDROID
+    private Android.Content.BroadcastReceiver? _decodeRx;
+#endif
 
     public ZebraBarcodeScannerPage(BarcodeDetectorService scannerService)
     {
@@ -140,7 +23,52 @@ public partial class ZebraBarcodeScannerPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        // Switch to Zebra profile
+        
+        // 1) Register a dynamic receiver for the decode channel (e.g., arista.zebra.SCAN)
+        _decodeRx = new AnonymousReceiver((ctx, intent) =>
+        {
+            if (intent?.Action != DataWedgeClient.ScanAction) return;
+
+            // Multi-barcode payload
+            if (intent.HasExtra("com.symbol.datawedge.barcodes"))
+            {
+                var list = intent.GetParcelableArrayListExtra("com.symbol.datawedge.barcodes");
+                if (list is null) return;
+                Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    foreach (var p in list)
+                    {
+                        if (p is Android.OS.Bundle b)
+                        {
+                            var value = b.GetString("com.symbol.datawedge.data_string");
+                            var sym   = b.GetString("com.symbol.datawedge.label_type") ?? "Unknown";
+                            if (!string.IsNullOrWhiteSpace(value))
+                                _scannerService.Add(value, sym, BarcodeClassifier.Classify(value));
+                        }
+                    }
+                });
+                return;
+            }
+
+            // Single decode extras
+            var data =
+                intent.GetStringExtra("com.symbol.datawedge.data_string") ??
+                intent.GetStringExtra("com.motorolasolutions.emdk.datawedge.data_string");
+            var symbology =
+                intent.GetStringExtra("com.symbol.datawedge.label_type") ??
+                intent.GetStringExtra("com.motorolasolutions.emdk.datawedge.label_type") ?? "Unknown";
+
+            if (string.IsNullOrWhiteSpace(data)) return;
+
+            Microsoft.Maui.ApplicationModel.MainThread.BeginInvokeOnMainThread(() =>
+                _scannerService.Add(data!, symbology, BarcodeClassifier.Classify(data!)));
+        });
+
+        var f = new Android.Content.IntentFilter(DataWedgeClient.ScanAction);
+        f.AddCategory(Android.Content.Intent.CategoryDefault);
+        Android.App.Application.Context.RegisterReceiver(_decodeRx, f);
+
+        // 2) Switch to Zebra DataWedge profile (so the right settings are active)
         Android.App.Application.Context.SendBroadcast(DataWedgeClient.BuildSwitchProfileIntent("ARISTAZebraTablet"));
     }
 
@@ -154,6 +82,34 @@ public partial class ZebraBarcodeScannerPage : ContentPage
     {
         var intent = DataWedgeClient.BuildApiIntent("STOP_SCANNING");
         Android.App.Application.Context.SendBroadcast(intent);
+    }
+
+    // Optional: emit a fake decode to prove UI updates even without the scanner
+    private void OnSimulateClicked(object sender, EventArgs e)
+    {
+        var intent = new Android.Content.Intent(DataWedgeClient.ScanAction);
+        intent.PutExtra("com.symbol.datawedge.data_string", "SIM-123456");
+        intent.PutExtra("com.symbol.datawedge.label_type",  "SIM_FORMAT");
+        intent.AddCategory(Android.Content.Intent.CategoryDefault);
+        Android.App.Application.Context.SendBroadcast(intent);
+    }
+
+    protected override void OnDisappearing()
+    {
+        if (_decodeRx is not null)
+        {
+            Android.App.Application.Context.UnregisterReceiver(_decodeRx);
+            _decodeRx = null;
+        }
+        base.OnDisappearing();
+    }
+
+    // Tiny helper to avoid writing a standalone class file
+    private sealed class AnonymousReceiver : Android.Content.BroadcastReceiver
+    {
+        private readonly Action<Android.Content.Context?, Android.Content.Intent?> _onReceive;
+        public AnonymousReceiver(Action<Android.Content.Context?, Android.Content.Intent?> onReceive) => _onReceive = onReceive;
+        public override void OnReceive(Android.Content.Context? context, Android.Content.Intent? intent) => _onReceive(context, intent);
     }
 #endif
 }

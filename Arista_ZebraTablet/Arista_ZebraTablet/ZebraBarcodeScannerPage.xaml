@@ -1,51 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<!--<ContentPage
+<ContentPage
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:Arista_ZebraTablet"
-    xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
-    xmlns:zx="clr-namespace:ZXing.Net.Maui;assembly=ZXing.Net.MAUI"
-    xmlns:components="clr-namespace:Arista_ZebraTablet.Components;assembly=Arista_ZebraTablet"
-    xmlns:shared="clr-namespace:Arista_ZebraTablet.Shared;assembly=Arista_ZebraTablet.Shared"
-    x:Class="Arista_ZebraTablet.LiveBarcodeScannerPage"
-    Title="Scan Barcodes">
-
-    <Grid RowDefinitions="0.6*,0.4*">
-         Optional status / instructions row 
-        <Grid Grid.Row="0" Padding="12">
-            <Label Text="Press the hardware trigger or tap the buttons below." FontAttributes="Bold"/>
-            <VerticalStackLayout Spacing="12">
-                <Button Text="Scan" Clicked="OnScanClicked"/>
-                <Button Text="Stop" Clicked="OnStopClicked"/>
-                <Button Text="Toggle" Clicked="OnToggleClicked"/>
-            </VerticalStackLayout>
-        </Grid>
-
-         Blazor Web View: Shows Real-Time Results 
-        <BlazorWebView x:Name="blazorWebView" Grid.Row="1" HostPage="wwwroot/index.html">
-            <BlazorWebView.RootComponents>
-                <RootComponent Selector="#app"  ComponentType="{x:Type components:BarcodeScannerResult}" />
-            </BlazorWebView.RootComponents>
-        </BlazorWebView>
-
-    </Grid>
-</ContentPage>-->
-
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="Arista_ZebraTablet.ZebraBarcodeScannerPage">
-    <VerticalStackLayout Padding="20">
+    x:Class="Arista_ZebraTablet.ZebraBarcodeScannerPage"
+>
+    <VerticalStackLayout Padding="20" Spacing="12">
         <Label Text="Zebra Scanner" FontSize="24" HorizontalOptions="Center" />
-        <Button Text="Start Scan" Clicked="OnStartScanClicked" />
-        <Button Text="Stop Scan" Clicked="OnStopScanClicked" />
-        <CollectionView ItemsSource="{Binding Barcodes}">
+
+        <HorizontalStackLayout Spacing="10">
+            <Button Text="Start Scan" Clicked="OnStartScanClicked" />
+            <Button Text="Stop Scan"  Clicked="OnStopScanClicked" />
+            <Button Text="Simulate"   Clicked="OnSimulateClicked" />
+        </HorizontalStackLayout>
+
+        <!-- Bind to the service's ObservableCollection -->
+        <CollectionView ItemsSource="{Binding Results}">
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <Label Text="{Binding Value}" />
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding Category}" FontSize="12" TextColor="Gray"/>
+                        <Label Text="{Binding Value}" FontAttributes="Bold"/>
+                        <Label Text="{Binding BarcodeType}" FontSize="12" TextColor="Gray"/>
+                        <Label Text="{Binding ScannedTime, StringFormat='{}{0:HH:mm:ss}'}" FontSize="12" TextColor="Gray"/>
+                    </VerticalStackLayout>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
     </VerticalStackLayout>
 </ContentPage>
- 
-    
