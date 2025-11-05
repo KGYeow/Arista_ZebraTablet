@@ -5,6 +5,7 @@ using Arista_ZebraTablet.Shared.Services;
 using Arista_ZebraTablet.Shared.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MudBlazor;
 using Color = MudBlazor.Color;
 
@@ -124,11 +125,12 @@ public partial class Home : ComponentBase
     /// Navigates to the native/hybrid barcode scanner screen for the current <see cref="barcodeMode"/>.
     /// </summary>
     private async Task OpenBarcodeScanner() => await Detector.NavigateToScannerAsync(barcodeMode);
-    
+
     /// <summary>
     /// Navigates to the native/hybrid zebra tablet barcode scanner screen for the current <see cref="barcodeMode"/>.
     /// </summary>
-    private async Task OpenZebraScanner() => await Detector.NavigateToZebraScannerAsync();
+    //private async Task OpenZebraScanner() => await Detector.NavigateToZebraScannerAsync();
+    //private async void OpenZebraScanner() => await Detector.NavigateToZebraScannerAsync();
 
     /// <summary>
     /// Maps a file processing state to an appropriate MudBlazor color.

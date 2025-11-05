@@ -48,12 +48,13 @@ namespace Arista_ZebraTablet.Services
         public Task NavigateToZebraScannerAsync() => Task.CompletedTask;
         //public async Task NavigateToZebraScannerAsync()
         //{
-        //    //_navigationManager.NavigateTo("/zebra-scanner");
-        //    //await Task.CompletedTask;
         //    await MainThread.InvokeOnMainThreadAsync(async () =>
         //    {
         //        try
         //        {
+        //            Console.WriteLine($"[DEBUG] BarcodeDetectorService instance: {this.GetType().Name}");
+        //            Console.WriteLine($"[DEBUG] Results count: {Results?.Count}");
+
         //            var page = new ZebraBarcodeScannerPage(this);
         //            await App.Current.Windows[0].Page.Navigation.PushModalAsync(page, true);
         //        }
@@ -70,7 +71,7 @@ namespace Arista_ZebraTablet.Services
         public void Add(string value, string barcodeType, string category)
         {
             if (string.IsNullOrWhiteSpace(value)) return;
-
+            Console.WriteLine($"Adding barcode to Results: {value}");
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 if (_seen.Add(value))
