@@ -8,7 +8,7 @@
 <PageTitle>Home | @AppConstant.AppTitle</PageTitle>
 
 <MudBreakpointProvider OnBreakpointChanged="HandleBreakpointChanged">
-    <MudContainer Class="pt-6 pb-0 position-sticky" MaxWidth="MaxWidth.Large" Style="">
+    <MudContainer Class="pt-6 pb-0 px-4 position-sticky" MaxWidth="MaxWidth.Large" Style="">
         <!-- Barcode Categorization Mode Toggle Button -->
         <MudGrid Spacing="4" Justify="Justify.Center">
             <MudItem xs="12" sm="4">
@@ -27,7 +27,7 @@
         </MudGrid>
     </MudContainer>
 
-    <MudContainer Class="py-4 d-flex flex-column gap-3 position-relative" MaxWidth="MaxWidth.Large" Style="flex: 1 1 auto; min-height: 0;">
+    <MudContainer Class="p-4 d-flex flex-column gap-3 position-relative" MaxWidth="MaxWidth.Large" Style="flex: 1 1 auto; min-height: 0;">
         <!-- Uploading Images Progress / Uploading Detected Barcodes Progress / Processing Progress -->
         <LoadingOverlay
             Visible="@(isUploadingImg || isUploadingResults || isBusy)"
@@ -118,7 +118,7 @@
                                     <MudSpacer />
 
                                     <!-- Delete Image Button -->
-                                    <MudTooltip Text="Delete" Placement="Placement.Left" Delay="250" Arrow>
+                                    <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
                                         <MudIconButton Icon="@Icons.Material.Rounded.DeleteOutline"
                                                         Color="Color.Error"
                                                         Size="Size.Small"
@@ -167,7 +167,7 @@
                                                                 <!-- Detected Barcode Results Actions (Display on Larger Screen) -->
                                                                 <MudHidden Breakpoint="Breakpoint.Xs">
                                                                     <!-- Edit Scanned Result Button -->
-                                                                    <MudTooltip Text="Edit" Placement="Placement.Left" Delay="250" Arrow>
+                                                                    <MudTooltip Text="Edit" Placement="Placement.Left" Delay="400" Arrow>
                                                                         <MudIconButton Icon="@Icons.Material.Rounded.Edit"
                                                                                         Color="Color.Primary"
                                                                                         Size="Size.Small"
@@ -176,7 +176,7 @@
                                                                     </MudTooltip>
 
                                                                     <!-- Delete Scanned Result Button -->
-                                                                    <MudTooltip Text="Delete" Placement="Placement.Left" Delay="250" Arrow>
+                                                                    <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
                                                                         <MudIconButton Icon="@Icons.Material.Rounded.DeleteOutline"
                                                                                         Color="Color.Error"
                                                                                         Size="Size.Small"
@@ -200,71 +200,98 @@
         </MudContainer>
     </MudContainer>
 
-    <MudContainer Class="@($"pt-0 pb-6 {(currentBreakpoint == Breakpoint.Xs || isUploadingImg || uploadedImgFiles.Any() ? "" : "flex-grow-1")}")" MaxWidth="MaxWidth.Large" Style="height:fit-content;">
+    <MudContainer Class="@($"pt-0 pb-6 px-4 {(currentBreakpoint == Breakpoint.Xs || isUploadingImg || uploadedImgFiles.Any() ? "" : "flex-grow-1")}")" MaxWidth="MaxWidth.Large" Style="height:fit-content;">
         <!-- Toolbar Section for Uploading Images -->
         <MudItem Class="position-sticky">
             <MudPaper Class="px-3 py-2 mud-theme-primary" Elevation="0" Style="border-radius: 40px">
                 <MudStack Row Spacing="2" AlignItems="AlignItems.Center" Justify="Justify.SpaceEvenly">
+                    <!-- More Button & More Options Drawer (Display on Smaller Screen) -->
+                    <MudHidden Breakpoint="Breakpoint.SmAndUp">
+                        <!-- More Button -->
+                        <MudItem>
+                            <MudFab Color="Color.Secondary"
+                                    OnClick="ToggleMoreDrawer"
+                                    Size="Size.Small"
+                                    StartIcon="material-symbols-rounded/add"
+                                    DropShadow="false" />
+                        </MudItem>
+
+                        <!-- More Options Drawer -->
+                        <MudDrawer @bind-Open="@moreDrawerOpen" Anchor="@Anchor.Bottom" Elevation="25" Variant="@DrawerVariant.Temporary" Style="border-top-left-radius: 16px; border-top-right-radius: 16px;">
+                            <MudNavMenu class="py-3" Color="Color.Surface">
+                                @if (factor != "Web")
+                                {
+                                    <MudContainer Class="px-3 d-flex flex-column" Gutters="false">
+                                        <MudStack Row Spacing="2" Justify="Justify.Center">
+                                            <MudButton Class="flex-grow-1"
+                                                       Variant="Variant.Filled"
+                                                       Color="Color.Secondary"
+                                                       DropShadow="false"
+                                                       OnClick="OpenBarcodeScanner">
+                                                <div class="d-flex flex-column align-items-center">
+                                                    <MudIcon Icon="material-symbols-rounded/barcode_scanner" />
+                                                    Barcode Scanner
+                                                </div>
+                                            </MudButton>
+
+                                            <MudButton Class="flex-grow-1"
+                                                       Variant="Variant.Filled"
+                                                       Color="Color.Secondary"
+                                                       DropShadow="false"
+                                                       OnClick="OpenZebraScanner">
+                                                <div class="d-flex flex-column align-items-center">
+                                                    <MudIcon Icon="material-symbols-rounded/point_scan" />
+                                                    Zebra Scanner
+                                                </div>
+                                            </MudButton>
+                                        </MudStack>
+                                        <MudDivider Class="my-3" />
+                                    </MudContainer>
+                                }
+                                <MudNavLink
+                                    Icon="material-symbols-rounded/database_upload"
+                                    OnClick="SaveDetectedBarcodesConfirmationAsync"
+                                    Disabled="isUploadingResults"
+                                >
+                                    Upload to Database
+                                </MudNavLink>
+                            </MudNavMenu>
+                        </MudDrawer>
+                    </MudHidden>
+
                     @if (factor != "Web")
                     {
-                        <!-- More Button -->
-                        @* <MudMenu>
-                            <ActivatorContent>
-                                <MudTooltip Text="More" Placement="Placement.Top" Delay="250" Arrow>
-                                    <MudFab Color="Color.Secondary"
-                                            Size="Size.Small"
-                                            StartIcon="material-symbols-rounded/add"
-                                            DropShadow="false" />
-                                </MudTooltip>
-                            </ActivatorContent>
-                            <ChildContent>
-                                <MudContainer Gutters="false">
-                                    <MudButton
-                                        Variant="Variant.Filled"
+                        <!-- Scanner Buttons (Display on Larger Screen) -->
+                        <MudHidden Breakpoint="Breakpoint.Xs">
+                            <!-- Barcode Scanner Button -->
+                            <MudTooltip Text="Barcode Scanner" Placement="Placement.Right" Delay="400" Arrow>
+                                <MudFab Color="Color.Secondary"
+                                        Size="Size.Small"
                                         StartIcon="material-symbols-rounded/barcode_scanner"
+                                        OnClick="OpenBarcodeScanner"
+                                        DropShadow="false" />
+                            </MudTooltip>
 
-                                        Style="background-color: yellowgreen; color: white; width: 200px; height: 60px;"
-                                    >
-                                        Download Now
-                                    </MudButton>
-
-                                    <MudMenuItem Label="Barcode Scanner"
-                                        Icon="material-symbols-rounded/barcode_scanner"
-                                        OnClick="OpenBarcodeScanner" />
-                                    <MudMenuItem Label="Zebra Scanner"
-                                        Icon="material-symbols-rounded/point_scan"
-                                        OnClick="OpenZebraScanner" />
-                                </MudContainer>
-                            </ChildContent>
-                        </MudMenu> *@
-
-                        <!-- Barcode Scanner Button -->
-                        <MudTooltip Text="Barcode Scanner" Placement="Placement.Top" Delay="250" Arrow>
-                            <MudFab Color="Color.Secondary"
-                                    Size="Size.Small"
-                                    StartIcon="material-symbols-rounded/barcode_scanner"
-                                    OnClick="OpenBarcodeScanner"
-                                    DropShadow="false" />
-                        </MudTooltip>
-
-                        <!-- Zebra Tablet Barcode Scanner Button -->
-                        @* <MudTooltip Text="Zebra Scanner" Placement="Placement.Top" Delay="250" Arrow>
-                            <MudFab Color="Color.Secondary"
-                                    Size="Size.Small"
-                                    StartIcon="material-symbols-rounded/point_scan"
-                                    OnClick="OpenZebraScanner"
-                                    DropShadow="false" />
-                        </MudTooltip> *@
+                            <!-- Zebra Tablet Barcode Scanner Button -->
+                            <MudTooltip Text="Zebra Scanner" Placement="Placement.Top" Delay="400" Arrow>
+                                <MudFab Color="Color.Secondary"
+                                        Size="Size.Small"
+                                        StartIcon="material-symbols-rounded/point_scan"
+                                        OnClick="OpenZebraScanner"
+                                        DropShadow="false" />
+                            </MudTooltip>
+                        </MudHidden>
                     }
 
                     <!-- Image File picker -->
                     <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                                    Class="w-100"
                                    Accept=".jpg,.jpeg,.png,.heic,.heif,image/*"
                                    FilesChanged="UploadImageFilesAsync"
                                    MaximumFileCount="50"
                                    Disabled="@(isUploadingImg || isUploadingResults)">
                         <ActivatorContent>
-                            <MudFab Class="text-white"
+                            <MudFab Class="text-white w-100"
                                     Label="Upload Images"
                                     Color="Color.Secondary"
                                     Size="Size.Small"
@@ -274,10 +301,8 @@
                         </ActivatorContent>
                     </MudFileUpload>
 
-                    <MudSpacer />
-
                     <!-- Detect Barcodes Button -->
-                    <MudTooltip Text="Detect Barcodes" Placement="Placement.Top" Delay="250" Arrow>
+                    <MudTooltip Text="Detect Barcodes" Placement="Placement.Top" Delay="400" Arrow>
                         <MudFab Color="Color.Secondary"
                                 Size="Size.Small"
                                 StartIcon="material-symbols-rounded/scan"
@@ -285,18 +310,20 @@
                                 DropShadow="false" />
                     </MudTooltip>
 
-                    <!-- Upload to Database Button -->
-                    <MudTooltip Text="Upload to Database" Placement="Placement.Top" Delay="250" Arrow>
-                        <MudFab Color="Color.Secondary"
-                                Size="Size.Small"
-                                StartIcon="material-symbols-rounded/database_upload"
-                                OnClick="SaveDetectedBarcodesConfirmationAsync"
-                                DropShadow="false"
-                                Disabled="isUploadingResults" />
-                    </MudTooltip>
+                    <!-- Upload to Database Button (Display on Larger Screen) -->
+                    <MudHidden Breakpoint="Breakpoint.Xs">
+                        <MudTooltip Text="Upload to Database" Placement="Placement.Top" Delay="400" Arrow>
+                            <MudFab Color="Color.Secondary"
+                                    Size="Size.Small"
+                                    StartIcon="material-symbols-rounded/database_upload"
+                                    OnClick="SaveDetectedBarcodesConfirmationAsync"
+                                    DropShadow="false"
+                                    Disabled="isUploadingResults" />
+                        </MudTooltip>
+                    </MudHidden>
 
                     <!-- Clear All Button -->
-                    <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="250" Arrow>
+                    <MudTooltip Text="Clear All" Placement="Placement.Top" Delay="400" Arrow>
                         <MudFab Color="Color.Warning"
                                 Size="Size.Small"
                                 StartIcon="@Icons.Material.Rounded.ClearAll"
@@ -309,3 +336,9 @@
         </MudItem>
     </MudContainer>
 </MudBreakpointProvider>
+
+@code{
+    private bool moreDrawerOpen { get; set; }
+
+    private void ToggleMoreDrawer() => moreDrawerOpen = !moreDrawerOpen;
+}

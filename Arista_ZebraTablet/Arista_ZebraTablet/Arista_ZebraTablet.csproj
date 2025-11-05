@@ -76,6 +76,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="ZebraBarcodeScannerPage.xaml.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <MauiXaml Remove="ZebraBarcodeScannerPage.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="Resources\raw\Jabil Enterprise KF ICA 1.crt" />
     <Content Include="Resources\raw\Jabil Enterprise KF RCA 1.crt" />
     <Content Include="Resources\Splash\jabil_white_sky_blue_rgb.png">
@@ -107,15 +115,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="LiveBarcodeScannerPage.xaml.cs">
-      <DependentUpon>LiveBarcodeScannerPage.xaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <MauiXaml Update="ZebraBarcodeScannerPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </MauiXaml>
     <MauiXaml Update="LiveBarcodeScannerPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </MauiXaml>
