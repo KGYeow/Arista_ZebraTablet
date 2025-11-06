@@ -18,9 +18,10 @@ public partial class LiveBarcodeScannerPage : ContentPage
 
     public LiveBarcodeScannerPage(BarcodeDetectorService scannerService, BarcodeMode mode)
     {
-        InitializeComponent();            // Load XAML UI
-        _scannerService = scannerService; // Assign service for storing results
-        _mode = mode;                     // Assign mode for classification
+        InitializeComponent();              // Load XAML UI
+        _scannerService = scannerService;   // Assign service for storing results
+        _mode = mode;                       // Assign mode for classification
+        BindingContext = this;              // expose IsDetectingFromCamera to XAML binding
 
         CameraView.Options = new BarcodeReaderOptions
         {
