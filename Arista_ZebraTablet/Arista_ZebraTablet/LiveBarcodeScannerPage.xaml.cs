@@ -73,6 +73,7 @@ public partial class LiveBarcodeScannerPage : ContentPage
         _scanAnimCts = new CancellationTokenSource();
         _ = RunScanLineAnimationAsync(_scanAnimCts.Token);
     }
+
     private void StopScanAnimation()
     {
         _scanAnimCts?.Cancel();
@@ -99,8 +100,8 @@ public partial class LiveBarcodeScannerPage : ContentPage
             await MainThread.InvokeOnMainThreadAsync(async () =>
             {
                 await Task.WhenAll(
-                    ScanLine.TranslateTo(0, y, travelMs, Easing.Linear),
-                    ScanLineGlow.TranslateTo(0, y, travelMs, Easing.Linear)
+                    ScanLine.TranslateTo(0, y, travelMs, Easing.SinInOut),
+                    ScanLineGlow.TranslateTo(0, y, travelMs, Easing.SinInOut)
                 );
             });
         }

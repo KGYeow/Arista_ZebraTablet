@@ -18,11 +18,8 @@
 
             // Clear the scan box area
             canvas.BlendMode = BlendMode.DestinationOut;
-            canvas.FillColor = Color.FromArgb("#00000000"); ;
+            canvas.FillColor = Color.FromArgb("#00000000");
             canvas.FillRoundedRectangle(x, y, boxWidth, boxHeight, 12);
-
-            // Restore blend mode
-            //canvas.BlendMode = BlendMode.SourceOut;
 
             // Draw corner brackets
             float bracketLength = 24;

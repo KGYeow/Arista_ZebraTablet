@@ -24,42 +24,102 @@
 
             <MudSpacer/>
 
+            <!-- Action Buttons -->
             <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                <!-- Copy Button -->
-                <MudTooltip Text="Copy All Results" Placement="Placement.Top" Delay="250" Arrow>
-                <MudIconButton
-                        Color="Color.Primary"
-                        Size="Size.Small"
-                        Icon="@Icons.Material.Filled.ContentCopy"
-                        OnClick="CopyAllScannedResultsAsync"
-                        Disabled="@(!scanResultsService.Results.Any())" 
-                />
-                </MudTooltip>
-                <!-- Submit Button -->
-                <MudTooltip Text="Upload to Database" Placement="Placement.Left" Delay="250" Arrow>
-                    <MudIconButton
-                        Color="Color.Primary"
-                        Icon="material-symbols-rounded/database_upload"
-                        Variant="Variant.Filled"
-                        Size="Size.Small"
-                        Disabled="@(!scanResultsService.Results.Any() || isSaving)"
-                        DropShadow="false"
-                        OnClick="SaveScannedResultConfirmationAsync"
-                    />
-                </MudTooltip>
+                <!-- Action Buttons (Display on Larger Screen) -->
+                <MudHidden Breakpoint="Breakpoint.Xs">
+                    <!-- If not in "Reorder" state -->
+                    @if (true)
+                    {
+                        <!-- Copy to Clipboard Button -->
+                        <MudTooltip Text="Copy Results" Placement="Placement.Bottom" Delay="400" Arrow>
+                            <MudIconButton Color="Color.Primary"
+                                           Icon="@Icons.Material.Rounded.ContentCopy"
+                                           Size="Size.Small"
+                                           Disabled="@(!scanResultsService.Results.Any() || isSaving)"
+                                           OnClick="CopyAllScannedResultsAsync" />
+                        </MudTooltip>
 
-                <!-- Clear Button -->
-                <MudTooltip Text="Clear All" Placement="Placement.Left" Delay="250" Arrow>
-                    <MudIconButton
-                        Color="Color.Warning"
-                        Icon="@Icons.Material.Rounded.ClearAll"
-                        Variant="Variant.Outlined"
+                        <!-- Upload to Database Button -->
+                        @* <MudTooltip Text="Upload to Database" Placement="Placement.Bottom" Delay="400" Arrow>
+                            <MudIconButton Color="Color.Primary"
+                                           Icon="material-symbols-rounded/database_upload"
+                                           Size="Size.Small"
+                                           Disabled="isSaving"
+                                           OnClick="SaveScannedResultConfirmationAsync" />
+                        </MudTooltip> *@
+
+                        <!-- Clear All Button -->
+                        <MudTooltip Text="Clear All" Placement="Placement.Left" Delay="400" Arrow>
+                            <MudIconButton Color="Color.Warning"
+                                           Icon="@Icons.Material.Rounded.ClearAll"
+                                           Variant="Variant.Outlined"
+                                           Size="Size.Small"
+                                           Disabled="isSaving"
+                                           OnClick="ClearAllScannedResultConfirmationAsync" />
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <!-- Confirm Reorder Button -->
+                        <MudTooltip Text="Confirm Reorder" Placement="Placement.Bottom" Delay="400" Arrow>
+                            <MudIconButton Icon="@Icons.Material.Rounded.Check"
+                                           Color="Color.Success"
+                                           Size="Size.Small" />
+                        </MudTooltip>
+
+                        <!-- Cancel Reorder Button -->
+                        <MudTooltip Text="Cancel Reorder" Placement="Placement.Left" Delay="400" Arrow>
+                            <MudIconButton Icon="@Icons.Material.Rounded.Close"
+                                           Color="Color.Error"
+                                           Size="Size.Small" />
+                        </MudTooltip>
+                    }
+                    
+                </MudHidden>
+
+                <!-- Action Buttons (Display on Smaller Screen) -->
+                <MudHidden Breakpoint="Breakpoint.SmAndUp">
+                    <MudMenu
+                        Icon="@Icons.Material.Rounded.MoreVert"
                         Size="Size.Small"
-                        DropShadow="false"
-                        Disabled="@(!scanResultsService.Results.Any() || isSaving)"
-                        OnClick="ClearAllScannedResultConfirmationAsync"
-                    />
-                </MudTooltip>
+                        AnchorOrigin="Origin.BottomLeft"
+                        TransformOrigin="Origin.CenterRight"
+                        Disabled="isSaving"
+                        Dense
+                    >
+                        <!-- If not in "Reorder" state -->
+                        @if (true)
+                        {
+                            <MudMenuItem
+                                Label="Copy Results"
+                                Icon="@Icons.Material.Rounded.ContentCopy"
+                                OnClick="CopyAllScannedResultsAsync"
+                            />
+                            @* <MudMenuItem
+                                    Label="Upload to Database"
+                                    Icon="@Icons.Material.Rounded.DeleteOutline"
+                                    OnClick="SaveScannedResultConfirmationAsync"
+                                /> *@
+                            <MudMenuItem
+                                Label="Clear All"
+                                Icon="@Icons.Material.Rounded.ClearAll"
+                                OnClick="ClearAllScannedResultConfirmationAsync"
+                            />
+                        }
+                        else
+                        {
+                            <MudMenuItem
+                                Label="Confirm Reorder"
+                                Icon="@Icons.Material.Rounded.Check"
+                            />
+                            <MudMenuItem
+                                Label="Cancel Reorder"
+                                Icon="@Icons.Material.Rounded.Close"
+                            />
+                        }
+                    </MudMenu>
+                </MudHidden>
             </MudStack>
         </MudStack>
 
@@ -87,7 +147,7 @@
 
                                 <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
                                     <!-- Copy Button -->
-                                    <MudTooltip Text="Copy" Placement="Placement.Top" Delay="250" Arrow>
+                                    <MudTooltip Text="Copy" Placement="Placement.Top" Delay="400" Arrow>
                                     <MudIconButton
                                             Color="Color.Primary"
                                             Size="Size.Small"
@@ -97,7 +157,7 @@
                                             />
                                     </MudTooltip>
                                     <!-- Edit Scanned Result Button -->
-                                    <MudTooltip Text="Edit" Placement="Placement.Left" Delay="250" Arrow>
+                                    <MudTooltip Text="Edit" Placement="Placement.Left" Delay="400" Arrow>
                                         <MudIconButton
                                             Icon="@Icons.Material.Filled.Edit"
                                             Color="Color.Primary"
@@ -108,7 +168,7 @@
                                     </MudTooltip>
 
                                     <!-- Delete Scanned Result Button -->
-                                    <MudTooltip Text="Delete" Placement="Placement.Left" Delay="250" Arrow>
+                                    <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
                                         <MudIconButton
                                             Icon="@Icons.Material.Filled.Delete"
                                             Color="Color.Error"
