@@ -95,6 +95,52 @@ public partial class Home : ComponentBase
     private int uploadImgProgress { get; set; }
 
     /// <summary>
+    /// Tracks whether the "More Options" drawer is currently open.
+    /// Bound to the MudDrawer component in the Home page.
+    /// </summary>
+    private bool moreDrawerOpen { get; set; }
+
+    /// <summary>
+    /// Reference to the MudSwipeArea component used for detecting swipe gestures
+    /// on the "More Options" drawer.
+    /// </summary>
+    private MudSwipeArea swipeArea = null!;
+
+    /// <summary>
+    /// Handles swipe movement events from the MudSwipeArea.
+    /// Closes the "More Options" drawer when a top-to-bottom swipe is detected.
+    /// </summary>
+    /// <param name="e">Event arguments containing swipe direction details.</param>
+    public void HandleSwipeMove(MultiDimensionSwipeEventArgs e)
+    {
+        for (int i = 0; i < e.SwipeDirections.Count; i++)
+        {
+            if (e.SwipeDirections[i] == MudBlazor.SwipeDirection.TopToBottom && moreDrawerOpen)
+            {
+                moreDrawerOpen = false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Called when the swipe gesture leaves the MudSwipeArea.
+    /// Cancels any ongoing swipe and resets the UI state.
+    /// </summary>
+    private void OnSwipeLeave()
+    {
+        swipeArea.Cancel();
+        ResetSwipeArea();
+    }
+
+    /// <summary>
+    /// Requests a UI refresh after swipe-related state changes.
+    /// </summary>
+    private void ResetSwipeArea()
+    {
+        StateHasChanged();
+    }
+
+    /// <summary>
     /// Current device form factor ("Web", "Android", "iOS", etc.) as provided by <see cref="IFormFactorService"/>.
     /// </summary>
     private string factor => FormFactor.GetFormFactor();
@@ -187,6 +233,12 @@ public partial class Home : ComponentBase
             .Select(f => f.Id)
             .ToHashSet();
     }
+
+    /// <summary>
+    /// Toggles the visibility of the "More Options" drawer.
+    /// Called by the UI when the user clicks the floating action button.
+    /// </summary>
+    private void ToggleMoreDrawer() => moreDrawerOpen = !moreDrawerOpen;
 
     #endregion
 

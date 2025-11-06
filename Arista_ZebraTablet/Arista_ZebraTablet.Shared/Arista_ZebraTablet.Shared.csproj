@@ -35,4 +35,8 @@
     <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.5.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\css\" />
+  </ItemGroup>
+
 </Project>

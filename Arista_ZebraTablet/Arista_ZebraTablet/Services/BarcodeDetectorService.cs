@@ -45,25 +45,6 @@ namespace Arista_ZebraTablet.Services
             });
         }
 
-        public Task NavigateToZebraScannerAsync() => Task.CompletedTask;
-        //public async Task NavigateToZebraScannerAsync()
-        //{
-        //    //_navigationManager.NavigateTo("/zebra-scanner");
-        //    //await Task.CompletedTask;
-        //    await MainThread.InvokeOnMainThreadAsync(async () =>
-        //    {
-        //        try
-        //        {
-        //            var page = new ZebraBarcodeScannerPage(this);
-        //            await App.Current.Windows[0].Page.Navigation.PushModalAsync(page, true);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            await App.Current.Windows[0].Page.DisplayAlert("Navigation error", ex.Message, "OK");
-        //        }
-        //    });
-        //}
-
         /// <summary>
         /// Adds a scanned barcode to the result list if not already added.
         /// </summary>
@@ -175,43 +156,5 @@ namespace Arista_ZebraTablet.Services
             }
             return results;
         }
-        //public async Task NavigateToScannerAsync()
-        //{
-        //    await MainThread.InvokeOnMainThreadAsync(async () =>
-        //    {
-        //        try
-        //        {
-        //            // Create scanner page via DI
-        //            //var page = new LiveBarcodeScannerPage(this);
-        //            var page = new LiveBarcodeScannerPage(this, mode);
-        //            await Application.Current!.MainPage!.Navigation.PushModalAsync(page, animated: true);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            await Application.Current!.MainPage!.DisplayAlert("Navigation error", ex.Message, "OK");
-        //        }
-        //    });
-        //}
-
-        //public async Task<string?> ScanAsync(CancellationToken ct = default)
-        //{
-        //    var tcs = new TaskCompletionSource<string?>();
-
-        //    await MainThread.InvokeOnMainThreadAsync(async () =>
-        //    {
-        //        try
-        //        {
-        //            var page = new LiveBarcodeScannerPage(tcs, this); // Manual creation
-        //            await Application.Current!.MainPage!.Navigation.PushModalAsync(page, animated: true);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            tcs.TrySetException(ex);
-        //        }
-        //    });
-
-        //    using (ct.Register(() => tcs.TrySetCanceled()))
-        //        return await tcs.Task.ConfigureAwait(false);
-        //}
     }
 }

@@ -13,10 +13,7 @@
         <!-- Topbar -->
         <Topbar Title="ARISTA Batch Barcode Scanner">
             <LeftContent>
-                @if (factor == "Web")
-                {
-                    <MudToggleIconButton Icon="@Icons.Material.Rounded.Menu" ToggledIcon="@Icons.Material.Rounded.MenuOpen" Color="Color.Inherit" Edge="Edge.Start" @bind-Toggled="drawerOpen" />
-                }
+                <MudToggleIconButton Icon="@Icons.Material.Rounded.Menu" ToggledIcon="@Icons.Material.Rounded.MenuOpen" Color="Color.Inherit" Edge="Edge.Start" @bind-Toggled="drawerOpen" />
             </LeftContent>
         </Topbar>
 
@@ -27,7 +24,7 @@
     }
 
     <!-- Main Content -->
-    <MudMainContent Class="vh-100 d-flex flex-column overflow-hidden">
+    <MudMainContent Class="@($"vh-100 d-flex flex-column overflow-hidden {(factor == "Web" ? "" : "pt-0")}")">
         <!-- Page Content -->
         @Body
     </MudMainContent>
