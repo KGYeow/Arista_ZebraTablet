@@ -6,28 +6,62 @@
     xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
     xmlns:zx="clr-namespace:ZXing.Net.Maui;assembly=ZXing.Net.MAUI"
     xmlns:components="clr-namespace:Arista_ZebraTablet.Components;assembly=Arista_ZebraTablet"
+    xmlns:services="clr-namespace:Arista_ZebraTablet.Services;assembly=Arista_ZebraTablet"
     x:Class="Arista_ZebraTablet.LiveBarcodeScannerPage"
     Title="Scan Barcodes"
 >
     <Grid RowDefinitions="0.6*,0.4*">
-        <!-- Camera -->
-        <Grid Grid.Row="0" HeightRequest="400">
+        <AbsoluteLayout Grid.Row="0">
+            <!-- Camera -->
             <zxing:CameraBarcodeReaderView
                 x:Name="CameraView"
+                AbsoluteLayout.LayoutBounds="0,0,1,1"
+                AbsoluteLayout.LayoutFlags="All"
                 BarcodesDetected="OnBarcodesDetected"
                 CameraLocation="Rear"
             >
                 <zxing:CameraBarcodeReaderView.Options>
-                    <zx:BarcodeReaderOptions AutoRotate="True"/>
+                    <zx:BarcodeReaderOptions AutoRotate="True" />
                 </zxing:CameraBarcodeReaderView.Options>
             </zxing:CameraBarcodeReaderView>
 
-        </Grid>
+            <!-- Scan Overlay with Punch-Out -->
+            <GraphicsView x:Name="ScanOverlay"
+                          Drawable="{x:Static services:ScanOverlayDrawable.Instance}"
+                          AbsoluteLayout.LayoutBounds="0,0,1,1"
+                          AbsoluteLayout.LayoutFlags="All"
+                          BackgroundColor="Transparent"
+                          InputTransparent="True" />
 
-        <!-- Blazor Web View: Shows Real-Time Results -->
+            <!-- Scan Line inside transparent ScanBox -->
+            <Grid x:Name="ScanBox"
+                  AbsoluteLayout.LayoutBounds="0,0,1,1"
+                  AbsoluteLayout.LayoutFlags="All"
+                  WidthRequest="300"
+                  HeightRequest="300"
+                  HorizontalOptions="Center"
+                  VerticalOptions="Center"
+                  BackgroundColor="Transparent"
+                  InputTransparent="True"
+            >
+                <BoxView x:Name="ScanLineGlow"
+                         HeightRequest="4"
+                         Opacity="0.35"
+                         BackgroundColor="#00E5FF"
+                         HorizontalOptions="Fill"
+                         VerticalOptions="Start" />
+                <BoxView x:Name="ScanLine"
+                         HeightRequest="2"
+                         BackgroundColor="#00E5FF"
+                         HorizontalOptions="Fill"
+                         VerticalOptions="Start" />
+            </Grid>
+        </AbsoluteLayout>
+
+        <!-- Blazor WebView: Result List -->
         <BlazorWebView x:Name="blazorWebView" Grid.Row="1" HostPage="wwwroot/index.html">
             <BlazorWebView.RootComponents>
-                <RootComponent Selector="#app"  ComponentType="{x:Type components:BarcodeScannerResult}" />
+                <RootComponent Selector="#app" ComponentType="{x:Type components:BarcodeScannerResult}" />
             </BlazorWebView.RootComponents>
         </BlazorWebView>
     </Grid>
