@@ -593,9 +593,17 @@ public partial class Home : ComponentBase
                 // Use the decoder service to extract barcode values.
                 var results = Detector.DecodeFromImage(item.Bytes, barcodeMode);
 
+
+                // Sorts the detected barcode results based on a predefined category order.Categories are matched against the PreferredCategoryOrder list.
+                // If a category is not found in the list, it is placed at the end.Results with the same category are further sorted by scan time.
                 item.DetectResult = new DetectResultViewModel
                 {
                     Barcodes = results
+                        .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
+                        ? PreferredCategoryOrder.IndexOf(b.Category)
+                        : int.MaxValue)
+                        .ThenBy(b => b.ScannedTime) // optional: secondary sort
+                        .ToList()
                 };
                 item.State = FileState.Done;
 
@@ -678,6 +686,20 @@ public partial class Home : ComponentBase
             StateHasChanged();
         }
     }
+
+    /// <summary>
+    /// Defines the desired order for barcode categories.
+    /// Used for sorting both display and copy operations.
+    /// </summary> 
+    private static readonly List<string> PreferredCategoryOrder = new()
+    {
+        "ASY",
+        "ASY-OTL",
+        "Serial Number",
+        "MAC Address",
+        "Deviation",
+        "PCA"
+    };
 
     #endregion
 }

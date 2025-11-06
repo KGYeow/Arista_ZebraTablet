@@ -25,6 +25,16 @@
             <MudSpacer/>
 
             <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                <!-- Copy Button -->
+                <MudTooltip Text="Copy All Results" Placement="Placement.Top" Delay="250" Arrow>
+                <MudIconButton
+                        Color="Color.Primary"
+                        Size="Size.Small"
+                        Icon="@Icons.Material.Filled.ContentCopy"
+                        OnClick="CopyAllScannedResultsAsync"
+                        Disabled="@(!scanResultsService.Results.Any())" 
+                />
+                </MudTooltip>
                 <!-- Submit Button -->
                 <MudTooltip Text="Upload to Database" Placement="Placement.Left" Delay="250" Arrow>
                     <MudIconButton
@@ -64,7 +74,7 @@
                 }
                 else
                 {
-                    @foreach (var barcodeItem in scanResultsService.Results)
+                    @foreach (var barcodeItem in SortedResults)
                     {
                         <MudPaper Class="pa-3" Elevation="0" Outlined>
                             <MudStack Row Spacing="3">
@@ -76,6 +86,16 @@
                                 <MudSpacer />
 
                                 <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
+                                    <!-- Copy Button -->
+                                    <MudTooltip Text="Copy" Placement="Placement.Top" Delay="250" Arrow>
+                                    <MudIconButton
+                                            Color="Color.Primary"
+                                            Size="Size.Small"
+                                            Icon="@Icons.Material.Filled.ContentCopy"
+                                            OnClick="CopyAllScannedResultsAsync"
+                                            Disabled="@(!scanResultsService.Results.Any())"
+                                            />
+                                    </MudTooltip>
                                     <!-- Edit Scanned Result Button -->
                                     <MudTooltip Text="Edit" Placement="Placement.Left" Delay="250" Arrow>
                                         <MudIconButton
@@ -295,5 +315,67 @@
 
         if (!result.Canceled)
             scanResultsService.Clear();
+    }
+    /// <summary>
+    /// Returns barcode results sorted by preferred category order.
+    /// Unknown categories are placed at the end.
+    /// Results with same category are sorted by scan time.
+    /// </summary> 
+
+    private IEnumerable<ScanBarcodeItemViewModel> SortedResults =>
+        scanResultsService.Results
+            .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
+                ? PreferredCategoryOrder.IndexOf(b.Category)
+                : int.MaxValue)
+            .ThenBy(b => b.ScannedTime);
+
+    /// <summary>
+    /// Defines the desired order for barcode categories.
+    /// Used for sorting both display and copy operations.
+    /// </summary> 
+    private static readonly List<string> PreferredCategoryOrder = new()
+    {
+        "ASY",
+        "ASY-OTL",
+        "Serial Number",
+        "MAC Address",
+        "Deviation",
+        "PCA"
+    };
+    /// <summary>
+    /// Copies all sorted barcode results to clipboard.
+    /// Uses MAUI Clipboard API and shows feedback via Snackbar.
+    /// </summary> 
+
+    private async Task CopyAllScannedResultsAsync()
+    {
+        if (!scanResultsService.Results.Any())
+        {
+            Snackbar.Add("No scanned results to copy.", Severity.Warning);
+            return;
+        }
+
+        var sortedResults = scanResultsService.Results
+            .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
+                ? PreferredCategoryOrder.IndexOf(b.Category)
+                : int.MaxValue)
+            .ThenBy(b => b.ScannedTime)
+            .ToList();
+
+        var lines = SortedResults
+            .Select(b => $"{b.Value}")
+            .ToList();
+
+        var textToCopy = string.Join("\n", lines);
+
+        try
+        {
+            await Clipboard.Default.SetTextAsync(textToCopy);
+            Snackbar.Add("Scanned results copied to clipboard.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to copy: {ex.Message}", Severity.Error);
+        }
     }
 }
