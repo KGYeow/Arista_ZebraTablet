@@ -183,6 +183,14 @@
                                                                                         Disabled="@isUploadingResults"
                                                                                         OnClick="@(() => DeleteDetectedBarcodeConfirmationAsync(img, detectedBarcode))" />
                                                                     </MudTooltip>
+
+                                                                    <MudTooltip Text="Copy" Placement="Placement.Left" Delay="400" Arrow>
+                                                                        <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
+                                                                                       Color="Color.Primary"
+                                                                                       Size="Size.Small"
+                                                                                       Disabled="@isUploadingResults"
+                                                                                       OnClick="@(() => CopyToClipboard(detectedBarcode.Value))" />
+                                                                    </MudTooltip>
                                                                 </MudHidden>
                                                             </MudStack>
                                                         </td>
@@ -234,7 +242,7 @@
                                                 </div>
                                             </MudButton>
 
-                                            <MudButton Class="flex-grow-1"
+                                            @* <MudButton Class="flex-grow-1"
                                                        Variant="Variant.Filled"
                                                        Color="Color.Secondary"
                                                        DropShadow="false"
@@ -243,7 +251,7 @@
                                                     <MudIcon Icon="material-symbols-rounded/point_scan" />
                                                     Zebra Scanner
                                                 </div>
-                                            </MudButton>
+                                            </MudButton> *@
                                         </MudStack>
                                         <MudDivider Class="my-3" />
                                     </MudContainer>
@@ -273,13 +281,13 @@
                             </MudTooltip>
 
                             <!-- Zebra Tablet Barcode Scanner Button -->
-                            <MudTooltip Text="Zebra Scanner" Placement="Placement.Top" Delay="400" Arrow>
+                            @* <MudTooltip Text="Zebra Scanner" Placement="Placement.Top" Delay="400" Arrow>
                                 <MudFab Color="Color.Secondary"
                                         Size="Size.Small"
                                         StartIcon="material-symbols-rounded/point_scan"
                                         OnClick="OpenZebraScanner"
                                         DropShadow="false" />
-                            </MudTooltip>
+                            </MudTooltip> *@
                         </MudHidden>
                     }
 

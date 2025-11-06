@@ -6,6 +6,7 @@ using Arista_ZebraTablet.Shared.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.JSInterop;
 using MudBlazor;
 using Color = MudBlazor.Color;
 
@@ -33,6 +34,11 @@ public partial class Home : ComponentBase
     /// Service responsible for uploading scanned barcode data to the backend.
     /// </summary>
     [Inject] public IScannedBarcodeService ScannedBarcodeService { get; set; } = default!;
+
+    /// <summary>
+    /// Service responsible for uploading scanned barcode data to the backend.
+    /// </summary>
+    [Inject] private IJSRuntime JS { get; set; } = default!;
 
     #endregion
 
@@ -282,6 +288,22 @@ public partial class Home : ComponentBase
             });
         }
         StateHasChanged();
+    }
+
+
+   
+
+    private async Task CopyToClipboard(string text)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            Snackbar.Add("Copied to clipboard.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to copy: {ex.Message}", Severity.Error);
+        }
     }
 
     #endregion
