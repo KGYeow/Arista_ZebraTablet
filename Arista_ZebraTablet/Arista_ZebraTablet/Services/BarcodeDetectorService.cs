@@ -51,7 +51,7 @@ namespace Arista_ZebraTablet.Services
         public void Add(string value, string barcodeType, string category)
         {
             if (string.IsNullOrWhiteSpace(value)) return;
-
+            Console.WriteLine($"Adding barcode to Results: {value}");
             MainThread.BeginInvokeOnMainThread(() =>
             {
                 if (_seen.Add(value))
