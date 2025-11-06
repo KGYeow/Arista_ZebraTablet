@@ -21,129 +21,13 @@
                     <zx:BarcodeReaderOptions AutoRotate="True"/>
                 </zxing:CameraBarcodeReaderView.Options>
             </zxing:CameraBarcodeReaderView>
-            
+
         </Grid>
-        
+
         <!-- Blazor Web View: Shows Real-Time Results -->
         <BlazorWebView x:Name="blazorWebView" Grid.Row="1" HostPage="wwwroot/index.html">
             <BlazorWebView.RootComponents>
                 <RootComponent Selector="#app"  ComponentType="{x:Type components:BarcodeScannerResult}" />
-            </BlazorWebView.RootComponents>
-        </BlazorWebView>
-    </Grid>
-</ContentPage>
-
-<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:Arista_ZebraTablet"
-    xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
-    xmlns:zx="clr-namespace:ZXing.Net.Maui;assembly=ZXing.Net.MAUI"
-    xmlns:components="clr-namespace:Arista_ZebraTablet.Components;assembly=Arista_ZebraTablet"
-    x:Class="Arista_ZebraTablet.LiveBarcodeScannerPage"
-    Title="Scan Barcodes"
->
-
-    <Grid RowDefinitions="0.6*,0.4*">
-
-        <!-- Camera -->
-        <Grid Grid.Row="0" HeightRequest="400">
-            <zxing:CameraBarcodeReaderView
-                x:Name="CameraView"
-                IsDetecting="{Binding IsDetectingFromCamera, Mode=OneWayToSource}"
-                BarcodesDetected="OnBarcodesDetected"
-                CameraLocation="Rear">
-
-                <zxing:CameraBarcodeReaderView.Options>
-                    <zx:BarcodeReaderOptions AutoRotate="True" />
-                </zxing:CameraBarcodeReaderView.Options>
-            </zxing:CameraBarcodeReaderView>
-
-            <!-- ===== Scan Overlay (input transparent, so touches go to camera) ===== -->
-            <Grid x:Name="ScanOverlay"
-                  InputTransparent="True"
-                  HorizontalOptions="Fill" VerticalOptions="Fill">
-
-                <!-- Dim the surroundings slightly (optional) -->
-                <Grid>
-                    <BoxView Color="#70000000"/>
-                    <!-- full screen dim -->
-                </Grid>
-
-                <!-- Centered scan box -->
-                <Grid x:Name="ScanBox"
-                      WidthRequest="280" HeightRequest="280"
-                      HorizontalOptions="Center" VerticalOptions="Center">
-
-                    <!-- Clear hole over the scan box (punch out effect) -->
-                    <Grid.Effects>
-                        <!-- If you want a true punched hole, replace this with a custom drawable.
-                             For simplicity we just draw a border and keep the dim underneath. -->
-                    </Grid.Effects>
-
-                    <!-- Border of the scan box -->
-                    <Border
-                        Stroke="#FFFFFFFF"
-                        StrokeThickness="2"
-                        BackgroundColor="#00000000"
-                        StrokeShape="RoundRectangle 12">
-                        <!-- corner “brackets” -->
-                        <Grid>
-                            <!-- top-left bracket -->
-                            <BoxView Color="#00E5FF" WidthRequest="24" HeightRequest="3"
-                                     HorizontalOptions="Start" VerticalOptions="Start" Margin="0,0,0,0"/>
-                            <BoxView Color="#00E5FF" WidthRequest="3" HeightRequest="24"
-                                     HorizontalOptions="Start" VerticalOptions="Start"/>
-                            <!-- top-right bracket -->
-                            <BoxView Color="#00E5FF" WidthRequest="24" HeightRequest="3"
-                                     HorizontalOptions="End" VerticalOptions="Start"/>
-                            <BoxView Color="#00E5FF" WidthRequest="3" HeightRequest="24"
-                                     HorizontalOptions="End" VerticalOptions="Start"/>
-                            <!-- bottom-left bracket -->
-                            <BoxView Color="#00E5FF" WidthRequest="24" HeightRequest="3"
-                                     HorizontalOptions="Start" VerticalOptions="End"/>
-                            <BoxView Color="#00E5FF" WidthRequest="3" HeightRequest="24"
-                                     HorizontalOptions="Start" VerticalOptions="End"/>
-                            <!-- bottom-right bracket -->
-                            <BoxView Color="#00E5FF" WidthRequest="24" HeightRequest="3"
-                                     HorizontalOptions="End" VerticalOptions="End"/>
-                            <BoxView Color="#00E5FF" WidthRequest="3" HeightRequest="24"
-                                     HorizontalOptions="End" VerticalOptions="End"/>
-                        </Grid>
-                    </Border>
-
-                    <!-- Moving scan line (we animate TranslationY in code-behind) -->
-                    <Grid>
-                        <!-- a slight glow: thick translucent line -->
-                        <BoxView x:Name="ScanLineGlow"
-                                 HeightRequest="4"
-                                 Opacity="0.35"
-                                 BackgroundColor="#00E5FF"
-                                 HorizontalOptions="Fill" VerticalOptions="Start"/>
-                        <!-- crisp center line -->
-                        <BoxView x:Name="ScanLine"
-                                 HeightRequest="2"
-                                 BackgroundColor="#00E5FF"
-                                 HorizontalOptions="Fill" VerticalOptions="Start"/>
-                    </Grid>
-                </Grid>
-
-                <!-- Optional hint -->
-                <Label Text="Align code within the box"
-                       TextColor="White"
-                       HorizontalOptions="Center" VerticalOptions="End"
-                       Margin="0,24,0,32"
-                       Opacity="0.9"/>
-            </Grid>
-            <!-- ===== End Scan Overlay ===== -->
-
-        </Grid>
-
-        <!-- Blazor WebView: your existing Result list -->
-        <BlazorWebView x:Name="blazorWebView" Grid.Row="1" HostPage="wwwroot/index.html">
-            <BlazorWebView.RootComponents>
-                <RootComponent Selector="#app" ComponentType="{x:Type components:BarcodeScannerResult}" />
             </BlazorWebView.RootComponents>
         </BlazorWebView>
     </Grid>

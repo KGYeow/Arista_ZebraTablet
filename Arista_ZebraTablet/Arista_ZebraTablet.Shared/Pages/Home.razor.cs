@@ -36,7 +36,7 @@ public partial class Home : ComponentBase
     [Inject] public IScannedBarcodeService ScannedBarcodeService { get; set; } = default!;
 
     /// <summary>
-    /// Service responsible for uploading scanned barcode data to the backend.
+    /// Service responsible for copy result to clipboard.
     /// </summary>
     [Inject] private IJSRuntime JS { get; set; } = default!;
 
@@ -342,14 +342,35 @@ public partial class Home : ComponentBase
         StateHasChanged();
     }
 
-
-   
-
-    private async Task CopyToClipboard(string text)
+    /// <summary>
+    /// Copies either a single barcode string or all barcode results from an image.
+    /// </summary>
+    private async Task CopyToClipboard(object content)
     {
+        string textToCopy;
+
+        switch (content)
+        {
+            //single copy
+            case string singleText:
+                textToCopy = singleText;
+                break;
+            //multiple copy
+            case ImgItemViewModel img when img?.DetectResult?.Barcodes?.Count > 0:
+                var lines = img.DetectResult.Barcodes
+                    .Select(b => $"{b.Value}")
+                    .ToList();
+                textToCopy = string.Join("\n", lines);
+                break;
+
+            default:
+                Snackbar.Add("Nothing to copy.", Severity.Warning);
+                return;
+        }
+
         try
         {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", textToCopy);
             Snackbar.Add("Copied to clipboard.", Severity.Success);
         }
         catch (Exception ex)
@@ -357,6 +378,8 @@ public partial class Home : ComponentBase
             Snackbar.Add($"Failed to copy: {ex.Message}", Severity.Error);
         }
     }
+
+
 
     #endregion
 
