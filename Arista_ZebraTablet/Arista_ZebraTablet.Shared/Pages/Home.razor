@@ -116,7 +116,14 @@
                                     </MudStack>
 
                                     <MudSpacer />
-
+                                    <!-- Copy Button -->
+                                    <MudTooltip Text="Copy All Results" Placement="Placement.Left" Delay="400" Arrow>
+                                        <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       Disabled="@isBusy"
+                                                       OnClick="@(() => CopyToClipboard(img))" />
+                                    </MudTooltip>
                                     <!-- Delete Image Button -->
                                     <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
                                         <MudIconButton Icon="@Icons.Material.Rounded.DeleteOutline"
@@ -155,6 +162,9 @@
                                                                                 TransformOrigin="Origin.BottomRight"
                                                                                 Disabled="isBusy"
                                                                                 Dense>
+                                                                        <MudMenuItem Label="Copy"
+                                                                                     Icon="@Icons.Material.Rounded.ContentCopy"
+                                                                                     OnClick="@(() => CopyToClipboard(detectedBarcode.Value))" />
                                                                         <MudMenuItem Label="Edit"
                                                                                         Icon="@Icons.Material.Rounded.Edit"
                                                                                         OnClick="@(() => OpenCategoryEditDialogAsync(detectedBarcode))" />
@@ -166,6 +176,14 @@
 
                                                                 <!-- Detected Barcode Results Actions (Display on Larger Screen) -->
                                                                 <MudHidden Breakpoint="Breakpoint.Xs">
+                                                                    <!-- Copy clipboard Button -->
+                                                                    <MudTooltip Text="Copy" Placement="Placement.Left" Delay="400" Arrow>
+                                                                        <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
+                                                                                       Color="Color.Primary"
+                                                                                       Size="Size.Small"
+                                                                                       Disabled="@isUploadingResults"
+                                                                                       OnClick="@(() => CopyToClipboard(detectedBarcode.Value))" />
+                                                                    </MudTooltip>
                                                                     <!-- Edit Scanned Result Button -->
                                                                     <MudTooltip Text="Edit" Placement="Placement.Left" Delay="400" Arrow>
                                                                         <MudIconButton Icon="@Icons.Material.Rounded.Edit"
