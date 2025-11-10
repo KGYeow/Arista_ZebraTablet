@@ -157,6 +157,8 @@ public partial class Home : ComponentBase
     /// </summary>
     private string platform => FormFactor.GetPlatform();
 
+    private List<DropItem> _reorderableItems = new();
+
     #endregion
 
     #region UI actions & helpers
@@ -343,7 +345,8 @@ public partial class Home : ComponentBase
     }
 
     /// <summary>
-    /// Copies either a single barcode string or all barcode results from an image.
+    /// Copies either a single barcode value, all detected barcodes from an image,
+    /// or all reordered barcode results (from drag-and-drop UI).
     /// </summary>
     private async Task CopyToClipboard(object content)
     {
@@ -351,16 +354,25 @@ public partial class Home : ComponentBase
 
         switch (content)
         {
-            //single copy
+            // ✅ Single barcode value (e.g., from individual result row)
             case string singleText:
                 textToCopy = singleText;
                 break;
-            //multiple copy
+
+            // ✅ All barcodes from a single image (e.g., from HistoryPage or HomePage card)
             case ImgItemViewModel img when img?.DetectResult?.Barcodes?.Count > 0:
                 var lines = img.DetectResult.Barcodes
-                    .Select(b => $"{b.Value}")
+                    .Select(b => $"{b.Value}") // You can also include category: $"{b.Category}: {b.Value}"
                     .ToList();
                 textToCopy = string.Join("\n", lines);
+                break;
+
+            // ✅ All reordered barcode results (e.g., from drag-and-drop UI)
+            case List<DropItem> dropItems when dropItems.Count > 0:
+                var reorderedLines = dropItems
+                    .Select(item => item.Name) // Reflects drag-and-drop order
+                    .ToList();
+                textToCopy = string.Join("\n", reorderedLines);
                 break;
 
             default:
@@ -456,6 +468,13 @@ public partial class Home : ComponentBase
         {
             if (imgItem.DetectResult.Barcodes.Contains(barcodeItem))
                 imgItem.DetectResult.Barcodes.Remove(barcodeItem);
+
+
+            // Remove from reorderable list
+            var dropItem = _reorderableItems.FirstOrDefault(x => x.Original == barcodeItem);
+            if (dropItem != null)
+                _reorderableItems.Remove(dropItem);
+            StateHasChanged();
         }
     }
 
@@ -605,6 +624,18 @@ public partial class Home : ComponentBase
                         .ThenBy(b => b.ScannedTime) // optional: secondary sort
                         .ToList()
                 };
+                _reorderableItems = results
+                    .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
+                        ? PreferredCategoryOrder.IndexOf(b.Category)
+                        : int.MaxValue)
+                    .ThenBy(b => b.ScannedTime)
+                    .Select(b => new DropItem
+                    {
+                        Name = $"{b.Category}: {b.Value}",
+                        Selector = "1",
+                        Original = b
+                    })
+                    .ToList();
                 item.State = FileState.Done;
 
                 // Auto-expand results the first time we have something to show.
@@ -700,6 +731,24 @@ public partial class Home : ComponentBase
         "Deviation",
         "PCA"
     };
+
+    public class DropItem
+    {
+        public string Name { get; set; } = string.Empty; // Display text: "Category: Value"
+        public string Selector { get; set; } = "1";      // Optional: grouping zone
+        public ScanBarcodeItemViewModel? Original { get; set; } // Reference to original data
+    }
+    private void OnItemDropped(MudItemDropInfo<DropItem> dropItem)
+    {
+        dropItem.Item.Selector = dropItem.DropzoneIdentifier;
+
+        // ✅ Rebuild _reorderableItems based on current order in MudDropContainer
+        _reorderableItems = _reorderableItems
+            .OrderBy(x => x.Selector) // If you have multiple zones
+            .ToList();
+
+        StateHasChanged();
+    }
 
     #endregion
 }

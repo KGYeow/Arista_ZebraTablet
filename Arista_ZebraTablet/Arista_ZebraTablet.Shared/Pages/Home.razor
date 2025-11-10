@@ -217,6 +217,30 @@
                                             </MudMenu>
                                         </MudHidden>
                                     </MudStack>
+                                    <!-- Copy Button -->
+                                    @* <MudTooltip Text="Copy All Results" Placement="Placement.Left" Delay="400" Arrow>
+                                        <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       Disabled="@isBusy"
+                                                       OnClick="@(() => CopyToClipboard(img))" />
+                                    </MudTooltip> *@
+                                    <MudTooltip Text="Copy All Results" Placement="@Placement.Left" Delay="400" Arrow>
+                                        <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
+                                                       Color="Color.Primary"
+                                                       Size="Size.Small"
+                                                       OnClick="@(() => CopyToClipboard(_reorderableItems))"
+                                                       Disabled="@(!_reorderableItems.Any())" />
+
+                                    </MudTooltip>
+                                    <!-- Delete Image Button -->
+                                    <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
+                                        <MudIconButton Icon="@Icons.Material.Rounded.DeleteOutline"
+                                                        Color="Color.Error"
+                                                        Size="Size.Small"
+                                                        Disabled="@isBusy"
+                                                        OnClick="@(() => DeleteUploadedImgConfirmationAsync(img))" />
+                                    </MudTooltip>
                                 </MudStack>
 
                                 @if (img.State == FileState.Error && !string.IsNullOrWhiteSpace(img.ErrorMessage))
@@ -230,7 +254,7 @@
                                 <MudCollapse Expanded="IsDetectedBarcodesDisplayed(img.Id) && img.DetectResult.Barcodes.Count > 0">
                                     @if (img.State == FileState.Done)
                                     {
-                                        <MudSimpleTable Class="mt-3" Dense Bordered Hover Outlined>
+                                        @* <MudSimpleTable Class="mt-3" Dense Bordered Hover Outlined>
                                             <tbody>
                                                 @foreach (var detectedBarcode in img.DetectResult.Barcodes)
                                                 {
@@ -301,7 +325,57 @@
                                                     </tr>
                                                 }
                                             </tbody>
-                                        </MudSimpleTable>
+                                        </MudSimpleTable> *@
+                                        <MudDropContainer T="DropItem"
+                                                          Items="_reorderableItems"
+                                                          ItemsSelector="@((item, dropzone) => item.Selector == dropzone)"
+                                                          ItemDropped="OnItemDropped"
+                                                          Class="d-flex flex-column flex-grow-1">
+
+                                            <ChildContent>
+                                                <MudPaper Class="ma-2">
+                                                    <MudList T="DropItem" Class="d-flex flex-column">
+                                                        <MudDropZone T="DropItem" Identifier="1" Class="flex-grow-1" AllowReorder="true" />
+                                                    </MudList>
+                                                </MudPaper>
+                                            </ChildContent>
+
+                                            <ItemRenderer>
+                                                <MudListItem T="DropItem">
+                                                    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                                        <!-- Show Category and Value -->
+                                                        <MudText>@context.Name</MudText>
+
+                                                        <!-- Action Buttons (same as table) -->
+                                                        <MudStack Row Spacing="1">
+                                                            <!-- Copy Button -->
+                                                            <MudTooltip Text="Copy" Placement="@Placement.Top">
+                                                                <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
+                                                                               Color="Color.Primary"
+                                                                               Size="Size.Small"
+                                                                               OnClick="@(() => CopyToClipboard(context.Name))" />
+                                                            </MudTooltip>
+
+                                                            <!-- Edit Button -->
+                                                            <MudTooltip Text="Edit" Placement="@Placement.Top">
+                                                                <MudIconButton Icon="@Icons.Material.Rounded.Edit"
+                                                                               Color="Color.Primary"
+                                                                               Size="Size.Small"
+                                                                               OnClick="@(() => OpenCategoryEditDialogAsync(context.Original))" />
+                                                            </MudTooltip>
+
+                                                            <!-- Delete Button -->
+                                                            <MudTooltip Text="Delete" Placement="@Placement.Top">
+                                                                <MudIconButton Icon="@Icons.Material.Rounded.DeleteOutline"
+                                                                               Color="Color.Error"
+                                                                               Size="Size.Small"
+                                                                               OnClick="@(() => DeleteDetectedBarcodeConfirmationAsync(img, context.Original))" />
+                                                            </MudTooltip>
+                                                        </MudStack>
+                                                    </MudStack>
+                                                </MudListItem>
+                                            </ItemRenderer>
+                                        </MudDropContainer>
                                     }
                                 </MudCollapse>
                             </MudCardContent>
