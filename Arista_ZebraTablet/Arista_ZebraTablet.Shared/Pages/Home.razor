@@ -1,6 +1,4 @@
 ﻿@page "/"
-@* @inject NavigationManager NavigationManager *@
-
 
 @using Arista_ZebraTablet.Shared.Application.Enums
 @using Arista_ZebraTablet.Shared.Application.ViewModels
@@ -117,11 +115,11 @@
 
                                     <MudSpacer />
 
+                                    <!-- Image File Preview Card Actions -->
                                     <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
                                         <!-- Image File Preview Card Actions (Display on Larger Screen) -->
                                         <MudHidden Breakpoint="Breakpoint.Xs">
-                                            <!-- If not in "Reorder" state -->
-                                            @if (true)
+                                            @if (img.DetectResult != null && img.DetectResult!.Barcodes.Count != 0)
                                             {
                                                 <!-- Copy Button -->
                                                 <MudTooltip Text="Copy Results" Placement="Placement.Top" Delay="400" Arrow>
@@ -129,46 +127,28 @@
                                                                    Color="Color.Primary"
                                                                    Size="Size.Small"
                                                                    Disabled="@isBusy"
-                                                                   OnClick="@(() => CopyToClipboard(img))" />
+                                                                   OnClick="() => CopyToClipboard(img)" />
                                                 </MudTooltip>
 
-                                                @if (img.DetectResult.Barcodes.Any())
-                                                {
-                                                    <!-- Reorder Button -->
-                                                    <MudTooltip Text="Reorder" Placement="Placement.Top" Delay="400" Arrow>
-                                                        <MudIconButton Icon="@Icons.Material.Rounded.Reorder"
-                                                                       Color="Color.Primary"
-                                                                       Size="Size.Small"
-                                                                       Disabled="@isBusy"
-                                                                       OnClick="@(() => EnableReorderMode(img.Id))" />
-                                                    </MudTooltip>
-                                                }
-                                                <!-- Delete Image Button -->
-                                                <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
-                                                    <MudIconButton Icon="@Icons.Material.Rounded.DeleteOutline"
-                                                                   Color="Color.Error"
-                                                                   Size="Size.Small"
-                                                                   Disabled="@isBusy"
-                                                                   OnClick="@(() => DeleteUploadedImgConfirmationAsync(img))" />
+                                                <!-- Reorder Button -->
+                                                <MudTooltip Text="Reorder" Placement="Placement.Top" Delay="400" Arrow>
+                                                    <MudIconButton Icon="@Icons.Material.Rounded.Reorder"
+                                                                    Color="Color.Primary"
+                                                                    Size="Size.Small"
+                                                                    Disabled="@isBusy"
+                                                                    OnClick="() => EnableReorderMode(img.Id)" />
                                                 </MudTooltip>
                                             }
-                                            else
-                                            {
-                                                @* <!-- Confirm Reorder Button -->
-                                                <MudIconButton Icon="@Icons.Material.Rounded.Check"
-                                                               Color="Color.Success"
-                                                               Size="Size.Small"
-                                                               Disabled="@isBusy"
-                                                               OnClick="@ConfirmReorder" />
-                                                <!-- Cancel Reorder Button -->
-                                                <MudIconButton Icon="@Icons.Material.Rounded.Close"
+                                            <!-- Delete Image Button -->
+                                            <MudTooltip Text="Delete" Placement="Placement.Top" Delay="400" Arrow>
+                                                <MudIconButton Icon="@Icons.Material.Rounded.DeleteOutline"
                                                                Color="Color.Error"
                                                                Size="Size.Small"
                                                                Disabled="@isBusy"
-                                                               OnClick="@(() => isReorderMode = false)" /> *@
-                                            }
-
+                                                               OnClick="() => DeleteUploadedImgConfirmationAsync(img)" />
+                                            </MudTooltip>
                                         </MudHidden>
+
                                         <!-- Image File Preview Card Actions (Display on Smaller Screen) -->
                                         <MudHidden Breakpoint="Breakpoint.SmAndUp">
                                             <MudMenu
@@ -179,57 +159,27 @@
                                                 Disabled="isBusy"
                                                 Dense
                                             >
-                                                <!-- If not in "Reorder" state -->
-                                                @if (true)
+                                                @if (img.DetectResult != null && img.DetectResult!.Barcodes.Count != 0)
                                                 {
                                                     <MudMenuItem
                                                         Label="Copy Results"
                                                         Icon="@Icons.Material.Rounded.ContentCopy"
-                                                        OnClick="@(() => CopyToClipboard(img))"
+                                                        OnClick="() => CopyToClipboard(img)"
                                                     />
-                                                    @if (img.DetectResult.Barcodes.Any())
-                                                    {
-                                                        <MudMenuItem
-                                                            Label="Reorder"
-                                                            Icon="@Icons.Material.Rounded.Reorder"
-                                                        />
-                                                    }
                                                     <MudMenuItem
-                                                        Label="Delete"
-                                                        Icon="@Icons.Material.Rounded.DeleteOutline"
-                                                        OnClick="@(() => DeleteUploadedImgConfirmationAsync(img))"
+                                                        Label="Reorder"
+                                                        Icon="@Icons.Material.Rounded.Reorder"
+                                                        OnClick="() => EnableReorderMode(img.Id)"
                                                     />
                                                 }
-                                                else
-                                                {
-                                                    <MudMenuItem
-                                                        Label="Confirm Reorder"
-                                                        Icon="@Icons.Material.Rounded.Check"
-                                                    />
-                                                    <MudMenuItem
-                                                        Label="Cancel Reorder"
-                                                        Icon="@Icons.Material.Rounded.Close"
-                                                    />
-                                                }
+                                                <MudMenuItem
+                                                    Label="Delete"
+                                                    Icon="@Icons.Material.Rounded.DeleteOutline"
+                                                    OnClick="@(() => DeleteUploadedImgConfirmationAsync(img))"
+                                                />
                                             </MudMenu>
                                         </MudHidden>
                                     </MudStack>
-                                    @* <!-- Copy Button -->
-                                    <MudTooltip Text="Copy All Results" Placement="Placement.Left" Delay="400" Arrow>
-                                        <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
-                                                       Color="Color.Primary"
-                                                       Size="Size.Small"
-                                                       Disabled="@isBusy"
-                                                       OnClick="@(() => CopyToClipboard(img))" />
-                                    </MudTooltip>
-                                    <!-- Delete Image Button -->
-                                    <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
-                                        <MudIconButton Icon="@Icons.Material.Rounded.DeleteOutline"
-                                                        Color="Color.Error"
-                                                        Size="Size.Small"
-                                                        Disabled="@isBusy"
-                                                        OnClick="@(() => DeleteUploadedImgConfirmationAsync(img))" />
-                                    </MudTooltip> *@
                                 </MudStack>
 
                                 @if (img.State == FileState.Error && !string.IsNullOrWhiteSpace(img.ErrorMessage))
@@ -265,17 +215,17 @@
                                                                         <MudMenuItem
                                                                             Label="Copy"
                                                                             Icon="@Icons.Material.Rounded.ContentCopy"
-                                                                            OnClick="@(() => CopyToClipboard(detectedBarcode.Value))"
+                                                                            OnClick="() => CopyToClipboard(detectedBarcode.Value)"
                                                                         />
                                                                         <MudMenuItem
                                                                             Label="Edit"
                                                                             Icon="@Icons.Material.Rounded.Edit"
-                                                                            OnClick="@(() => OpenCategoryEditDialogAsync(detectedBarcode))"
+                                                                            OnClick="() => OpenCategoryEditDialogAsync(detectedBarcode)"
                                                                         />
                                                                         <MudMenuItem
                                                                             Label="Delete"
                                                                             Icon="@Icons.Material.Rounded.DeleteOutline"
-                                                                            OnClick="@(() => DeleteDetectedBarcodeConfirmationAsync(img, detectedBarcode))"
+                                                                            OnClick="() => DeleteDetectedBarcodeConfirmationAsync(img, detectedBarcode)"
                                                                         />
                                                                     </MudMenu>
                                                                 </MudHidden>
@@ -283,21 +233,21 @@
                                                                 <!-- Detected Barcode Results Actions (Display on Larger Screen) -->
                                                                 <MudHidden Breakpoint="Breakpoint.Xs">
                                                                     <!-- Copy to Clipboard Button -->
-                                                                    <MudTooltip Text="Copy" Placement="Placement.Left" Delay="400" Arrow>
+                                                                    <MudTooltip Text="Copy" Placement="Placement.Top" Delay="400" Arrow>
                                                                         <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
                                                                                        Color="Color.Primary"
                                                                                        Size="Size.Small"
                                                                                        Disabled="@isUploadingResults"
-                                                                                       OnClick="@(() => CopyToClipboard(detectedBarcode.Value))" />
+                                                                                       OnClick="() => CopyToClipboard(detectedBarcode.Value)" />
                                                                     </MudTooltip>
 
                                                                     <!-- Edit Scanned Result Button -->
-                                                                    <MudTooltip Text="Edit" Placement="Placement.Left" Delay="400" Arrow>
+                                                                    <MudTooltip Text="Edit" Placement="Placement.Top" Delay="400" Arrow>
                                                                         <MudIconButton Icon="@Icons.Material.Rounded.Edit"
                                                                                         Color="Color.Primary"
                                                                                         Size="Size.Small"
                                                                                         Disabled="@isUploadingResults"
-                                                                                        OnClick="@(() => OpenCategoryEditDialogAsync(detectedBarcode))" />
+                                                                                        OnClick="() => OpenCategoryEditDialogAsync(detectedBarcode)" />
                                                                     </MudTooltip>
 
                                                                     <!-- Delete Scanned Result Button -->
@@ -306,7 +256,7 @@
                                                                                         Color="Color.Error"
                                                                                         Size="Size.Small"
                                                                                         Disabled="@isUploadingResults"
-                                                                                        OnClick="@(() => DeleteDetectedBarcodeConfirmationAsync(img, detectedBarcode))" />
+                                                                                        OnClick="() => DeleteDetectedBarcodeConfirmationAsync(img, detectedBarcode)" />
                                                                     </MudTooltip>
                                                                 </MudHidden>
                                                             </MudStack>
@@ -333,8 +283,42 @@
     >
         <MudGrid Spacing="0" Justify="Justify.Center">
             <MudItem xs="12" sm="9" Class="position-sticky">
-                <MudPaper Class="px-3 py-2 mud-theme-primary" Elevation="0" Style="border-radius: 40px">
+                <MudPaper Class="px-3 py-2 mud-theme-primary rounded-pill" Elevation="0">
                     <MudStack Row Spacing="2" AlignItems="AlignItems.Center" Justify="Justify.SpaceEvenly">
+                        <!-- More Button & More Options Menu (Display on Larger Screen) -->
+                        <MudHidden Breakpoint="Breakpoint.Xs">
+                            <MudMenu
+                                AnchorOrigin="Origin.TopLeft"
+                                TransformOrigin="Origin.BottomLeft"
+                                Disabled="isBusy"
+                                Dense
+                            >
+                                <ActivatorContent>
+                                    <MudFab
+                                        Color="Color.Secondary"
+                                        Size="Size.Small"
+                                        StartIcon="material-symbols-rounded/add"
+                                        DropShadow="false"
+                                    />
+                                </ActivatorContent>
+                                <ChildContent>
+                                    <MudMenuItem
+                                        Label="Barcode Scanner"
+                                        Icon="material-symbols-rounded/barcode_scanner"
+                                        OnClick="OpenBarcodeScanner"/>
+                                    <MudDivider/>
+                                    <MudMenuItem
+                                        Label="Copy All"
+                                        Icon="material-symbols-rounded/content_copy"
+                                        OnClick="CopyAllResults" />
+                                    <MudMenuItem
+                                        Label="Reorder All"
+                                        Icon="material-symbols-rounded/reorder"
+                                        OnClick="() => EnableReorderMode()" />
+                                </ChildContent>
+                            </MudMenu>
+                        </MudHidden>
+
                         <!-- More Button & More Options Drawer (Display on Smaller Screen) -->
                         <MudHidden Breakpoint="Breakpoint.SmAndUp">
                             <!-- More Button -->
@@ -373,7 +357,7 @@
                                         </MudNavLink>
                                         <MudNavLink Icon="material-symbols-rounded/reorder"
                                                     ActiveClass=""
-                                                    OnClick="@EnableReorderAll"
+                                                    OnClick="() => EnableReorderMode()"
                                                     Disabled="isUploadingResults">
                                             Reorder All
                                         </MudNavLink>
