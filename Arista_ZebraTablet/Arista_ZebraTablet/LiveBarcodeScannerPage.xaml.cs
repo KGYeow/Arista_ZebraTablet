@@ -4,7 +4,6 @@ using System.ComponentModel;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
-using ZXing.Net.Maui; // Barcode detection library for MAUI
 
 namespace Arista_ZebraTablet;
 
