@@ -10,124 +10,123 @@
 <MobileComponentLayout>
     <Body>
         <MudContainer Class="py-4" MaxWidth="MaxWidth.Large">
-            <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
-                <!-- Title + Live Scanned Result Count -->
-                <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
-                    <MudText Typo="Typo.h6">Scanned Results</MudText>
+                <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
+                    <!-- Title + Live Scanned Result Count -->
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
+                        <MudText Typo="Typo.h6">Scanned Results</MudText>
 
-                    @if (scanResultsService.Results.Count > 0)
-                    {
-                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
-                            @scanResultsService.Results.Count
-                        </MudChip>
-                    }
-                </MudStack>
-
-                <MudSpacer/>
-
-                <!-- Action Buttons -->
-                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                    <!-- Action Buttons (Display on Larger Screen) -->
-                    <MudHidden Breakpoint="Breakpoint.Xs">
-                        <!-- If not in "Reorder" state -->
-                        @if (true)
+                        @if (scanResultsService.Results.Count > 0)
                         {
-                            <!-- Copy to Clipboard Button -->
-                            <MudTooltip Text="Copy Results" Placement="Placement.Bottom" Delay="400" Arrow>
-                                <MudIconButton Color="Color.Primary"
-                                               Icon="@Icons.Material.Rounded.ContentCopy"
-                                               Size="Size.Small"
-                                               Disabled="@(!scanResultsService.Results.Any() || isSaving)"
-                                               OnClick="CopyAllScannedResultsAsync" />
-                            </MudTooltip>
-
-                            <!-- Upload to Database Button -->
-                            @* <MudTooltip Text="Upload to Database" Placement="Placement.Bottom" Delay="400" Arrow>
-                                <MudIconButton Color="Color.Primary"
-                                               Icon="material-symbols-rounded/database_upload"
-                                               Size="Size.Small"
-                                               Disabled="isSaving"
-                                               OnClick="SaveScannedResultConfirmationAsync" />
-                            </MudTooltip> *@
-
-                            <!-- Clear All Button -->
-                            <MudTooltip Text="Clear All" Placement="Placement.Left" Delay="400" Arrow>
-                                <MudIconButton Color="Color.Warning"
-                                               Icon="@Icons.Material.Rounded.ClearAll"
-                                               Variant="Variant.Outlined"
-                                               Size="Size.Small"
-                                               Disabled="isSaving"
-                                               OnClick="ClearAllScannedResultConfirmationAsync" />
-                            </MudTooltip>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
+                                @scanResultsService.Results.Count
+                            </MudChip>
                         }
-                        else
-                        {
-                            <!-- Confirm Reorder Button -->
-                            <MudTooltip Text="Confirm Reorder" Placement="Placement.Bottom" Delay="400" Arrow>
-                                <MudIconButton Icon="@Icons.Material.Rounded.Check"
-                                               Color="Color.Success"
-                                               Size="Size.Small" />
-                            </MudTooltip>
+                    </MudStack>
 
-                            <!-- Cancel Reorder Button -->
-                            <MudTooltip Text="Cancel Reorder" Placement="Placement.Left" Delay="400" Arrow>
-                                <MudIconButton Icon="@Icons.Material.Rounded.Close"
-                                               Color="Color.Error"
-                                               Size="Size.Small" />
-                            </MudTooltip>
-                        }
-                    
-                    </MudHidden>
+                    <MudSpacer/>
 
-                    <!-- Action Buttons (Display on Smaller Screen) -->
-                    <MudHidden Breakpoint="Breakpoint.SmAndUp">
-                        <MudMenu
-                            Icon="@Icons.Material.Rounded.MoreVert"
-                            Size="Size.Small"
-                            AnchorOrigin="Origin.BottomLeft"
-                            TransformOrigin="Origin.CenterRight"
-                            Disabled="isSaving"
-                            Dense
-                        >
+                    <!-- Action Buttons -->
+                    <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                        <!-- Action Buttons (Display on Larger Screen) -->
+                        <MudHidden Breakpoint="Breakpoint.Xs">
                             <!-- If not in "Reorder" state -->
                             @if (true)
                             {
-                                <MudMenuItem
-                                    Label="Copy Results"
-                                    Icon="@Icons.Material.Rounded.ContentCopy"
-                                    OnClick="CopyAllScannedResultsAsync"
-                                />
-                                @* <MudMenuItem
-                                        Label="Upload to Database"
-                                        Icon="@Icons.Material.Rounded.DeleteOutline"
-                                        OnClick="SaveScannedResultConfirmationAsync"
-                                    /> *@
-                                <MudMenuItem
-                                    Label="Clear All"
-                                    Icon="@Icons.Material.Rounded.ClearAll"
-                                    OnClick="ClearAllScannedResultConfirmationAsync"
-                                />
+                                <!-- Copy to Clipboard Button -->
+                                <MudTooltip Text="Copy Results" Placement="Placement.Bottom" Delay="400" Arrow>
+                                    <MudIconButton Color="Color.Primary"
+                                                   Icon="@Icons.Material.Rounded.ContentCopy"
+                                                   Size="Size.Small"
+                                                   Disabled="@(!scanResultsService.Results.Any() || isSaving)"
+                                                   OnClick="CopyAllScannedResultsAsync" />
+                                </MudTooltip>
+
+                                <!-- Upload to Database Button -->
+                                @* <MudTooltip Text="Upload to Database" Placement="Placement.Bottom" Delay="400" Arrow>
+                                    <MudIconButton Color="Color.Primary"
+                                                   Icon="material-symbols-rounded/database_upload"
+                                                   Size="Size.Small"
+                                                   Disabled="isSaving"
+                                                   OnClick="SaveScannedResultConfirmationAsync" />
+                                </MudTooltip> *@
+
+                                <!-- Clear All Button -->
+                                <MudTooltip Text="Clear All" Placement="Placement.Left" Delay="400" Arrow>
+                                    <MudIconButton Color="Color.Warning"
+                                                   Icon="@Icons.Material.Rounded.ClearAll"
+                                                   Variant="Variant.Outlined"
+                                                   Size="Size.Small"
+                                                   Disabled="isSaving"
+                                                   OnClick="ClearAllScannedResultConfirmationAsync" />
+                                </MudTooltip>
                             }
                             else
                             {
-                                <MudMenuItem
-                                    Label="Confirm Reorder"
-                                    Icon="@Icons.Material.Rounded.Check"
-                                />
-                                <MudMenuItem
-                                    Label="Cancel Reorder"
-                                    Icon="@Icons.Material.Rounded.Close"
-                                />
-                            }
-                        </MudMenu>
-                    </MudHidden>
-                </MudStack>
-            </MudStack>
+                                <!-- Confirm Reorder Button -->
+                                <MudTooltip Text="Confirm Reorder" Placement="Placement.Bottom" Delay="400" Arrow>
+                                    <MudIconButton Icon="@Icons.Material.Rounded.Check"
+                                                   Color="Color.Success"
+                                                   Size="Size.Small" />
+                                </MudTooltip>
 
+                                <!-- Cancel Reorder Button -->
+                                <MudTooltip Text="Cancel Reorder" Placement="Placement.Left" Delay="400" Arrow>
+                                    <MudIconButton Icon="@Icons.Material.Rounded.Close"
+                                                   Color="Color.Error"
+                                                   Size="Size.Small" />
+                                </MudTooltip>
+                            }
+                    
+                        </MudHidden>
+
+                        <!-- Action Buttons (Display on Smaller Screen) -->
+                        <MudHidden Breakpoint="Breakpoint.SmAndUp">
+                            <MudMenu
+                                Icon="@Icons.Material.Rounded.MoreVert"
+                                Size="Size.Small"
+                                AnchorOrigin="Origin.BottomLeft"
+                                TransformOrigin="Origin.CenterRight"
+                                Disabled="isSaving"
+                                Dense
+                            >
+                                <!-- If not in "Reorder" state -->
+                                @if (true)
+                                {
+                                    <MudMenuItem
+                                        Label="Copy Results"
+                                        Icon="@Icons.Material.Rounded.ContentCopy"
+                                        OnClick="CopyAllScannedResultsAsync"
+                                    />
+                                    @* <MudMenuItem
+                                            Label="Upload to Database"
+                                            Icon="@Icons.Material.Rounded.DeleteOutline"
+                                            OnClick="SaveScannedResultConfirmationAsync"
+                                        /> *@
+                                    <MudMenuItem
+                                        Label="Clear All"
+                                        Icon="@Icons.Material.Rounded.ClearAll"
+                                        OnClick="ClearAllScannedResultConfirmationAsync"
+                                    />
+                                }
+                                else
+                                {
+                                    <MudMenuItem
+                                        Label="Confirm Reorder"
+                                        Icon="@Icons.Material.Rounded.Check"
+                                    />
+                                    <MudMenuItem
+                                        Label="Cancel Reorder"
+                                        Icon="@Icons.Material.Rounded.Close"
+                                    />
+                                }
+                            </MudMenu>
+                        </MudHidden>
+                    </MudStack>
+                </MudStack>
             <MudItem>
                 <!-- Scanned Barcode's Result Cards -->
                 <MudStack Class="position-relative" Spacing="2">
-                    @if (!scanResultsService.Results.Any())
+                    @* @if (!scanResultsService.Results.Any())
                     {
                         <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
                             No scans yet. Aim the camera at a code.
@@ -143,50 +142,49 @@
                                         <MudText Typo="Typo.caption" GutterBottom="false">@barcodeItem.Category</MudText>
                                         <MudText Typo="Typo.body1" Class="fw-bold" GutterBottom="false">@barcodeItem.Value</MudText>
                                     </MudStack>
-        <MudItem>
-            <!-- Scanned Barcode's Result Cards -->
-            <MudStack Class="position-relative" Spacing="2">
-                @* @if (!scanResultsService.Results.Any())
-                {
-                    <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
-                        No scans yet. Aim the camera at a code.
-                    </MudAlert>
-                }
-                else
-                {
-                    @foreach (var barcodeItem in SortedResults)
-                    {
-                        <MudPaper Class="pa-3" Elevation="0" Outlined>
-                            <MudStack Row Spacing="3">
-                                <MudStack Spacing="0">
-                                    <MudText Typo="Typo.caption" GutterBottom="false">@barcodeItem.Category</MudText>
-                                    <MudText Typo="Typo.body1" Class="fw-bold" GutterBottom="false">@barcodeItem.Value</MudText>
-                                </MudStack>
 
-                                    <MudSpacer />
+                                        <MudSpacer />
 
-                                    <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
-                                        <!-- Copy Button -->
-                                        <MudTooltip Text="Copy" Placement="Placement.Top" Delay="400" Arrow>
-                                        <MudIconButton
-                                                Color="Color.Primary"
-                                                Size="Size.Small"
-                                                Icon="@Icons.Material.Filled.ContentCopy"
-                                                OnClick="CopyAllScannedResultsAsync"
-                                                Disabled="@(!scanResultsService.Results.Any())"
-                                                />
-                                        </MudTooltip>
-                                        <!-- Edit Scanned Result Button -->
-                                        <MudTooltip Text="Edit" Placement="Placement.Left" Delay="400" Arrow>
+                                        <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
+                                            <!-- Copy Button -->
+                                            <MudTooltip Text="Copy" Placement="Placement.Top" Delay="400" Arrow>
                                             <MudIconButton
-                                                Icon="@Icons.Material.Filled.Edit"
-                                                Color="Color.Primary"
-                                                Size="Size.Small"
-                                                Disabled="@isSaving"
-                                                OnClick="@(() => OpenCategoryEditDialogAsync(barcodeItem))"
-                                            />
-                                        </MudTooltip>
+                                                    Color="Color.Primary"
+                                                    Size="Size.Small"
+                                                    Icon="@Icons.Material.Filled.ContentCopy"
+                                                    OnClick="CopyAllScannedResultsAsync"
+                                                    Disabled="@(!scanResultsService.Results.Any())"
+                                                    />
+                                            </MudTooltip>
+                                            <!-- Edit Scanned Result Button -->
+                                            <MudTooltip Text="Edit" Placement="Placement.Left" Delay="400" Arrow>
+                                                <MudIconButton
+                                                    Icon="@Icons.Material.Filled.Edit"
+                                                    Color="Color.Primary"
+                                                    Size="Size.Small"
+                                                    Disabled="@isSaving"
+                                                    OnClick="@(() => OpenCategoryEditDialogAsync(barcodeItem))"
+                                                />
+                                            </MudTooltip>
 
+                                            <!-- Delete Scanned Result Button -->
+                                            <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
+                                                <MudIconButton
+                                                    Icon="@Icons.Material.Filled.Delete"
+                                                    Color="Color.Error"
+                                                    Size="Size.Small"
+                                                    Disabled="@isSaving"
+                                                    OnClick="@(() => DeleteScannedResultConfirmationAsync(barcodeItem))"
+                                                />
+                                            </MudTooltip>
+                                        </MudStack>
+                                    </MudStack>
+                                </MudPaper>
+                            }
+                        }
+                    </MudStack>
+                </MudItem>
+            </MudContainer>
                                         <!-- Delete Scanned Result Button -->
                                         <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
                                             <MudIconButton
@@ -201,120 +199,105 @@
                                 </MudStack>
                             </MudPaper>
                         }
+                    } *@
+                    @if (!scanResultsService.Results.Any())
+                    {
+                        <MudText>No scans yet. Aim the camera at a code.</MudText>
                     }
+                    else
+                    {
+                        @* @foreach (var frameGroup in GroupedResults)
+                        {
+                            <MudCard Class="mb-3" Elevation="1">
+                                <MudCardContent>
+                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                        <!-- Thumbnail or placeholder image -->
+                                        <MudAvatar Size="Size.Large" Color="Color.Default" Rounded>
+                                            <MudIcon Icon="@Icons.Material.Rounded.Image" />
+                                        </MudAvatar>
+
+                                        <MudStack>
+                                            <MudText Typo="Typo.subtitle2">Frame @frameGroup.Key</MudText>
+                                            <MudText Typo="Typo.caption">@($"{frameGroup.Count()} barcode(s)")</MudText>
+                                        </MudStack>
+                                    </MudStack>
+
+                                    <MudDivider Class="my-2" />
+
+                                    <!-- Barcode results table -->
+                                    <MudSimpleTable Dense Bordered Hover Outlined>
+                                        <tbody>
+                                            @foreach (var barcode in frameGroup)
+                                            {
+                                                <tr>
+                                                    <td>@barcode.Category</td>
+                                                    <td>@barcode.Value</td>
+                                                    <td>
+                                                        <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
+                                                                       Color="Color.Primary"
+                                                                       Size="Size.Small"
+                                                                       OnClick="@(() => CopySingleBarcode(barcode.Value))" />
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </MudSimpleTable>
+                                </MudCardContent>
+                            </MudCard>
+                        } *@
+
+                        @foreach (var frameGroup in GroupedResults)
+                        {
+                            <MudCard Class="mb-3" Elevation="1">
+                                <MudCardContent>
+                                    <!-- Frame Info -->
+                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudAvatar Size="Size.Large" Color="Color.Default" Rounded>
+                                            <MudIcon Icon="@Icons.Material.Rounded.Image" />
+                                        </MudAvatar>
+                                        <MudStack>
+                                            <MudText Typo="Typo.subtitle2">Frame @frameGroup.Key</MudText>
+                                            <MudText Typo="Typo.caption">@($"{frameGroup.Count()} barcode(s)")</MudText>
+                                        </MudStack>
+                                    </MudStack>
+
+                                    <MudDivider Class="my-2" />
+
+                                    <!-- All barcodes in this frame -->
+                                    <MudSimpleTable Dense Bordered Hover Outlined>
+                                        <tbody>
+                                            @foreach (var barcode in frameGroup)
+                                            {
+                                                <tr>
+                                                    <td>@barcode.Category</td>
+                                                    <td>@barcode.Value</td>
+                                                    <td>
+                                                        <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
+                                                                       Color="Color.Primary"
+                                                                       Size="Size.Small"
+                                                                       OnClick="@(() => CopySingleBarcode(barcode.Value))" />
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </MudSimpleTable>
+
+                                    <!-- Frame-level actions -->
+                                    <MudStack Row Spacing="2" Class="mt-2">
+                                        <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                                                   OnClick="@(() => CopyFrame(frameGroup))">Copy All</MudButton>
+                                        <MudButton Color="Color.Error" Variant="Variant.Outlined"
+                                                   OnClick="@(() => DeleteFrame(frameGroup))">Delete Frame</MudButton>
+                                    </MudStack>
+                                </MudCardContent>
+                            </MudCard>
+                        }
+
+                    }
+
                 </MudStack>
             </MudItem>
         </MudContainer>
-                                    <!-- Delete Scanned Result Button -->
-                                    <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
-                                        <MudIconButton
-                                            Icon="@Icons.Material.Filled.Delete"
-                                            Color="Color.Error"
-                                            Size="Size.Small"
-                                            Disabled="@isSaving"
-                                            OnClick="@(() => DeleteScannedResultConfirmationAsync(barcodeItem))"
-                                        />
-                                    </MudTooltip>
-                                </MudStack>
-                            </MudStack>
-                        </MudPaper>
-                    }
-                } *@
-                @if (!scanResultsService.Results.Any())
-                {
-                    <MudText>No scans yet. Aim the camera at a code.</MudText>
-                }
-                else
-                {
-                    @* @foreach (var frameGroup in GroupedResults)
-                    {
-                        <MudCard Class="mb-3" Elevation="1">
-                            <MudCardContent>
-                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                    <!-- Thumbnail or placeholder image -->
-                                    <MudAvatar Size="Size.Large" Color="Color.Default" Rounded>
-                                        <MudIcon Icon="@Icons.Material.Rounded.Image" />
-                                    </MudAvatar>
-
-                                    <MudStack>
-                                        <MudText Typo="Typo.subtitle2">Frame @frameGroup.Key</MudText>
-                                        <MudText Typo="Typo.caption">@($"{frameGroup.Count()} barcode(s)")</MudText>
-                                    </MudStack>
-                                </MudStack>
-
-                                <MudDivider Class="my-2" />
-
-                                <!-- Barcode results table -->
-                                <MudSimpleTable Dense Bordered Hover Outlined>
-                                    <tbody>
-                                        @foreach (var barcode in frameGroup)
-                                        {
-                                            <tr>
-                                                <td>@barcode.Category</td>
-                                                <td>@barcode.Value</td>
-                                                <td>
-                                                    <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
-                                                                   Color="Color.Primary"
-                                                                   Size="Size.Small"
-                                                                   OnClick="@(() => CopySingleBarcode(barcode.Value))" />
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </MudSimpleTable>
-                            </MudCardContent>
-                        </MudCard>
-                    } *@
-                    @foreach (var frameGroup in GroupedResults)
-                    {
-                        <MudCard Class="mb-3" Elevation="1">
-                            <MudCardContent>
-                                <!-- Frame Info -->
-                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudAvatar Size="Size.Large" Color="Color.Default" Rounded>
-                                        <MudIcon Icon="@Icons.Material.Rounded.Image" />
-                                    </MudAvatar>
-                                    <MudStack>
-                                        <MudText Typo="Typo.subtitle2">Frame @frameGroup.Key</MudText>
-                                        <MudText Typo="Typo.caption">@($"{frameGroup.Count()} barcode(s)")</MudText>
-                                    </MudStack>
-                                </MudStack>
-
-                                <MudDivider Class="my-2" />
-
-                                <!-- All barcodes in this frame -->
-                                <MudSimpleTable Dense Bordered Hover Outlined>
-                                    <tbody>
-                                        @foreach (var barcode in frameGroup)
-                                        {
-                                            <tr>
-                                                <td>@barcode.Category</td>
-                                                <td>@barcode.Value</td>
-                                                <td>
-                                                    <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
-                                                                   Color="Color.Primary"
-                                                                   Size="Size.Small"
-                                                                   OnClick="@(() => CopySingleBarcode(barcode.Value))" />
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </MudSimpleTable>
-
-                                <!-- Frame-level actions -->
-                                <MudStack Row Spacing="2" Class="mt-2">
-                                    <MudButton Color="Color.Primary" Variant="Variant.Filled"
-                                               OnClick="@(() => CopyFrame(frameGroup))">Copy All</MudButton>
-                                    <MudButton Color="Color.Error" Variant="Variant.Outlined"
-                                               OnClick="@(() => DeleteFrame(frameGroup))">Delete Frame</MudButton>
-                                </MudStack>
-                            </MudCardContent>
-                        </MudCard>
-                    }
-                }
-
-            </MudStack>
-        </MudItem>
     </Body>
 </MobileComponentLayout>
 
