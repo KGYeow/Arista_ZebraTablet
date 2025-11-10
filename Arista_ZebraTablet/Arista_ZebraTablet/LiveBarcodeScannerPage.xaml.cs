@@ -1,32 +1,46 @@
-﻿using Arista_ZebraTablet.Services; // Import app-level services
+﻿using Arista_ZebraTablet.Services;
 using Arista_ZebraTablet.Shared.Application.Enums;
+using System.ComponentModel;
+using ZXing.Net.Maui;
+using ZXing.Net.Maui.Controls;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
 using ZXing.Net.Maui; // Barcode detection library for MAUI
 
 namespace Arista_ZebraTablet;
 
 /// <summary>
-/// LiveBarcodeScannerPage Component
+/// A page that hosts live camera barcode scanning using <c>ZXing.Net.MAUI</c>.
 /// </summary>
 /// <remarks>
-/// This page handles live camera barcode scanning in MAUI.
-/// It continuously adds detected barcodes to a list.
+/// <para>
+/// The page configures the camera for continuous barcode detection, pushes results to
+/// <see cref="BarcodeDetectorService"/>, and reacts to user actions (switch camera, toggle torch,
+/// pause/resume detection) published through <see cref="BarcodeScannerService"/>.
+/// </para>
+/// <para>
+/// UI updates are marshaled to the UI thread using <see cref="MainThread.BeginInvokeOnMainThread(System.Action)"/>.
+/// The <see cref="CameraView"/> control is declared in the associated XAML file.
+/// </para>
 /// </remarks>
 public partial class LiveBarcodeScannerPage : ContentPage
 {
-    private readonly BarcodeDetectorService _scannerService; // Service to store and manage scan results
-    private readonly BarcodeMode _mode; // Categorizing mode passed from home page (Standard or Unique)
+    private readonly BarcodeDetectorService _scannerService;
+    private readonly BarcodeScannerService _scannerControlService;
+    private readonly BarcodeMode _mode;
 
-    // Animation control
-    private CancellationTokenSource? _scanAnimCts;
-    private bool _animStarted;
-
-    public LiveBarcodeScannerPage(BarcodeDetectorService scannerService, BarcodeMode mode)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LiveBarcodeScannerPage"/> class.
+    /// Configures the camera reader, wires control events, and primes autofocus.
+    /// </summary>
+    public LiveBarcodeScannerPage(BarcodeScannerService scannerControlService, BarcodeDetectorService scannerService, BarcodeMode mode)
     {
-        InitializeComponent();              // Load XAML UI
-        _scannerService = scannerService;   // Assign service for storing results
-        _mode = mode;                       // Assign mode for classification
+        InitializeComponent();
 
+        _scannerControlService = scannerControlService;
+        _scannerService = scannerService;
+        _mode = mode;
+
+        // Configure barcode detection behavior.
         CameraView.Options = new BarcodeReaderOptions
         {
             AutoRotate = true,
@@ -35,85 +49,92 @@ public partial class LiveBarcodeScannerPage : ContentPage
             Formats = BarcodeFormats.All
         };
 
-        // Trigger autofocus when the page is initialized
-        CameraView.AutoFocus(); // This calls the AutoFocus method internally
+        // Subscribe to control events published by the mediator service.
+        _scannerControlService.SwitchCameraRequested += OnSwitchCamera;
+        _scannerControlService.ToggleTorchRequested += OnToggleTorch;
+        _scannerControlService.ToggleScanPausedRequested += OnTogglePauseScan;
 
-        // Simulate continuous autofocus every 3 seconds
-        //Device.StartTimer(TimeSpan.FromSeconds(3), () =>
-        //{
-        //    CameraView.AutoFocus();
-        //    return true; // Keep running
-        //});
+        // Prime the camera's autofocus on startup.
+        CameraView.AutoFocus();
     }
 
+    /// <summary>
+    /// Starts listening for camera state changes and aligns the pause overlay with
+    /// the current detection state when the page appears.
+    /// </summary>
     protected override void OnAppearing()
     {
         base.OnAppearing();
+        CameraView.PropertyChanged += CameraView_PropertyChanged;
 
-        // Start scan-line animation once size is known
-        ScanBox.SizeChanged += ScanBox_SizeChanged;
-        TryStartScanAnimation();
+        // Initialize overlay to current state
+        UpdatePauseOverlay(paused: !CameraView.IsDetecting);
     }
 
     protected override void OnDisappearing()
     {
-        ScanBox.SizeChanged -= ScanBox_SizeChanged;
-        StopScanAnimation();
-
+        CameraView.PropertyChanged -= CameraView_PropertyChanged;
         base.OnDisappearing();
     }
 
-    private void ScanBox_SizeChanged(object? sender, EventArgs e) => TryStartScanAnimation();
-
-    private void TryStartScanAnimation()
+    private void CameraView_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (_animStarted) return;
-        if (ScanBox.Width <= 0 || ScanBox.Height <= 0) return;
-
-        _animStarted = true;
-        _scanAnimCts = new CancellationTokenSource();
-        _ = RunScanLineAnimationAsync(_scanAnimCts.Token);
+        if (e.PropertyName == nameof(CameraBarcodeReaderView.IsDetecting))
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                UpdatePauseOverlay(paused: !CameraView.IsDetecting);
+            });
+        }
     }
 
-    private void StopScanAnimation()
+    /// <summary>
+    /// Shows a dark cover and optionally hides the camera preview when paused.
+    /// </summary>
+    private async Task UpdatePauseOverlay(bool paused)
     {
-        _scanAnimCts?.Cancel();
-        _scanAnimCts?.Dispose();
-        _scanAnimCts = null;
-        _animStarted = false;
+        await AnimatePauseOverlayAsync(paused);
+        CameraView.IsVisible = !paused;
+    }
 
-        // Reset position (optional)
+    private void OnSwitchCamera()
+    {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            ScanLine.TranslationY = 0;
-            ScanLineGlow.TranslationY = 0;
+            CameraView.CameraLocation = CameraView.CameraLocation == CameraLocation.Rear
+                ? CameraLocation.Front
+                : CameraLocation.Rear;
         });
     }
 
-    private async Task RunScanLineAnimationAsync(CancellationToken token)
+    private void OnToggleTorch()
     {
-        await Task.Yield();
-        const uint travelMs = 1200;
-        const uint pauseMs = 120;
-
-        async Task MoveToY(double y)
+        MainThread.BeginInvokeOnMainThread(() =>
         {
-            await MainThread.InvokeOnMainThreadAsync(async () =>
-            {
-                await Task.WhenAll(
-                    ScanLine.TranslateTo(0, y, travelMs, Easing.SinInOut),
-                    ScanLineGlow.TranslateTo(0, y, travelMs, Easing.SinInOut)
-                );
-            });
+            CameraView.IsTorchOn = !CameraView.IsTorchOn;
+        });
+    }
+
+    private void OnTogglePauseScan()
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            CameraView.IsDetecting = !CameraView.IsDetecting;
+        });
+    }
+
+    private async Task AnimatePauseOverlayAsync(bool show)
+    {
+        if (show)
+        {
+            PauseOverlay.Opacity = 0;
+            PauseOverlay.IsVisible = true;
+            await PauseOverlay.FadeTo(1, 180, Easing.CubicOut);
         }
-
-        while (!token.IsCancellationRequested)
+        else
         {
-            var maxY = Math.Max(0, ScanBox.Height - ScanLine.Height);
-            await MoveToY(maxY);
-            await Task.Delay((int)pauseMs, token);
-            await MoveToY(0);
-            await Task.Delay((int)pauseMs, token);
+            await PauseOverlay.FadeTo(0, 160, Easing.CubicIn);
+            PauseOverlay.IsVisible = false;
         }
     }
 

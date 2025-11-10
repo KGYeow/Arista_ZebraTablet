@@ -1,14 +1,9 @@
 using Arista_ZebraTablet.Shared.Application.Enums;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
 using Arista_ZebraTablet.Shared.Services;
-using Microsoft.AspNetCore.Components;
 using SkiaSharp;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using ZXing;
 using ZXing.Common;
-using ZXing.Net.Maui;
 using ZXing.SkiaSharp;
 
 namespace Arista_ZebraTablet.Services
@@ -18,12 +13,14 @@ namespace Arista_ZebraTablet.Services
     /// </summary>
     public sealed class BarcodeDetectorService : IBarcodeDetectorService
     {
+        private readonly IServiceProvider _services;
         private readonly HashSet<string> _seen = new(StringComparer.OrdinalIgnoreCase);
         public ObservableCollection<ScanBarcodeItemViewModel> Results { get; } = []; // Scan using Camera Result Management
         public event EventHandler<ScanBarcodeItemViewModel>? ScanReceived;  // <--- ADD
 
-        public BarcodeDetectorService()
+        public BarcodeDetectorService(IServiceProvider services)
         {
+            _services = services;
         }
 
         /// <summary>
@@ -35,7 +32,7 @@ namespace Arista_ZebraTablet.Services
             {
                 try
                 {
-                    var page = new LiveBarcodeScannerPage(this, mode);
+                    var page = ActivatorUtilities.CreateInstance<LiveBarcodeScannerPage>(_services, mode);
                     await App.Current.Windows[0].Page.Navigation.PushModalAsync(page, true);
                 }
                 catch (Exception ex)
