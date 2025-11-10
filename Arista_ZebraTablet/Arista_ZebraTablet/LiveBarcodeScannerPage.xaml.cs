@@ -31,6 +31,9 @@ public partial class LiveBarcodeScannerPage : ContentPage
     /// Initializes a new instance of the <see cref="LiveBarcodeScannerPage"/> class.
     /// Configures the camera reader, wires control events, and primes autofocus.
     /// </summary>
+    /// <param name="scannerControlService">Mediator for UI control actions (switch camera, torch, pause/resume).</param>
+    /// <param name="scannerService">Collector/service that stores and manages detected barcode results.</param>
+    /// <param name="mode">Classification mode (e.g., <see cref="BarcodeMode.Standard"/> or <see cref="BarcodeMode.Unique"/>).</param>
     public LiveBarcodeScannerPage(BarcodeScannerService scannerControlService, BarcodeDetectorService scannerService, BarcodeMode mode)
     {
         InitializeComponent();
@@ -64,38 +67,58 @@ public partial class LiveBarcodeScannerPage : ContentPage
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        CameraView.PropertyChanged += CameraView_PropertyChanged;
+        CameraView.PropertyChanged += CameraViewPropertyChanged;
 
-        // Initialize overlay to current state
+        // Sync overlay with current detection state.
         UpdatePauseOverlay(paused: !CameraView.IsDetecting);
     }
 
+    /// <summary>
+    /// Stops listening for camera state changes when the page disappears.
+    /// </summary>
+    /// <remarks>
+    /// If this page’s lifetime is shorter than <see cref="BarcodeScannerService"/>,
+    /// consider unsubscribing from its events to avoid retaining page instances.
+    /// </remarks>
     protected override void OnDisappearing()
     {
-        CameraView.PropertyChanged -= CameraView_PropertyChanged;
+        CameraView.PropertyChanged -= CameraViewPropertyChanged;
         base.OnDisappearing();
     }
 
-    private void CameraView_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    /// <summary>
+    /// Handles camera property changes and updates the pause overlay when
+    /// <see cref="CameraBarcodeReaderView.IsDetecting"/> changes.
+    /// </summary>
+    /// <param name="sender">The camera view.</param>
+    /// <param name="e">Property change arguments.</param>
+    private void CameraViewPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(CameraBarcodeReaderView.IsDetecting))
         {
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                UpdatePauseOverlay(paused: !CameraView.IsDetecting);
+                UpdatePauseOverlay(paused: !CameraView.IsDetecting).ConfigureAwait(false);
             });
         }
     }
 
     /// <summary>
-    /// Shows a dark cover and optionally hides the camera preview when paused.
+    /// Shows or hides the pause overlay and toggles the camera preview visibility
+    /// to reflect whether scanning is paused.
     /// </summary>
+    /// <param name="paused">If <see langword="true"/>, show overlay and hide preview; otherwise hide overlay and show preview.</param>
+    /// <returns>A task that completes when the overlay animation finishes.</returns>
     private async Task UpdatePauseOverlay(bool paused)
     {
         await AnimatePauseOverlayAsync(paused);
         CameraView.IsVisible = !paused;
     }
 
+    /// <summary>
+    /// Switches between front and rear cameras in response to a request from
+    /// <see cref="BarcodeScannerService"/>.
+    /// </summary>
     private void OnSwitchCamera()
     {
         MainThread.BeginInvokeOnMainThread(() =>
@@ -106,6 +129,9 @@ public partial class LiveBarcodeScannerPage : ContentPage
         });
     }
 
+    /// <summary>
+    /// Toggles the torch (flash) in response to a request from <see cref="BarcodeScannerService"/>.
+    /// </summary>
     private void OnToggleTorch()
     {
         MainThread.BeginInvokeOnMainThread(() =>
@@ -114,6 +140,10 @@ public partial class LiveBarcodeScannerPage : ContentPage
         });
     }
 
+    /// <summary>
+    /// Pauses or resumes barcode detection in response to a request from
+    /// <see cref="BarcodeScannerService"/>.
+    /// </summary>
     private void OnTogglePauseScan()
     {
         MainThread.BeginInvokeOnMainThread(() =>
@@ -122,6 +152,11 @@ public partial class LiveBarcodeScannerPage : ContentPage
         });
     }
 
+    /// <summary>
+    /// Animates the pause overlay in or out.
+    /// </summary>
+    /// <param name="show">If <see langword="true"/>, fade in; otherwise fade out.</param>
+    /// <returns>A task that completes when the animation finishes.</returns>
     private async Task AnimatePauseOverlayAsync(bool show)
     {
         if (show)
@@ -137,9 +172,13 @@ public partial class LiveBarcodeScannerPage : ContentPage
         }
     }
 
+    /// 
     /// <summary>
-    /// Barcode Detection Handler: called when barcodes are detected by the camera
+    /// Processes detected barcodes and adds them to the scanner service,
+    /// classifying each item according to the active <see cref="BarcodeMode"/>.
     /// </summary>
+    /// <param name="sender">The camera view raising the event.</param>
+    /// <param name="e">Detection results containing zero or more barcodes.</param>
     private void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
     {
         var barcodeResults = e.Results ?? Enumerable.Empty<BarcodeResult>(); // Get detected barcodes
