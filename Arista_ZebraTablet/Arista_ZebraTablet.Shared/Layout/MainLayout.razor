@@ -11,7 +11,7 @@
     @if (factor == "Web")
     {
         <!-- Topbar -->
-        <Topbar Title="ARISTA Batch Barcode Scanner">
+        <Topbar Title="ARISTA Barcode Scanner">
             <LeftContent>
                 <MudToggleIconButton Icon="@Icons.Material.Rounded.Menu" ToggledIcon="@Icons.Material.Rounded.MenuOpen" Color="Color.Inherit" Edge="Edge.Start" @bind-Toggled="drawerOpen" />
             </LeftContent>
@@ -39,11 +39,6 @@
 
     private string factor => FormFactor.GetFormFactor();
     private string platform => FormFactor.GetPlatform();
-
-    private Topbar.NavItemModel[] topNav = new Topbar.NavItemModel[]
-    {
-        new ("ASP.NET Core Documentation", "https://learn.microsoft.com/aspnet/core/"),
-    };
 
     // Define custom theme
     // Jabil Brand Portal: https://jabil.sharepoint.com/sites/JabilBrandPortal/ (Navigate to Brand Guidelines)
