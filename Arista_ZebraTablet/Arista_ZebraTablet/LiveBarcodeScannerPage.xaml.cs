@@ -1,5 +1,6 @@
 ﻿using Arista_ZebraTablet.Services; // Import app-level services
 using Arista_ZebraTablet.Shared.Application.Enums;
+using Arista_ZebraTablet.Shared.Application.ViewModels;
 using ZXing.Net.Maui; // Barcode detection library for MAUI
 
 namespace Arista_ZebraTablet;
@@ -123,6 +124,11 @@ public partial class LiveBarcodeScannerPage : ContentPage
     {
         var barcodeResults = e.Results ?? Enumerable.Empty<BarcodeResult>(); // Get detected barcodes
 
+
+        // Generate a new FrameId for this camera frame
+        var frameId = Guid.NewGuid();
+
+
         foreach (var result in barcodeResults)
         {
             if (string.IsNullOrWhiteSpace(result.Value))
@@ -132,6 +138,19 @@ public partial class LiveBarcodeScannerPage : ContentPage
             var category = _mode == BarcodeMode.Standard
                 ? BarcodeClassifier.Classify(result.Value)
                 : UniqueBarcodeClassifier.Classify(result.Value);
+
+
+            // Create ScanBarcodeItemViewModel and assign FrameId
+            var barcodeItem = new ScanBarcodeItemViewModel
+            {
+                Id = Guid.NewGuid(),
+                Value = result.Value,
+                Category = category,
+                BarcodeType = result.Format.ToString(),
+                ScannedTime = DateTime.Now,
+                FrameId = frameId // ✅ Important for grouping
+            };
+
 
             // Add result to scanner service
             _scannerService.Add(result.Value, result.Format.ToString(), category);

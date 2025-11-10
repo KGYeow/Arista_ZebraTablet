@@ -1,0 +1,194 @@
+﻿@page "/reorder"
+@inject ISnackbar Snackbar
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JS
+
+
+
+
+@using System.Collections.ObjectModel
+@using Arista_ZebraTablet.Shared.Application.ViewModels
+@using Arista_ZebraTablet.Shared.Services
+
+<PageTitle>Reorder Barcodes</PageTitle>
+
+<MudContainer Class="pa-4">
+    <MudText Typo="Typo.h5">Reorder Barcode Results</MudText>
+
+    <MudDropContainer T="DropItem" Items="_reorderableItems" ItemsSelector="@((item, dropzone) => item.Selector == dropzone)" ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
+        <ChildContent>
+            <MudPaper Class="ma-4 flex-grow-1">
+                <MudList T="string" Class="d-flex flex-column mud-height-full">
+                    <MudListSubheader>Reorder Barcodes</MudListSubheader>
+                    <MudDropZone T="DropItem" Identifier="1" @ref="_dropZone" Class="flex-grow-1" AllowReorder="true" />
+                </MudList>
+            </MudPaper>
+        </ChildContent>
+        <ItemRenderer>
+            <MudListItem T="string" Text="@context.Name" />
+        </ItemRenderer>
+    </MudDropContainer>
+
+
+    <MudStack Class="mt-4" Row Spacing="2">
+        <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="@(() => CopyToClipboard(_reorderedItems))">Copy</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Outlined" OnClick="CancelReorder">Cancel</MudButton>
+    </MudStack>
+</MudContainer>
+
+@code {
+    [Inject] public IBarcodeDetectorService Detector { get; set; } = default!;
+    private ImgItemViewModel? imageToReorder;
+    private MudDropZone<DropItem>? _dropZone;
+    private List<DropItem> _items = new();
+    private List<DropItem> _reorderedItems = new();
+    [Parameter] public Guid imgId { get; set; }
+
+
+    private List<DropItem> _reorderableItems = new();
+
+    
+
+    private static readonly List<string> PreferredCategoryOrder = new()
+    {
+        "ASY",
+        "ASY-OTL",
+        "Serial Number",
+        "MAC Address",
+        "Deviation",
+        "PCA"
+    };
+
+    protected override void OnInitialized()
+    {
+        if (Detector.UploadedImages == null || !Detector.UploadedImages.Any())
+        {
+            return; // Nothing to reorder
+        }
+
+        if (Detector.SelectedImageId == Guid.Empty)
+        {
+            // Reorder all barcodes from all images
+            var allBarcodes = Detector.UploadedImages
+                .Where(img => img.DetectResult?.Barcodes?.Any() == true)
+                .SelectMany(img => img.DetectResult.Barcodes)
+                .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
+                    ? PreferredCategoryOrder.IndexOf(b.Category)
+                    : int.MaxValue)
+                .ThenBy(b => b.ScannedTime)
+                .Select(b => new DropItem
+                {
+                    Name = $"{b.Category}: {b.Value}",
+                    Selector = "1",
+                    Original = b
+                })
+                .ToList();
+
+            _reorderableItems = allBarcodes;
+        }
+        else
+        {
+            var selectedImg = Detector.UploadedImages
+                .FirstOrDefault(img => img.Id == Detector.SelectedImageId);
+
+            if (selectedImg?.DetectResult?.Barcodes?.Any() == true)
+            {
+                _reorderableItems = selectedImg.DetectResult.Barcodes
+                    .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
+                        ? PreferredCategoryOrder.IndexOf(b.Category)
+                        : int.MaxValue)
+                    .ThenBy(b => b.ScannedTime)
+                    .Select(b => new DropItem
+                    {
+                        Name = $"{b.Category}: {b.Value}",
+                        Selector = "1",
+                        Original = b
+                    })
+                    .ToList();
+            }
+        }
+    }
+
+    private void OnItemDropped(MudItemDropInfo<DropItem> dropItem)
+    {
+        dropItem.Item.Selector = dropItem.DropzoneIdentifier;
+        _reorderableItems = _reorderableItems.OrderBy(x => x.Selector).ToList();
+        StateHasChanged();
+    }
+
+
+
+    private void ItemUpdated(MudItemDropInfo<DropItem> dropItem)
+    {
+        dropItem.Item.Selector = dropItem.DropzoneIdentifier;
+
+        // Remove and re-insert the item to simulate reordering
+        if (_items.Remove(dropItem.Item))
+        {
+            // _items.Add(dropItem.Item); Add to end or use custom logic to insert at specific position
+        }
+
+        // Update the reordered list
+        _reorderedItems = _reorderableItems.ToList();
+
+    }
+
+    private void ConfirmReorder()
+    {
+        if (_items.Any())
+        {
+            ReorderCache.UpdatedResults[imgId] = _items.Select(i => i.Original!).ToList();
+        }
+        NavigationManager.NavigateTo("/");
+    }
+    private async Task CopyToClipboard(object content)
+    {
+        string textToCopy;
+
+        switch (content)
+        {
+            case string singleText:
+                textToCopy = singleText;
+                break;
+
+            case ImgItemViewModel img when img?.DetectResult?.Barcodes?.Count > 0:
+                var lines = img.DetectResult.Barcodes
+                    .Select(b => $"{b.Value}")
+                    .ToList();
+                textToCopy = string.Join("\n", lines);
+                break;
+
+            case List<DropItem> dropItems when dropItems.Count > 0:
+                var reorderedLines = dropItems.Select(item => item.Name).ToList();
+                textToCopy = string.Join("\n", reorderedLines);
+                break;
+
+            default:
+                Snackbar.Add("Nothing to copy.", Severity.Warning);
+                return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", textToCopy);
+            Snackbar.Add("Copied to clipboard.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to copy: {ex.Message}", Severity.Error);
+        }
+    }
+
+
+    private void CancelReorder()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+
+    public class DropItem
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Selector { get; set; } = "1";
+        public ScanBarcodeItemViewModel? Original { get; set; }
+    }
+}

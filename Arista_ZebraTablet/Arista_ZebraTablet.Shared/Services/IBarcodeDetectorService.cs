@@ -14,5 +14,9 @@ namespace Arista_ZebraTablet.Shared.Services
         /// Decodes barcodes from an image byte array.
         /// </summary>
         List<ScanBarcodeItemViewModel> DecodeFromImage(byte[] imageBytes, BarcodeMode mode);
+
+        List<ImgItemViewModel> UploadedImages { get; set; }
+        Guid? SelectedImageId { get; set; }
+
     }
 }

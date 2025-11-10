@@ -167,5 +167,7 @@ namespace Arista_ZebraTablet.Web.Services
             }
             return results;
         }
+        public List<ImgItemViewModel> UploadedImages { get; set; } = new();
+        public Guid? SelectedImageId { get; set; }
     }
 }

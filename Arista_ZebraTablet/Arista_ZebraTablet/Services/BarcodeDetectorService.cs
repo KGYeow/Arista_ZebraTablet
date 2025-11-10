@@ -156,5 +156,13 @@ namespace Arista_ZebraTablet.Services
             }
             return results;
         }
+
+        /// <summary>
+        /// Reorders uploaded images in the list.
+        /// </summary>
+        public List<ImgItemViewModel> UploadedImages { get; set; } = new();
+        public Guid? SelectedImageId { get; set; }
+
+
     }
 }

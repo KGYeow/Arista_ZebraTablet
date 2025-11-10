@@ -126,7 +126,7 @@
         <MudItem>
             <!-- Scanned Barcode's Result Cards -->
             <MudStack Class="position-relative" Spacing="2">
-                @if (!scanResultsService.Results.Any())
+                @* @if (!scanResultsService.Results.Any())
                 {
                     <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
                         No scans yet. Aim the camera at a code.
@@ -181,7 +181,100 @@
                             </MudStack>
                         </MudPaper>
                     }
+                } *@
+                @if (!scanResultsService.Results.Any())
+                {
+                    <MudText>No scans yet. Aim the camera at a code.</MudText>
                 }
+                else
+                {
+                    @* @foreach (var frameGroup in GroupedResults)
+                    {
+                        <MudCard Class="mb-3" Elevation="1">
+                            <MudCardContent>
+                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                    <!-- Thumbnail or placeholder image -->
+                                    <MudAvatar Size="Size.Large" Color="Color.Default" Rounded>
+                                        <MudIcon Icon="@Icons.Material.Rounded.Image" />
+                                    </MudAvatar>
+
+                                    <MudStack>
+                                        <MudText Typo="Typo.subtitle2">Frame @frameGroup.Key</MudText>
+                                        <MudText Typo="Typo.caption">@($"{frameGroup.Count()} barcode(s)")</MudText>
+                                    </MudStack>
+                                </MudStack>
+
+                                <MudDivider Class="my-2" />
+
+                                <!-- Barcode results table -->
+                                <MudSimpleTable Dense Bordered Hover Outlined>
+                                    <tbody>
+                                        @foreach (var barcode in frameGroup)
+                                        {
+                                            <tr>
+                                                <td>@barcode.Category</td>
+                                                <td>@barcode.Value</td>
+                                                <td>
+                                                    <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
+                                                                   Color="Color.Primary"
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => CopySingleBarcode(barcode.Value))" />
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </MudSimpleTable>
+                            </MudCardContent>
+                        </MudCard>
+                    } *@
+                    @foreach (var frameGroup in GroupedResults)
+                    {
+                        <MudCard Class="mb-3" Elevation="1">
+                            <MudCardContent>
+                                <!-- Frame Info -->
+                                <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudAvatar Size="Size.Large" Color="Color.Default" Rounded>
+                                        <MudIcon Icon="@Icons.Material.Rounded.Image" />
+                                    </MudAvatar>
+                                    <MudStack>
+                                        <MudText Typo="Typo.subtitle2">Frame @frameGroup.Key</MudText>
+                                        <MudText Typo="Typo.caption">@($"{frameGroup.Count()} barcode(s)")</MudText>
+                                    </MudStack>
+                                </MudStack>
+
+                                <MudDivider Class="my-2" />
+
+                                <!-- All barcodes in this frame -->
+                                <MudSimpleTable Dense Bordered Hover Outlined>
+                                    <tbody>
+                                        @foreach (var barcode in frameGroup)
+                                        {
+                                            <tr>
+                                                <td>@barcode.Category</td>
+                                                <td>@barcode.Value</td>
+                                                <td>
+                                                    <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
+                                                                   Color="Color.Primary"
+                                                                   Size="Size.Small"
+                                                                   OnClick="@(() => CopySingleBarcode(barcode.Value))" />
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </MudSimpleTable>
+
+                                <!-- Frame-level actions -->
+                                <MudStack Row Spacing="2" Class="mt-2">
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled"
+                                               OnClick="@(() => CopyFrame(frameGroup))">Copy All</MudButton>
+                                    <MudButton Color="Color.Error" Variant="Variant.Outlined"
+                                               OnClick="@(() => DeleteFrame(frameGroup))">Delete Frame</MudButton>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+                    }
+                }
+
             </MudStack>
         </MudItem>
     </Body>
@@ -196,6 +289,8 @@
 
     // Event-based refresh is more reliable with BlazorWebView
     private void OnScanReceived(object? sender, ScanBarcodeItemViewModel e) => InvokeAsync(StateHasChanged);
+
+    // public Guid FrameId { get; set; }
 
     /// <summary>
     /// This code makes a Blazor component automatically refresh when a data collection changes,
@@ -382,12 +477,11 @@
     /// Results with same category are sorted by scan time.
     /// </summary> 
 
-    private IEnumerable<ScanBarcodeItemViewModel> SortedResults =>
+    private IEnumerable<IGrouping<Guid, ScanBarcodeItemViewModel>> GroupedResults =>
         scanResultsService.Results
-            .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
-                ? PreferredCategoryOrder.IndexOf(b.Category)
-                : int.MaxValue)
-            .ThenBy(b => b.ScannedTime);
+            .GroupBy(b => b.FrameId)
+            .OrderBy(g => g.First().ScannedTime);
+
 
     /// <summary>
     /// Defines the desired order for barcode categories.
@@ -422,8 +516,9 @@
             .ThenBy(b => b.ScannedTime)
             .ToList();
 
-        var lines = SortedResults
-            .Select(b => $"{b.Value}")
+        var lines = GroupedResults
+            .SelectMany(group => group) // Flatten each group into individual barcodes
+            .Select(barcode => barcode.Value) // Get Value from each barcode
             .ToList();
 
         var textToCopy = string.Join("\n", lines);
@@ -438,4 +533,32 @@
             Snackbar.Add($"Failed to copy: {ex.Message}", Severity.Error);
         }
     }
+    /// <summary>
+    /// Copies single barcode value to clipboard.
+    /// </summary>
+    private async Task CopySingleBarcode(string value)
+    {
+        await Clipboard.Default.SetTextAsync(value);
+        Snackbar.Add("Copied barcode.", Severity.Success);
+    }
+
+    //copy value in one frame
+    private async Task CopyFrame(IGrouping<Guid, ScanBarcodeItemViewModel> frameGroup)
+    {
+        var lines = frameGroup.Select(b => b.Value).ToList();
+        var textToCopy = string.Join("\n", lines);
+        await Clipboard.Default.SetTextAsync(textToCopy);
+        Snackbar.Add("Copied all barcodes in this frame.", Severity.Success);
+    }
+
+    //delete frame
+    private void DeleteFrame(IGrouping<Guid, ScanBarcodeItemViewModel> frameGroup)
+    {
+        foreach (var barcode in frameGroup.ToList())
+        {
+            scanResultsService.Results.Remove(barcode);
+        }
+        Snackbar.Add("Frame deleted.", Severity.Success);
+    }
+
 }
