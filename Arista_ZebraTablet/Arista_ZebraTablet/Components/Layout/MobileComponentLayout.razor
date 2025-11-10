@@ -1,7 +1,7 @@
 ﻿@inherits LayoutComponentBase
 
 @* Required *@
-<MudThemeProvider Theme="MyCustomTheme" />
+<MudThemeProvider Theme="Theme" />
 <MudPopoverProvider />
 
 @* Needed for dialogs *@
@@ -14,14 +14,12 @@
     <!-- Main Content -->
     <MudMainContent Class="p-0">
         <!-- Page Content -->
-        <MudContainer Class="py-4" MaxWidth="MaxWidth.Large">
-            @Body
-        </MudContainer>
+        @Body
     </MudMainContent>
 </MudLayout>
 
 @code {
     // Define custom theme
     // Jabil Brand Portal: https://jabil.sharepoint.com/sites/JabilBrandPortal/ (Navigate to Brand Guidelines)
-    MyCustomTheme MyCustomTheme = new MyCustomTheme();
+    [Parameter] public MyCustomTheme Theme { get; set; } = new MyCustomTheme();
 }

@@ -12,7 +12,7 @@
 >
     <Grid RowDefinitions="0.6*,0.4*">
         <AbsoluteLayout Grid.Row="0">
-            <!-- Camera -->
+            <!-- Scanning Camera -->
             <zxing:CameraBarcodeReaderView
                 x:Name="CameraView"
                 AbsoluteLayout.LayoutBounds="0,0,1,1"
@@ -25,42 +25,56 @@
                 </zxing:CameraBarcodeReaderView.Options>
             </zxing:CameraBarcodeReaderView>
 
-            <!-- Scan Overlay with Punch-Out -->
-            <GraphicsView x:Name="ScanOverlay"
-                          Drawable="{x:Static services:ScanOverlayDrawable.Instance}"
-                          AbsoluteLayout.LayoutBounds="0,0,1,1"
-                          AbsoluteLayout.LayoutFlags="All"
-                          BackgroundColor="Transparent"
-                          InputTransparent="True" />
-
-            <!-- Scan Line inside transparent ScanBox -->
-            <Grid x:Name="ScanBox"
-                  AbsoluteLayout.LayoutBounds="0,0,1,1"
-                  AbsoluteLayout.LayoutFlags="All"
-                  WidthRequest="300"
-                  HeightRequest="300"
-                  HorizontalOptions="Center"
-                  VerticalOptions="Center"
-                  BackgroundColor="Transparent"
-                  InputTransparent="True"
+            <!-- Scanning Paused Screen Overlay -->
+            <Grid x:Name="PauseOverlay"
+                AbsoluteLayout.LayoutBounds="0,0,1,1"
+                AbsoluteLayout.LayoutFlags="All"
+                IsVisible="False"
+                BackgroundColor="#CC1F1F1F"
+                InputTransparent="False"
+                ZIndex="10"
             >
-                <BoxView x:Name="ScanLineGlow"
-                         HeightRequest="4"
-                         Opacity="0.35"
-                         BackgroundColor="#00E5FF"
-                         HorizontalOptions="Fill"
-                         VerticalOptions="Start" />
-                <BoxView x:Name="ScanLine"
-                         HeightRequest="2"
-                         BackgroundColor="#00E5FF"
-                         HorizontalOptions="Fill"
-                         VerticalOptions="Start" />
+
+                <!-- Centered content -->
+                <Grid RowDefinitions="Auto,Auto,Auto"
+                    RowSpacing="14"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                >
+                    <Label Grid.Row="1"
+                       Text="Scanning paused"
+                       TextColor="White"
+                       FontSize="22"
+                       FontAttributes="Bold"
+                       HorizontalTextAlignment="Center" />
+                </Grid>
+            </Grid>
+
+            <!-- Bottom Overlay Container that Fills the Camera Controls Area -->
+            <Grid
+                AbsoluteLayout.LayoutBounds="0,0,1,1"
+                AbsoluteLayout.LayoutFlags="All"
+                InputTransparent="False"
+                BackgroundColor="Transparent"
+                ZIndex="15"
+            >
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Camera Controls Anchored at the Bottom -->
+                <BlazorWebView x:Name="blazorWebViewCameraControls" Grid.Row="1" BackgroundColor="Transparent" HostPage="wwwroot/index.html">
+                    <BlazorWebView.RootComponents>
+                        <RootComponent Selector="#app" ComponentType="{x:Type components:BarcodeScannerControls}" />
+                    </BlazorWebView.RootComponents>
+                </BlazorWebView>
             </Grid>
         </AbsoluteLayout>
 
-        <!-- Blazor WebView: Result List -->
-        <BlazorWebView x:Name="blazorWebView" Grid.Row="1" HostPage="wwwroot/index.html">
+        <BlazorWebView x:Name="blazorWebViewScannedResult" Grid.Row="1" HostPage="wwwroot/index.html">
             <BlazorWebView.RootComponents>
+                <!-- Results List -->
                 <RootComponent Selector="#app" ComponentType="{x:Type components:BarcodeScannerResult}" />
             </BlazorWebView.RootComponents>
         </BlazorWebView>

@@ -1,0 +1,103 @@
+﻿@using Arista_ZebraTablet.Services
+
+@inject BarcodeScannerService scannerControlService
+
+<!-- Overlay Layout - keep Theme transparent so the camera remains visible -->
+<MobileComponentLayout Theme="@myScannerControlsTheme">
+    <Body>
+        <!-- Control Bar -->
+        <MudStack Row Class="mx-4 mb-5" Spacing="3" AlignItems="AlignItems.Center" Justify="Justify.Center">
+            <!-- Switch Camera Button (front <-> rear) -->
+            <MudFab Color="Color.Primary"
+                    Size="Size.Small"
+                    StartIcon="@Icons.Material.Outlined.Cameraswitch"
+                    OnClick="SwitchCamera"
+                    DropShadow="false" />
+
+            <!-- Scan Pause Button -->
+            <MudFab Color="Color.Primary"
+                    Size="Size.Small"
+                    StartIcon="@(scanPaused ? @Icons.Material.Outlined.PlayArrow : @Icons.Material.Outlined.Pause)"
+                    OnClick="ToggleScanPause"
+                    DropShadow="false" />
+
+            <!-- Torch Toggle Button -->
+            <MudFab Color="Color.Primary"
+                    Size="Size.Small"
+                    StartIcon="@(flashLightOn ? @Icons.Material.Outlined.FlashlightOff : @Icons.Material.Outlined.FlashlightOn)"
+                    OnClick="ToggleTorch"
+                    DropShadow="false" />
+        </MudStack>
+    </Body>
+</MobileComponentLayout>
+
+@code {
+    /// <summary>
+    /// Theme applied to the overlay. We force transparent backgrounds so the
+    /// native camera preview below the BlazorWebView remains visible.
+    /// </summary>
+    /// <remarks>
+    /// Ensure both <c>Background</c> (and, if needed, <c>Surface</c>) are transparent.
+    /// </remarks>
+    private MyCustomTheme myScannerControlsTheme = new MyCustomTheme();
+
+    /// <summary>
+    /// Local UI state that mirrors the torch on/off icon.
+    /// </summary>
+    /// <remarks>
+    /// This flag is for immediate visual feedback. The actual torch control occurs in
+    /// the MAUI page that handles the underlying <c>CameraBarcodeReaderView</c>.
+    /// </remarks>
+    private bool flashLightOn = false;
+
+    /// <summary>
+    /// Indicates whether barcode scanning is currently paused.
+    /// </summary>
+    /// <remarks>
+    /// This flag is used for UI state and toggling the pause/resume button.
+    /// When <c>true</c>, scanning is paused (camera preview remains active).
+    /// </remarks>
+    private bool scanPaused = false;
+
+    /// <summary>
+    /// Initializes the component and enforces a transparent background so the overlay
+    /// does not occlude the camera preview.
+    /// </summary>
+    /// <returns>A completed task.</returns>
+    protected override async Task OnInitializedAsync()
+    {
+        // Transparent ARGB color: 00 (alpha) + 000000 (black) = fully transparent.
+        myScannerControlsTheme.PaletteLight.Background = "#00000000";
+
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Requests a camera location toggle (front ↔ rear) via the scanner control service.
+    /// </summary>
+    /// <remarks>
+    /// The MAUI page subscribes to perform the actual camera switch on the UI thread.
+    /// </remarks>
+    private void SwitchCamera() => scannerControlService.RequestSwitchCamera();
+
+    /// <summary>
+    /// Toggles the device torch and updates the local UI toggle state.
+    /// </summary>
+    /// <remarks>
+    /// The underlying torch change is executed on the MAUI page.
+    /// </remarks>
+    private void ToggleTorch()
+    {
+        scannerControlService.RequestToggleTorch();
+        flashLightOn = !flashLightOn;
+    }
+
+    /// <summary>
+    /// Pauses or resumes barcode scanning by invoking the scanner control service.
+    /// </summary>
+    private void ToggleScanPause()
+    {
+        scannerControlService.RequestToggleScanPause();
+        scanPaused = !scanPaused;
+    }
+}
