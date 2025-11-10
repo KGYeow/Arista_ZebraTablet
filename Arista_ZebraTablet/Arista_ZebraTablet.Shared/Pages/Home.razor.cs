@@ -39,6 +39,7 @@ public partial class Home : ComponentBase
     /// Service responsible for copy result to clipboard.
     /// </summary>
     [Inject] private IJSRuntime JS { get; set; } = default!;
+    [Inject] public NavigationManager NavigationManager { get; set; } = default!;
 
     #endregion
 
@@ -59,7 +60,7 @@ public partial class Home : ComponentBase
     /// <summary>
     /// In-memory list of uploaded image files bound to the UI.
     /// </summary>
-    private List<ImgItemViewModel> uploadedImgFiles { get; } = new();
+    private List<ImgItemViewModel> uploadedImgFiles { get; set; } = new();
 
     /// <summary>
     /// Tracks which image IDs currently have their detected-barcode results expanded in the UI.
@@ -157,7 +158,15 @@ public partial class Home : ComponentBase
     /// </summary>
     private string platform => FormFactor.GetPlatform();
 
+    /// <summary>
+    /// Reorderable list of detected barcode items for drag-and-drop UI.
+    /// </summary>
     private List<DropItem> _reorderableItems = new();
+
+    /// <summary>
+    /// The selected image ID for reordering barcodes.
+    /// </summary>
+    public Guid? SelectedImageId { get; set; }
 
     #endregion
 
@@ -369,9 +378,7 @@ public partial class Home : ComponentBase
 
             // ✅ All reordered barcode results (e.g., from drag-and-drop UI)
             case List<DropItem> dropItems when dropItems.Count > 0:
-                var reorderedLines = dropItems
-                    .Select(item => item.Name) // Reflects drag-and-drop order
-                    .ToList();
+                var reorderedLines = dropItems.Select(item => item.Name).ToList();
                 textToCopy = string.Join("\n", reorderedLines);
                 break;
 
@@ -391,7 +398,32 @@ public partial class Home : ComponentBase
         }
     }
 
+    /// <summary>
+    /// Copies all results from all uploaded images to the clipboard.
+    /// </summary>
+    private async Task CopyAllResults()
+    {
+        var allBarcodes = uploadedImgFiles
+            .Where(img => img.DetectResult?.Barcodes?.Any() == true)
+            .SelectMany(img => img.DetectResult.Barcodes)
+            .Select(b => $"{b.Value}")
+            .ToList();
 
+        if (allBarcodes.Count == 0)
+        {
+            Snackbar.Add("No barcode results to copy.", Severity.Warning);
+            return;
+        }
+
+        await CopyToClipboard(string.Join("\n", allBarcodes));
+    }
+    protected override void OnInitialized()
+    {
+        if (Detector.UploadedImages.Any())
+        {
+            uploadedImgFiles = Detector.UploadedImages; // Restore updated list
+        }
+    }
 
     #endregion
 
@@ -572,7 +604,19 @@ public partial class Home : ComponentBase
             }
         }
     }
+    private void EnableReorderMode(Guid imgId)
+    {
+        Detector.SelectedImageId = imgId;
+        Detector.UploadedImages = uploadedImgFiles;
+        NavigationManager.NavigateTo("/reorder");
+    }
 
+    private void EnableReorderAll()
+    {
+        Detector.SelectedImageId = Guid.Empty; // Use Guid.Empty to indicate "reorder all"
+        Detector.UploadedImages = uploadedImgFiles;
+        NavigationManager.NavigateTo("/reorder");
+    }
     #endregion
 
     #region Barcode decoding & upload
@@ -731,6 +775,10 @@ public partial class Home : ComponentBase
         "Deviation",
         "PCA"
     };
+
+    /// <summary>
+    /// Represents an item in the drag-and-drop reorderable list.
+    /// </summary> 
 
     public class DropItem
     {
