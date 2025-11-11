@@ -17,7 +17,7 @@ namespace Arista_ZebraTablet.Shared.Pages;
 /// </summary>
 public partial class Home : ComponentBase
 {
-    #region Injected services
+    #region Dependencies
 
     /// <summary>
     /// Provides device form factor and platform information (Web/Android/iOS, etc.).

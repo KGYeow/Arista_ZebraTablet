@@ -7,6 +7,8 @@
 /// </summary>
 public sealed class BarcodeScannerService
 {
+    #region Events
+
     /// <summary>
     /// Occurs when a request is made to switch the active camera (e.g., rear ↔ front).
     /// </summary>
@@ -34,12 +36,20 @@ public sealed class BarcodeScannerService
     /// </remarks>
     public event Action? ToggleScanPausedRequested;
 
+    #endregion
+
+    #region Constructor
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BarcodeScannerService"/> class.
     /// </summary>
     public BarcodeScannerService()
     {
     }
+
+    #endregion
+
+    #region Request methods
 
     /// <summary>
     /// Requests that the active camera be switched.
@@ -58,4 +68,6 @@ public sealed class BarcodeScannerService
     /// Triggers <see cref="ToggleScanPausedRequested"/>.
     /// </summary>
     public void RequestToggleScanPause() => ToggleScanPausedRequested?.Invoke();
+
+    #endregion
 }

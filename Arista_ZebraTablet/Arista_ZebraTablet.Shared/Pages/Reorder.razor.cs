@@ -18,7 +18,7 @@ namespace Arista_ZebraTablet.Shared.Pages;
 /// </remarks>
 public partial class Reorder : ComponentBase
 {
-    #region Injected services
+    #region Dependencies
 
     /// <summary>
     /// Provides navigation helpers for moving between pages.
