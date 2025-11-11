@@ -5,7 +5,6 @@ using Arista_ZebraTablet.Shared.Services;
 using Arista_ZebraTablet.Shared.Shared;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.JSInterop;
 using MudBlazor;
 using Color = MudBlazor.Color;
@@ -39,6 +38,7 @@ public partial class Home : ComponentBase
     /// Service responsible for copy result to clipboard.
     /// </summary>
     [Inject] private IJSRuntime JS { get; set; } = default!;
+
     [Inject] public NavigationManager NavigationManager { get; set; } = default!;
 
     #endregion
@@ -170,6 +170,25 @@ public partial class Home : ComponentBase
 
     #endregion
 
+    #region Lifecycle
+
+    /// <summary>
+    /// Restores the uploaded image list from <see cref="Detector.UploadedImages"/> if available.
+    /// </summary>
+    /// <remarks>
+    /// Ensures continuity when navigating back from other pages (e.g., reorder screen),
+    /// so the UI reflects the previously uploaded images without requiring re-upload.
+    /// </remarks>
+    protected override void OnInitialized()
+    {
+        if (Detector.UploadedImages.Any())
+        {
+            uploadedImgFiles = Detector.UploadedImages; // Restore updated list
+        }
+    }
+
+    #endregion
+
     #region UI actions & helpers
 
     /// <summary>
@@ -194,6 +213,21 @@ public partial class Home : ComponentBase
     /// </summary>
     //private async Task OpenZebraScanner() => await Detector.NavigateToZebraScannerAsync();
     //private async void OpenZebraScanner() => await Detector.NavigateToZebraScannerAsync();
+
+    /// <summary>
+    /// Enables reorder mode and navigates to the reorder page.
+    /// If <paramref name="imgId"/> is provided, reorders only that image; otherwise reorders all.
+    /// </summary>
+    /// <param name="imgId">
+    /// The image ID to reorder. If <see langword="null"/>, the method enables “reorder all”.
+    /// </param>
+    private void EnableReorderMode(Guid? imgId = null)
+    {
+        // Guid.Empty indicates “reorder all” to the downstream service
+        Detector.SelectedImageId = imgId ?? Guid.Empty;
+        Detector.UploadedImages = uploadedImgFiles;
+        NavigationManager.NavigateTo("/reorder");
+    }
 
     /// <summary>
     /// Maps a file processing state to an appropriate MudBlazor color.
@@ -251,6 +285,71 @@ public partial class Home : ComponentBase
             .Where(f => f.DetectResult?.Barcodes?.Any() == true)
             .Select(f => f.Id)
             .ToHashSet();
+    }
+
+    /// <summary>
+    /// Copies either a single barcode value, all detected barcodes from an image,
+    /// or all reordered barcode results (from drag-and-drop UI).
+    /// </summary>
+    private async Task CopyToClipboard(object content)
+    {
+        string textToCopy;
+
+        switch (content)
+        {
+            // ✅ Single barcode value (e.g., from individual result row)
+            case string singleText:
+                textToCopy = singleText;
+                break;
+
+            // ✅ All barcodes from a single image (e.g., from HomePage card)
+            case ImgItemViewModel img when img?.DetectResult?.Barcodes?.Count > 0:
+                var lines = img.DetectResult.Barcodes
+                    .Select(b => $"{b.Value}") // You can also include category: $"{b.Category}: {b.Value}"
+                    .ToList();
+                textToCopy = string.Join("\n", lines);
+                break;
+
+            // ✅ All reordered barcode results (e.g., from drag-and-drop UI)
+            case List<DropItem> dropItems when dropItems.Count > 0:
+                var reorderedLines = dropItems.Select(item => item.Name).ToList();
+                textToCopy = string.Join("\n", reorderedLines);
+                break;
+
+            default:
+                Snackbar.Add("Nothing to copy.", Severity.Warning);
+                return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", textToCopy);
+            Snackbar.Add("Copied to clipboard.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to copy: {ex.Message}", Severity.Error);
+        }
+    }
+
+    /// <summary>
+    /// Copies all results from all uploaded images to the clipboard.
+    /// </summary>
+    private async Task CopyAllResults()
+    {
+        var allBarcodes = uploadedImgFiles
+            .Where(img => img.DetectResult?.Barcodes?.Count > 0)
+            .SelectMany(img => img.DetectResult.Barcodes)
+            .Select(b => $"{b.Value}")
+            .ToList();
+
+        if (allBarcodes.Count == 0)
+        {
+            Snackbar.Add("No barcode results to copy.", Severity.Warning);
+            return;
+        }
+
+        await CopyToClipboard(string.Join("\n", allBarcodes));
     }
 
     /// <summary>
@@ -351,78 +450,6 @@ public partial class Home : ComponentBase
             });
         }
         StateHasChanged();
-    }
-
-    /// <summary>
-    /// Copies either a single barcode value, all detected barcodes from an image,
-    /// or all reordered barcode results (from drag-and-drop UI).
-    /// </summary>
-    private async Task CopyToClipboard(object content)
-    {
-        string textToCopy;
-
-        switch (content)
-        {
-            // ✅ Single barcode value (e.g., from individual result row)
-            case string singleText:
-                textToCopy = singleText;
-                break;
-
-            // ✅ All barcodes from a single image (e.g., from HistoryPage or HomePage card)
-            case ImgItemViewModel img when img?.DetectResult?.Barcodes?.Count > 0:
-                var lines = img.DetectResult.Barcodes
-                    .Select(b => $"{b.Value}") // You can also include category: $"{b.Category}: {b.Value}"
-                    .ToList();
-                textToCopy = string.Join("\n", lines);
-                break;
-
-            // ✅ All reordered barcode results (e.g., from drag-and-drop UI)
-            case List<DropItem> dropItems when dropItems.Count > 0:
-                var reorderedLines = dropItems.Select(item => item.Name).ToList();
-                textToCopy = string.Join("\n", reorderedLines);
-                break;
-
-            default:
-                Snackbar.Add("Nothing to copy.", Severity.Warning);
-                return;
-        }
-
-        try
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", textToCopy);
-            Snackbar.Add("Copied to clipboard.", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Failed to copy: {ex.Message}", Severity.Error);
-        }
-    }
-
-    /// <summary>
-    /// Copies all results from all uploaded images to the clipboard.
-    /// </summary>
-    private async Task CopyAllResults()
-    {
-        var allBarcodes = uploadedImgFiles
-            .Where(img => img.DetectResult?.Barcodes?.Any() == true)
-            .SelectMany(img => img.DetectResult.Barcodes)
-            .Select(b => $"{b.Value}")
-            .ToList();
-
-        if (allBarcodes.Count == 0)
-        {
-            Snackbar.Add("No barcode results to copy.", Severity.Warning);
-            return;
-        }
-
-        await CopyToClipboard(string.Join("\n", allBarcodes));
-    }
-    protected override void OnInitialized()
-    {
-        if (Detector.UploadedImages.Any())
-        {
-            uploadedImgFiles = Detector.UploadedImages; // Restore updated list
-        }
     }
 
     #endregion
@@ -603,19 +630,6 @@ public partial class Home : ComponentBase
                 Snackbar.Add("An unexpected error occurred while uploading the detected barcodes. Please try again.", Severity.Error);
             }
         }
-    }
-    private void EnableReorderMode(Guid imgId)
-    {
-        Detector.SelectedImageId = imgId;
-        Detector.UploadedImages = uploadedImgFiles;
-        NavigationManager.NavigateTo("/reorder");
-    }
-
-    private void EnableReorderAll()
-    {
-        Detector.SelectedImageId = Guid.Empty; // Use Guid.Empty to indicate "reorder all"
-        Detector.UploadedImages = uploadedImgFiles;
-        NavigationManager.NavigateTo("/reorder");
     }
     #endregion
 
