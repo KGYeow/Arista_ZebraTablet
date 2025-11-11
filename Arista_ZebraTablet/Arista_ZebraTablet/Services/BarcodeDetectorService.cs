@@ -17,11 +17,13 @@ namespace Arista_ZebraTablet.Services
         private readonly HashSet<string> _seen = new(StringComparer.OrdinalIgnoreCase);
         public ObservableCollection<ScanBarcodeItemViewModel> Results { get; } = []; // Scan using Camera Result Management
         public event EventHandler<ScanBarcodeItemViewModel>? ScanReceived;  // <--- ADD
-
+        public ObservableCollection<FrameItemViewModel> Frames { get; } = new();
         public BarcodeDetectorService(IServiceProvider services)
         {
             _services = services;
         }
+
+
 
         /// <summary>
         /// Navigation to live camera Scanner Page
@@ -159,6 +161,11 @@ namespace Arista_ZebraTablet.Services
         /// </summary>
         public List<ImgItemViewModel> UploadedImages { get; set; } = new();
         public Guid? SelectedImageId { get; set; }
+
+        public void RaiseScanReceived(ScanBarcodeItemViewModel barcode)
+        {
+            ScanReceived?.Invoke(this, barcode);
+        }
 
 
     }

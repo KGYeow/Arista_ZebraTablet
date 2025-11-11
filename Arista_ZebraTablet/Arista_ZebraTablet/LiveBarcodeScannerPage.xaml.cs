@@ -26,6 +26,7 @@ public partial class LiveBarcodeScannerPage : ContentPage
     private readonly BarcodeDetectorService _scannerService;
     private readonly BarcodeScannerService _scannerControlService;
     private readonly BarcodeMode _mode;
+    private readonly GroupingService _groupingService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LiveBarcodeScannerPage"/> class.
@@ -34,13 +35,14 @@ public partial class LiveBarcodeScannerPage : ContentPage
     /// <param name="scannerControlService">Mediator for UI control actions (switch camera, torch, pause/resume).</param>
     /// <param name="scannerService">Collector/service that stores and manages detected barcode results.</param>
     /// <param name="mode">Classification mode (e.g., <see cref="BarcodeMode.Standard"/> or <see cref="BarcodeMode.Unique"/>).</param>
-    public LiveBarcodeScannerPage(BarcodeScannerService scannerControlService, BarcodeDetectorService scannerService, BarcodeMode mode)
+    public LiveBarcodeScannerPage(BarcodeScannerService scannerControlService, BarcodeDetectorService scannerService, BarcodeMode mode, GroupingService groupingService)
     {
         InitializeComponent();
 
         _scannerControlService = scannerControlService;
         _scannerService = scannerService;
         _mode = mode;
+        _groupingService = groupingService;
 
         // Configure barcode detection behavior.
         CameraView.Options = new BarcodeReaderOptions
@@ -179,40 +181,106 @@ public partial class LiveBarcodeScannerPage : ContentPage
     /// </summary>
     /// <param name="sender">The camera view raising the event.</param>
     /// <param name="e">Detection results containing zero or more barcodes.</param>
+    //private void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
+    //{
+    //    var barcodeResults = e.Results ?? Enumerable.Empty<BarcodeResult>(); // Get detected barcodes
+
+
+    //    // Generate a new FrameId for this camera frame
+
+    //    var frameItem = new FrameItemViewModel
+    //    {
+    //        CapturedTime = DateTime.Now,
+    //        DetectResult = new DetectResultViewModel()
+    //    };
+
+
+
+    //    foreach (var result in barcodeResults)
+    //    {
+    //        if (string.IsNullOrWhiteSpace(result.Value))
+    //            continue; // Skip empty results
+
+    //        // Classify barcode using regex
+    //        var category = _mode == BarcodeMode.Standard
+    //            ? BarcodeClassifier.Classify(result.Value)
+    //            : UniqueBarcodeClassifier.Classify(result.Value);
+
+
+    //        // Create ScanBarcodeItemViewModel and assign FrameId
+
+    //        frameItem.DetectResult.Barcodes.Add(new ScanBarcodeItemViewModel
+    //        {
+    //            Id = Guid.NewGuid(),
+    //            Value = result.Value,
+    //            Category = category,
+    //            BarcodeType = result.Format.ToString(),
+    //            ScannedTime = DateTime.Now
+    //        });
+
+
+
+    //        // Add result to scanner service
+    //        //_scannerService.Add(result.Value, result.Format.ToString(), category);
+    //        _scannerService.Frames.Add(frameItem); // New collection for frames
+    //    }
+    //}
+
     private void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
     {
-        var barcodeResults = e.Results ?? Enumerable.Empty<BarcodeResult>(); // Get detected barcodes
+        var barcodeResults = e.Results?.Where(r => !string.IsNullOrWhiteSpace(r.Value)).ToList();
+        if (barcodeResults == null || !barcodeResults.Any()) return;
 
+        // Extract values for comparison
+        var newValues = barcodeResults.Select(r => r.Value).OrderBy(v => v).ToList();
 
-        // Generate a new FrameId for this camera frame
-        var frameId = Guid.NewGuid();
+        // Check last frame
+        var lastFrame = _scannerService.Frames.LastOrDefault();
+        if (lastFrame != null)
+        {
+            var lastValues = lastFrame.DetectResult.Barcodes.Select(b => b.Value).OrderBy(v => v).ToList();
 
+            // If same barcodes, update instead of adding
+            if (newValues.SequenceEqual(lastValues))
+            {
+                // Optional: update timestamp or preview image
+                lastFrame.CapturedTime = DateTime.Now;
+                return; // Do nothing else
+            }
+        }
+
+        // Otherwise, create new frame
+        var frameItem = new FrameItemViewModel
+        {
+            CapturedTime = DateTime.Now,
+            DetectResult = new DetectResultViewModel()
+        };
 
         foreach (var result in barcodeResults)
         {
-            if (string.IsNullOrWhiteSpace(result.Value))
-                continue; // Skip empty results
-
-            // Classify barcode using regex
             var category = _mode == BarcodeMode.Standard
                 ? BarcodeClassifier.Classify(result.Value)
                 : UniqueBarcodeClassifier.Classify(result.Value);
 
-
-            // Create ScanBarcodeItemViewModel and assign FrameId
             var barcodeItem = new ScanBarcodeItemViewModel
             {
                 Id = Guid.NewGuid(),
                 Value = result.Value,
                 Category = category,
                 BarcodeType = result.Format.ToString(),
-                ScannedTime = DateTime.Now,
-                FrameId = frameId // ✅ Important for grouping
+                ScannedTime = DateTime.Now
             };
 
+            frameItem.DetectResult.Barcodes.Add(barcodeItem);
 
-            // Add result to scanner service
-            _scannerService.Add(result.Value, result.Format.ToString(), category);
+            // ✅ Notify Razor component
+            _scannerService.RaiseScanReceived(barcodeItem);
+
+            // ✅ Update grouping service
+            _groupingService.AddBarcode(barcodeItem);
         }
+
+        _scannerService.Frames.Add(frameItem);
+
     }
 }
