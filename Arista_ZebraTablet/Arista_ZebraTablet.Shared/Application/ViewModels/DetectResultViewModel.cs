@@ -10,6 +10,5 @@
 /// </remarks>
 public sealed class DetectResultViewModel
 {
-    //public List<ScanBarcodeItemViewModel> Barcodes { get; set; } = [];
     public List<ScanBarcodeItemViewModel> Barcodes { get; set; } = new();
 }
