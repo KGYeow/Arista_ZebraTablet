@@ -220,13 +220,14 @@
                                         <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Rounded.ContentCopy" Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => CopyGroup(group))">
                                             Copy
                                         </MudIconButton>
-                                            <MudTooltip Text="Delete Machine" Placement="Placement.Left" Delay="400" Arrow>
+                                            @* <MudTooltip Text="Delete Machine" Placement="Placement.Left" Delay="400" Arrow>
                                                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                                                Color="Color.Error"
                                                                Size="Size.Small"
                                                                Disabled="@isSaving"
                                                                OnClick="async () => await DeleteCompletedGroup(i)" />
-                                            </MudTooltip>
+                                            </MudTooltip> *@
+                                            
                                     </MudStack>
                                 </MudStack>
                                     <MudDivider Class="my-2" />
@@ -510,12 +511,7 @@
         {
             if (index >= 0 && index < groupingService.CompletedGroups.Count)
             {
-                var updatedList = groupingService.CompletedGroups.ToList();
-                updatedList.RemoveAt(index);
-                groupingService.CompletedGroups = new ObservableCollection<GroupedMachineScanViewModel>(updatedList);
-                groupingService.NotifyPropertyChanged(nameof(groupingService.CompletedGroups));
-                await InvokeAsync(StateHasChanged);
-                Snackbar.Add($"Machine #{index + 1} deleted.", Severity.Warning);
+                groupingService.CompletedGroups.RemoveAt(index);
             }
         }
     }

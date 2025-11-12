@@ -74,13 +74,16 @@
                                     <!-- Thumbnail Image -->
                                     @if (!string.IsNullOrWhiteSpace(img.PreviewDataUrl))
                                     {
-                                        <MudLink OnClick="() => OpenPreviewImgDialogAsync(img.Id)">
+                                        @* <MudLink OnClick="() => OpenPreviewImgDialogAsync(img.Id)">
                                             <MudImage Src="@img.PreviewDataUrl"
                                                         Class="rounded-lg me-3"
                                                         Width="56"
                                                         Height="56"
                                                         ObjectFit="ObjectFit.Cover" />
-                                        </MudLink>
+                                        </MudLink> *@
+                                        <MudAvatar Class="me-3" Size="Size.Large" Color="Color.Default" Rounded>
+                                            <MudIcon Icon="@Icons.Material.Rounded.Image" />
+                                        </MudAvatar>
                                     }
                                     else
                                     {
