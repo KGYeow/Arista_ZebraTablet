@@ -111,7 +111,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="ReorderPage.xaml.cs">
+      <DependentUpon>ReorderPage.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <MauiXaml Update="LiveBarcodeScannerPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
+    <MauiXaml Update="ReorderPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </MauiXaml>
   </ItemGroup>

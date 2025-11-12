@@ -5,6 +5,7 @@ using SkiaSharp;
 using System.Collections.ObjectModel;
 using ZXing.Common;
 using ZXing.SkiaSharp;
+using static Arista_ZebraTablet.Shared.Pages.Home;
 
 namespace Arista_ZebraTablet.Services;
 
@@ -49,6 +50,8 @@ public sealed class BarcodeDetectorService : IBarcodeDetectorService
     /// </summary>
     public event EventHandler<ScanBarcodeItemViewModel>? ScanReceived;
 
+    public ObservableCollection<FrameItemViewModel> Frames { get; } = new();
+
     #endregion
 
     #region Constructer
@@ -74,6 +77,11 @@ public sealed class BarcodeDetectorService : IBarcodeDetectorService
     /// Use <see cref="Guid.Empty"/> to indicate that the reorder scope is “all images”.
     /// </remarks>
     public Guid? SelectedImageId { get; set; }
+
+    public void RaiseScanReceived(ScanBarcodeItemViewModel barcode)
+    {
+        ScanReceived?.Invoke(this, barcode);
+    }
 
     #endregion
 

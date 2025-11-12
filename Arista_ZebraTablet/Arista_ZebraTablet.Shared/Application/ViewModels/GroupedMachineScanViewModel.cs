@@ -6,6 +6,7 @@
 
         // Holds barcodes by category (ASY, Serial Number, MAC Address, Deviation, PCA)
         public Dictionary<string, ScanBarcodeItemViewModel> BarcodesByCategory { get; set; } = new();
+        public DetectResultViewModel DetectResult { get; set; } = null!;
 
         public DateTime CreatedTime { get; set; } = DateTime.Now;
 

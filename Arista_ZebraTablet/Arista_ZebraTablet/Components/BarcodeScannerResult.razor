@@ -97,11 +97,12 @@
                                     Label="Copy Results"
                                     Icon="@Icons.Material.Rounded.ContentCopy"
                                             OnClick="CopyAllGroupedResultsAsync" />
-                                @* <MudMenuItem
-                                        Label="Upload to Database"
-                                        Icon="@Icons.Material.Rounded.DeleteOutline"
-                                        OnClick="SaveScannedResultConfirmationAsync"
-                                    /> *@
+
+                                <!-- ✅ NEW: Reorder Completed Results Button -->
+                                <MudMenuItem Label="Reorder Completed Results"
+                                             Icon="@Icons.Material.Rounded.Reorder"
+                                             OnClick="EnableReorderModeForCompletedGroups" />
+
                                 <MudMenuItem
                                     Label="Clear All"
                                     Icon="@Icons.Material.Rounded.ClearAll"
@@ -127,176 +128,6 @@
             <MudItem>
                 <!-- Scanned Barcode's Result Cards -->
                 <MudStack Class="position-relative" Spacing="2">
-                    @* @if (!scanResultsService.Results.Any())
-                    {
-                        <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
-                            No scans yet. Aim the camera at a code.
-                        </MudAlert>
-                    }
-                    else
-                    {
-                        @foreach (var barcodeItem in SortedResults)
-                        {
-                            <MudPaper Class="pa-3" Elevation="0" Outlined>
-                                <MudStack Row Spacing="3">
-                                    <MudStack Spacing="0">
-                                        <MudText Typo="Typo.caption" GutterBottom="false">@barcodeItem.Category</MudText>
-                                        <MudText Typo="Typo.body1" Class="fw-bold" GutterBottom="false">@barcodeItem.Value</MudText>
-                                    </MudStack>
-
-                                        <MudSpacer />
-
-                                        <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
-                                            <!-- Copy Button -->
-                                            <MudTooltip Text="Copy" Placement="Placement.Top" Delay="400" Arrow>
-                                            <MudIconButton
-                                                    Color="Color.Primary"
-                                                    Size="Size.Small"
-                                                    Icon="@Icons.Material.Filled.ContentCopy"
-                                                    OnClick="CopyAllScannedResultsAsync"
-                                                    Disabled="@(!scanResultsService.Results.Any())"
-                                                    />
-                                            </MudTooltip>
-                                            <!-- Edit Scanned Result Button -->
-                                            <MudTooltip Text="Edit" Placement="Placement.Left" Delay="400" Arrow>
-                                                <MudIconButton
-                                                    Icon="@Icons.Material.Filled.Edit"
-                                                    Color="Color.Primary"
-                                                    Size="Size.Small"
-                                                    Disabled="@isSaving"
-                                                    OnClick="@(() => OpenCategoryEditDialogAsync(barcodeItem))"
-                                                />
-                                            </MudTooltip>
-
-                                            <!-- Delete Scanned Result Button -->
-                                            <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
-                                                <MudIconButton
-                                                    Icon="@Icons.Material.Filled.Delete"
-                                                    Color="Color.Error"
-                                                    Size="Size.Small"
-                                                    Disabled="@isSaving"
-                                                    OnClick="@(() => DeleteScannedResultConfirmationAsync(barcodeItem))"
-                                                />
-                                            </MudTooltip>
-                                        </MudStack>
-                                    </MudStack>
-                                </MudPaper>
-                            }
-                        }
-                    </MudStack>
-                </MudItem>
-            </MudContainer>
-                                        <!-- Delete Scanned Result Button -->
-                                        <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
-                                            <MudIconButton
-                                                Icon="@Icons.Material.Filled.Delete"
-                                                Color="Color.Error"
-                                                Size="Size.Small"
-                                                Disabled="@isSaving"
-                                                OnClick="@(() => DeleteScannedResultConfirmationAsync(barcodeItem))"
-                                            />
-                                        </MudTooltip>
-                                    </MudStack>
-                                </MudStack>
-                            </MudPaper>
-                        }
-                    } *@
-                    @* @if (!scanResultsService.Frames.Any())
-                    {
-                        <MudText>No scans yet. Aim the camera at a code.</MudText>
-                    }
-                    else
-                    { *@
-                        @* @foreach (var frameGroup in GroupedResults)
-                        {
-                            <MudCard Class="mb-3" Elevation="1">
-                                <MudCardContent>
-                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                        <!-- Thumbnail or placeholder image -->
-                                        <MudAvatar Size="Size.Large" Color="Color.Default" Rounded>
-                                            <MudIcon Icon="@Icons.Material.Rounded.Image" />
-                                        </MudAvatar>
-
-                                        <MudStack>
-                                            <MudText Typo="Typo.subtitle2">Frame @frameGroup.Key</MudText>
-                                            <MudText Typo="Typo.caption">@($"{frameGroup.Count()} barcode(s)")</MudText>
-                                        </MudStack>
-                                    </MudStack>
-
-                                    <MudDivider Class="my-2" />
-
-                                    <!-- Barcode results table -->
-                                    <MudSimpleTable Dense Bordered Hover Outlined>
-                                        <tbody>
-                                            @foreach (var barcode in frameGroup)
-                                            {
-                                                <tr>
-                                                    <td>@barcode.Category</td>
-                                                    <td>@barcode.Value</td>
-                                                    <td>
-                                                        <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
-                                                                       Color="Color.Primary"
-                                                                       Size="Size.Small"
-                                                                       OnClick="@(() => CopySingleBarcode(barcode.Value))" />
-                                                    </td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </MudSimpleTable>
-                                </MudCardContent>
-                            </MudCard>
-                        } *@
-
-                        @* @foreach (var frame in scanResultsService.Frames)
-                        {
-                            <MudCard Class="mb-3" Elevation="1">
-                                <MudCardContent>
-                                    <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
-                                        <MudAvatar Size="Size.Large" Color="Color.Default" Rounded>
-                                            <MudIcon Icon="@Icons.Material.Rounded.Image" />
-                                        </MudAvatar>
-                                        <MudStack>
-                                            <MudText Typo="Typo.subtitle2">Frame @frame.Id</MudText>
-                                            <MudText Typo="Typo.caption">@($"{frame.DetectResult.Barcodes.Count} barcode(s)")</MudText>
-                                        </MudStack>
-                                    </MudStack>
-
-                                    <MudDivider Class="my-2" />
-
-                                    <MudSimpleTable Dense Bordered Hover Outlined>
-                                        <tbody>
-                                            @foreach (var barcode in frame.DetectResult.Barcodes
-                                                                                .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
-                                                                                ? PreferredCategoryOrder.IndexOf(b.Category)
-                                                                                : int.MaxValue)
-                                                                                .ThenBy(b => b.ScannedTime))
-                                            {
-                                                <tr>
-                                                    <td>@barcode.Category</td>
-                                                    <td>@barcode.Value</td>
-                                                    <td>
-                                                        <MudIconButton Icon="@Icons.Material.Rounded.ContentCopy"
-                                                                       Color="Color.Primary"
-                                                                       Size="Size.Small"
-                                                                       OnClick="@(() => CopySingleBarcode(barcode.Value))" />
-                                                    </td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </MudSimpleTable>
-
-                                    <MudStack Row Spacing="2" Class="mt-2">
-                                        <MudButton Color="Color.Primary" Variant="Variant.Filled"
-                                                   OnClick="@(() => CopyFrame(frame))">Copy All</MudButton>
-                                        <MudButton Color="Color.Error" Variant="Variant.Outlined"
-                                                   OnClick="@(() => DeleteFrame(frame))">Delete Frame</MudButton>
-                                    </MudStack>
-                                </MudCardContent>
-                            </MudCard>
-                        } *@
-
-                    @* } *@
-
                     @if (!groupingService.CurrentGroup.BarcodesByCategory.Any())
                     {
                         <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
@@ -450,7 +281,7 @@
 </MobileComponentLayout>
 
 @code {
-    // Event handler field or subscribes for observing collection changes
+        // Event handler field or subscribes for observing collection changes
     private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _collectionChangedSub;
 
     // Flag to track whether a save operation is in progress
@@ -478,7 +309,7 @@
         _collectionChangedSub = (_, __) => InvokeAsync(StateHasChanged);
         // Subscribe the handler to the collection's change event
         // scanResultsService.Results.CollectionChanged += _collectionChangedSub;
-        scanResultsService.Frames.CollectionChanged += _collectionChangedSub;
+        // scanResultsService.Frames.CollectionChanged += _collectionChangedSub;
 
         groupingService.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
     }
@@ -491,9 +322,9 @@
     public void Dispose()
     {
         scanResultsService.ScanReceived -= OnScanReceived;
-        if (_collectionChangedSub is not null)
-            // scanResultsService.Results.CollectionChanged -= _collectionChangedSub;
-            scanResultsService.Frames.CollectionChanged -= _collectionChangedSub;
+        // if (_collectionChangedSub is not null)
+        //     scanResultsService.Results.CollectionChanged -= _collectionChangedSub;
+        //     scanResultsService.Frames.CollectionChanged -= _collectionChangedSub;
     }
 
     /// <summary>
@@ -655,7 +486,7 @@
             }
         }
     }
-        private void DeleteCurrentGroup()
+    private void DeleteCurrentGroup()
     {
         groupingService.CurrentGroup = new GroupedMachineScanViewModel();
         Snackbar.Add("Current machine cleared.", Severity.Warning);
@@ -716,7 +547,7 @@
             groupingService.CurrentGroup = new GroupedMachineScanViewModel();
 
             // ✅ Optional: Clear frames if needed
-            scanResultsService.Frames.Clear();
+            // scanResultsService.Frames.Clear();
 
             Snackbar.Add("All results cleared.", Severity.Success);
         }
@@ -727,7 +558,7 @@
     /// Results with same category are sorted by scan time.
     /// </summary> 
 
-    
+
     /// <summary>
     /// Defines the desired order for barcode categories.
     /// Used for sorting both display and copy operations.
@@ -809,6 +640,72 @@
     private void NextMachine()
     {
         groupingService.NextGroup();
+    }
+
+
+
+    private List<DropBarcodeItem> _reorderableItems = new();
+
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+
+    private async Task EnableReorderModeForCompletedGroups()
+    {
+        Snackbar.Add($"Failed to prepare reorderable items: 0 line is error", Severity.Error);
+        // Convert completed group barcodes to reorderable items
+        try{
+            
+                Snackbar.Add($"Failed to prepare reorderable items: First line is error", Severity.Error);
+                _reorderableItems = groupingService.CompletedGroups
+        .SelectMany(g => g.BarcodesByCategory.Values)
+        .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
+            ? PreferredCategoryOrder.IndexOf(b.Category)
+            : int.MaxValue)
+        .ThenBy(b => b.ScannedTime)
+        .Select(b => new DropBarcodeItem
+            {
+                Name = $"{b.Category}: {b.Value}",
+                Selector = "1",
+                Original = b
+            })
+        .ToList();
+                Snackbar.Add($"Failed to prepare reorderable items: Last line error", Severity.Error);
+
+        }
+        catch(Exception ex)
+        {
+            Snackbar.Add($"Failed to prepare reorderable items: {ex.Message}", Severity.Error);
+            return;
+        }
+
+        // Optional: store reorderable items in a shared service if needed
+        // scanResultsService.ReorderItems = _reorderableItems;
+
+        // ✅ Navigate to reorder page
+
+        try{
+            await App.Current.Windows[0].Page.Navigation.PushModalAsync(new ReorderPage(), true);
+            
+
+        }
+        catch(Exception ex)
+        {
+            Snackbar.Add($"Failed to navigate to reorder page: {ex.Message}", Severity.Error);
+        }
+        
+    }
+
+    private void OnItemDropped(MudItemDropInfo<DropBarcodeItem> dropItem)
+    {
+        dropItem.Item.Selector = dropItem.DropzoneIdentifier;
+        _reorderableItems = _reorderableItems.OrderBy(x => x.Selector).ToList();
+        StateHasChanged();
+    }
+
+    public class DropBarcodeItem
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Selector { get; set; } = "1";
+        public ScanBarcodeItemViewModel? Original { get; set; }
     }
 
 

@@ -181,50 +181,6 @@ public partial class LiveBarcodeScannerPage : ContentPage
     /// </summary>
     /// <param name="sender">The camera view raising the event.</param>
     /// <param name="e">Detection results containing zero or more barcodes.</param>
-    //private void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
-    //{
-    //    var barcodeResults = e.Results ?? Enumerable.Empty<BarcodeResult>(); // Get detected barcodes
-
-
-    //    // Generate a new FrameId for this camera frame
-
-    //    var frameItem = new FrameItemViewModel
-    //    {
-    //        CapturedTime = DateTime.Now,
-    //        DetectResult = new DetectResultViewModel()
-    //    };
-
-
-
-    //    foreach (var result in barcodeResults)
-    //    {
-    //        if (string.IsNullOrWhiteSpace(result.Value))
-    //            continue; // Skip empty results
-
-    //        // Classify barcode using regex
-    //        var category = _mode == BarcodeMode.Standard
-    //            ? BarcodeClassifier.Classify(result.Value)
-    //            : UniqueBarcodeClassifier.Classify(result.Value);
-
-
-    //        // Create ScanBarcodeItemViewModel and assign FrameId
-
-    //        frameItem.DetectResult.Barcodes.Add(new ScanBarcodeItemViewModel
-    //        {
-    //            Id = Guid.NewGuid(),
-    //            Value = result.Value,
-    //            Category = category,
-    //            BarcodeType = result.Format.ToString(),
-    //            ScannedTime = DateTime.Now
-    //        });
-
-
-
-    //        // Add result to scanner service
-    //        //_scannerService.Add(result.Value, result.Format.ToString(), category);
-    //        _scannerService.Frames.Add(frameItem); // New collection for frames
-    //    }
-    //}
 
     private void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
     {

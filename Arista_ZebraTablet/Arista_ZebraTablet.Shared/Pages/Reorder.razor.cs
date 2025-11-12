@@ -3,6 +3,7 @@ using Arista_ZebraTablet.Shared.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
+using static Arista_ZebraTablet.Shared.Pages.Home;
 
 namespace Arista_ZebraTablet.Shared.Pages;
 
@@ -36,6 +37,8 @@ public partial class Reorder : ComponentBase
     /// </summary>
     [Inject] public IBarcodeDetectorService Detector { get; set; } = default!;
 
+
+
     #endregion
 
     #region Constants & state & models
@@ -51,6 +54,8 @@ public partial class Reorder : ComponentBase
     /// This list is updated in-place on every drop.
     /// </summary>
     private List<DropBarcodeItem> reorderableBarcodeItems = new();
+
+    private List<DropItem> _reorderableItems = new();
 
     #endregion
 
@@ -97,6 +102,8 @@ public partial class Reorder : ComponentBase
                     .ToList();
             }
         }
+
+
     }
 
     #endregion

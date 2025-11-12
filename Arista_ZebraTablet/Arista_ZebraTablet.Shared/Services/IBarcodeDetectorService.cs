@@ -1,5 +1,6 @@
 using Arista_ZebraTablet.Shared.Application.Enums;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
+using static Arista_ZebraTablet.Shared.Pages.Home;
 
 namespace Arista_ZebraTablet.Shared.Services;
 
@@ -51,4 +52,5 @@ public interface IBarcodeDetectorService
     /// A list of <see cref="ScanBarcodeItemViewModel"/> representing the detected barcodes and their metadata.
     /// </returns>
     List<ScanBarcodeItemViewModel> DecodeFromImage(byte[] imageBytes, BarcodeMode mode);
+
 }
