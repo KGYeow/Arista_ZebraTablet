@@ -55,8 +55,6 @@ public partial class Reorder : ComponentBase
     /// </summary>
     private List<DropBarcodeItem> reorderableBarcodeItems = new();
 
-    private List<DropItem> _reorderableItems = new();
-
     #endregion
 
     #region Lifecycle
@@ -68,18 +66,18 @@ public partial class Reorder : ComponentBase
     /// </summary>
     protected override void OnInitialized()
     {
-        if (Detector.UploadedImages == null || !Detector.UploadedImages.Any())
+        if (Detector.BarcodeGroups == null || Detector.BarcodeGroups.Count == 0)
             return; // Nothing to reorder
 
-        if (Detector.SelectedImageId == Guid.Empty)
+        if (Detector.SelectedBarcodeGroupId == Guid.Empty)
         {
-            // Reorder all barcodes from all images.
-            reorderableBarcodeItems = Detector.UploadedImages
-                .Where(img => img.DetectResult?.Barcodes?.Any() == true)
-                .SelectMany(img => img.DetectResult!.Barcodes)
+            // Reorder all barcodes from all barcode groups of specified barcode source.
+            reorderableBarcodeItems = Detector.BarcodeGroups
+                .Where(g => g.Source == Detector.SelectedBarcodeSource && g.Barcodes.Count > 0)
+                .SelectMany(g => g.Barcodes)
                 .Select(b => new DropBarcodeItem
                 {
-                    Name = $"{b.Category}: {b.Value}",
+                    Name = $"{b.Value}",
                     Selector = "1",
                     ScanBarcodeItem = b
                 })
@@ -87,12 +85,12 @@ public partial class Reorder : ComponentBase
         }
         else
         {
-            // Reorder barcodes only from the selected image.
-            var selectedImgItem = Detector.UploadedImages.FirstOrDefault(img => img.Id == Detector.SelectedImageId);
+            // Reorder barcodes only from the selected barcode group.
+            var selectedBarcodeGroupItem = Detector.BarcodeGroups.FirstOrDefault(g => g.Id == Detector.SelectedBarcodeGroupId);
 
-            if (selectedImgItem?.DetectResult?.Barcodes?.Any() == true)
+            if (selectedBarcodeGroupItem?.Barcodes.Count > 0)
             {
-                reorderableBarcodeItems = selectedImgItem.DetectResult.Barcodes
+                reorderableBarcodeItems = selectedBarcodeGroupItem.Barcodes
                     .Select(b => new DropBarcodeItem
                     {
                         Name = $"{b.Value}",
@@ -102,8 +100,6 @@ public partial class Reorder : ComponentBase
                     .ToList();
             }
         }
-
-
     }
 
     #endregion

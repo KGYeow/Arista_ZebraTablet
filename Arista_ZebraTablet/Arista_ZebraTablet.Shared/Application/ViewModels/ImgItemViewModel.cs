@@ -8,11 +8,6 @@ namespace Arista_ZebraTablet.Shared.Application.ViewModels;
 public partial class ImgItemViewModel
 {
     /// <summary>
-    /// Unique identifier for the image.
-    /// </summary>
-    public Guid Id { get; set; }
-
-    /// <summary>
     /// Original file name of the uploaded image.
     /// </summary>
     public string? FileName { get; set; }
@@ -28,6 +23,11 @@ public partial class ImgItemViewModel
     public byte[]? Bytes { get; set; }
 
     /// <summary>
+    /// ThumbnailUrl
+    /// </summary>
+    public string? ThumbnailUrl { get; set; }
+
+    /// <summary>
     /// Base64-encoded data URL for previewing the image in the UI.
     /// </summary>
     public string? PreviewDataUrl { get; set; }
@@ -36,14 +36,4 @@ public partial class ImgItemViewModel
     /// Current processing state of the image (e.g., Ready, Detecting, Done, Error).
     /// </summary>
     public FileState State { get; set; }
-
-    /// <summary>
-    /// Error message if processing failed.
-    /// </summary>
-    public string? ErrorMessage { get; set; }
-
-    /// <summary>
-    /// Barcode detection results associated with this image.
-    /// </summary>
-    public DetectResultViewModel DetectResult { get; set; } = null!;
 }

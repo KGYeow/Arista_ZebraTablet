@@ -10,9 +10,9 @@
                     <MudIcon Icon="@Icons.Material.Rounded.Image" Size="Size.Small"/>
 
                     <!-- Truncating title with tooltip for full filename -->
-                    <MudTooltip Text="@SelectedImageFile?.FileName" Placement="Placement.Bottom" Delay="250" Arrow>
+                    <MudTooltip Text="@SelectedImageFile?.ImgItem?.FileName" Placement="Placement.Bottom" Delay="250" Arrow>
                         <MudText Typo="Typo.h6" Class="d-block text-truncate" Style="max-width: 55vw">
-                            @SelectedImageFile?.FileName
+                            @SelectedImageFile?.ImgItem?.FileName
                         </MudText>
                     </MudTooltip>
 
@@ -77,7 +77,7 @@
                     class="d-flex flex-column justify-content-start"
                     style="height: 100%; width: inherit; overflow-y: auto;"
                 >
-                    <MudImage Src="@context.PreviewDataUrl" ObjectFit="ObjectFit.Contain" Style="height: 100%; width: 100%;" Fluid/>
+                    <MudImage Src="@context.ImgItem?.PreviewDataUrl" ObjectFit="ObjectFit.Contain" Style="height: 100%; width: 100%;" Fluid />
                 </div>
             </ItemTemplate>
         </MudCarousel>
@@ -88,12 +88,12 @@
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter] public int SelectedFileIndex { get; set; }
-    [Parameter] public List<ImgItemViewModel> ImageFiles { get; set; } = new();
+    [Parameter] public List<BarcodeGroupItemViewModel> ImageFiles { get; set; } = new();
 
-    private MudCarousel<ImgItemViewModel> carousel = null!;
+    private MudCarousel<BarcodeGroupItemViewModel> carousel = null!;
     private bool isBusy;
 
-    private ImgItemViewModel? SelectedImageFile =>
+    private BarcodeGroupItemViewModel? SelectedImageFile =>
         (SelectedFileIndex >= 0 && SelectedFileIndex < ImageFiles.Count)
             ? ImageFiles[SelectedFileIndex]
             : null;

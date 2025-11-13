@@ -22,6 +22,9 @@ public interface IBarcodeDetectorService
     /// </remarks>
     List<ImgItemViewModel> UploadedImages { get; set; }
 
+    // Gets or sets the list of barcode groups (upload image/ scanned result) along with their detection results.
+    List<BarcodeGroupItemViewModel> BarcodeGroups { get; set; }
+
     /// <summary>
     /// Gets or sets the identifier of the image selected for barcode reordering.
     /// </summary>
@@ -29,6 +32,9 @@ public interface IBarcodeDetectorService
     /// Use <see cref="Guid.Empty"/> to indicate that all images should be included in the reorder operation.
     /// </remarks>
     Guid? SelectedImageId { get; set; }
+    Guid? SelectedBarcodeGroupId { get; set; }
+
+    BarcodeSource SelectedBarcodeSource { get; set; }
 
     /// <summary>
     /// Navigates to the live barcode scanner page for the specified mode.
