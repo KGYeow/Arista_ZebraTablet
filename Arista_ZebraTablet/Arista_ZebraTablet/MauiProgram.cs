@@ -5,7 +5,9 @@ using MudBlazor;
 using MudBlazor.Services;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Channels;
 using ZXing.Net.Maui.Controls;
+
 
 namespace Arista_ZebraTablet
 {
@@ -44,6 +46,7 @@ namespace Arista_ZebraTablet
             {
                 client.BaseAddress = new Uri("https://awase1penweb81.corp.jabil.org/Arista_ZebraTablet/");
             })
+
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
                 // On Android, MAUI will map this to Android’s native handler under the hood
@@ -85,8 +88,14 @@ namespace Arista_ZebraTablet
                         return nameOk && chainOk;
                     };
 
+
                 return handler;
+
             });
+
+
+
+
 
             static X509Certificate2Collection LoadCertificatesFromApp(string assetName)
             {

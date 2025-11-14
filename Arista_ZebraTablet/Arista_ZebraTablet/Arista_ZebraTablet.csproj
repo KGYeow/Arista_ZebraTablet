@@ -40,6 +40,8 @@
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+
+	  <AndroidEnableR8>true</AndroidEnableR8>
   </PropertyGroup>
 
   <ItemGroup>
@@ -73,6 +75,8 @@
     <MauiXaml Remove="obj\**" />
     <None Remove="bin\**" />
     <None Remove="obj\**" />
+  <AndroidAarLibrary Remove="obj\Debug\net9.0-android\lp\161\**\*.aar" />
+   <AndroidJavaLibrary Remove="obj\Debug\net9.0-android\lp\161\**\*.jar" />
   </ItemGroup>
 
   <ItemGroup>

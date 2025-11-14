@@ -2,10 +2,13 @@
 @using Arista_ZebraTablet.Services
 @using Arista_ZebraTablet.Shared.Application.ViewModels
 @using Arista_ZebraTablet.Shared.Services
+@using Arista_ZebraTablet.Shared.Application.Enums
 
 @inject BarcodeDetectorService scanResultsService
 @inject IScannedBarcodeService ScannedBarcodeService
 @inject GroupingService groupingService
+@inject IBarcodeDetectorService Detector
+@inject NavigationManager NavigationManager
 @implements IDisposable
 
 <MobileComponentLayout>
@@ -99,9 +102,9 @@
                                             OnClick="CopyAllGroupedResultsAsync" />
 
                                 <!-- ✅ NEW: Reorder Completed Results Button -->
-                                <MudMenuItem Label="Reorder Completed Results"
+                                @* <MudMenuItem Label="Reorder Completed Results"
                                              Icon="@Icons.Material.Rounded.Reorder"
-                                             OnClick="EnableReorderModeForCompletedGroups" />
+                                             OnClick="EnableReorderModeForCompletedGroups" /> *@
 
                                 <MudMenuItem
                                     Label="Clear All"
@@ -208,7 +211,13 @@
                     }
                     else
                     {
+
                         <MudText Typo="Typo.h6" Class="mt-4">Final result</MudText>
+                        <div class="mt-3 text-center">
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@CompleteAndNavigateHome">
+                                Complete
+                            </MudButton>
+                        </div>
                         @for (int i = 0; i < groupingService.CompletedGroups.Count; i++)
                         {
                             var group = groupingService.CompletedGroups[i];
@@ -220,14 +229,14 @@
                                         <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Rounded.ContentCopy" Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => CopyGroup(group))">
                                             Copy
                                         </MudIconButton>
-                                            @* <MudTooltip Text="Delete Machine" Placement="Placement.Left" Delay="400" Arrow>
+                                            <MudTooltip Text="Delete Machine" Placement="Placement.Left" Delay="400" Arrow>
                                                 <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                                                Color="Color.Error"
                                                                Size="Size.Small"
                                                                Disabled="@isSaving"
-                                                               OnClick="async () => await DeleteCompletedGroup(i)" />
-                                            </MudTooltip> *@
-                                            
+                                                               OnClick="@(() => DeleteCompletedGroup(group))" />
+                                            </MudTooltip>
+
                                     </MudStack>
                                 </MudStack>
                                     <MudDivider Class="my-2" />
@@ -490,31 +499,61 @@
     private void DeleteCurrentGroup()
     {
         groupingService.CurrentGroup = new GroupedMachineScanViewModel();
-        Snackbar.Add("Current machine cleared.", Severity.Warning);
+        Snackbar.Add("Current machine cleared.", Severity.Error);
     }
 
-    private async Task DeleteCompletedGroup(int index)
+    // private async Task DeleteCompletedGroup(int index)
+    // {
+    //     var parameters = new DialogParameters<ConfirmationDialog>
+    // {
+    //     { x => x.ContentText, $"Are you sure you want to delete Machine #{index + 1}? This action is permanent and cannot be undone." },
+    //     { x => x.SubmitBtnText, "Delete" },
+    //     { x => x.DialogIcon, Icons.Material.Rounded.Warning },
+    //     { x => x.DialogIconColor, Color.Error }
+    // };
+
+    //     var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+    //     var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Machine Confirmation", parameters, options);
+    //     var result = await dialog.Result;
+
+    //     if (!result.Canceled)
+    //     {
+    //         if (index >= 0 && index < groupingService.CompletedGroups.Count)
+    //         {
+    //             groupingService.CompletedGroups.RemoveAt(index);
+    //         }
+    //     }
+    // }
+
+    private async Task DeleteCompletedGroup(GroupedMachineScanViewModel group)
     {
-        var parameters = new DialogParameters<ConfirmationDialog>
+        var parameters = new DialogParameters
     {
-        { x => x.ContentText, $"Are you sure you want to delete Machine #{index + 1}? This action is permanent and cannot be undone." },
-        { x => x.SubmitBtnText, "Delete" },
-        { x => x.DialogIcon, Icons.Material.Rounded.Warning },
-        { x => x.DialogIconColor, Color.Error }
+        { "ContentText", "Are you sure you want to delete this frame?" },
+        { "SubmitBtnText", "Delete" },
+        { "DialogIcon", Icons.Material.Rounded.Error },
+        { "DialogIconColor", Color.Error }
     };
 
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.ExtraSmall,
+            FullWidth = true
+        };
+
         var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Machine Confirmation", parameters, options);
         var result = await dialog.Result;
 
         if (!result.Canceled)
         {
-            if (index >= 0 && index < groupingService.CompletedGroups.Count)
-            {
-                groupingService.CompletedGroups.RemoveAt(index);
-            }
+            groupingService.CompletedGroups.Remove(group);
+            await InvokeAsync(StateHasChanged);
+            Snackbar.Add("Frame deleted.", Severity.Error);
         }
     }
+
     /// <summary>
     /// Displays a confirmation dialog asking the user to confirm clearing all
     /// scanned barcode results currently shown in the list.
@@ -638,71 +677,88 @@
         groupingService.NextGroup();
     }
 
-
-
-    private List<DropBarcodeItem> _reorderableItems = new();
-
-    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
-
-    private async Task EnableReorderModeForCompletedGroups()
+    private void CompleteAndNavigateHome()
     {
-        Snackbar.Add($"Failed to prepare reorderable items: 0 line is error", Severity.Error);
-        // Convert completed group barcodes to reorderable items
-        try{
-            
-                Snackbar.Add($"Failed to prepare reorderable items: First line is error", Severity.Error);
-                _reorderableItems = groupingService.CompletedGroups
-        .SelectMany(g => g.BarcodesByCategory.Values)
-        .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
-            ? PreferredCategoryOrder.IndexOf(b.Category)
-            : int.MaxValue)
-        .ThenBy(b => b.ScannedTime)
-        .Select(b => new DropBarcodeItem
+        // ✅ Store grouped results in a shared service for Home page
+        Detector.UploadedImages = groupingService.CompletedGroups
+            .Select(g => new ImgItemViewModel
             {
-                Name = $"{b.Category}: {b.Value}",
-                Selector = "1",
-                Original = b
-            })
-        .ToList();
-                Snackbar.Add($"Failed to prepare reorderable items: Last line error", Severity.Error);
+                Id = Guid.NewGuid(),
+                FileName = $"Machine-{DateTime.Now:HHmmss}",
+                DetectResult = new DetectResultViewModel
+                {
+                    Barcodes = g.BarcodesByCategory.Values.ToList()
+                },
+                State = FileState.Done
+            }).ToList();
 
-        }
-        catch(Exception ex)
-        {
-            Snackbar.Add($"Failed to prepare reorderable items: {ex.Message}", Severity.Error);
-            return;
-        }
+        NavigationManager.NavigateTo("/");
+    }
 
-        // Optional: store reorderable items in a shared service if needed
-        // scanResultsService.ReorderItems = _reorderableItems;
 
-        // ✅ Navigate to reorder page
+    // private List<DropBarcodeItem> _reorderableItems = new();
 
-        try{
-            await App.Current.Windows[0].Page.Navigation.PushModalAsync(new ReorderPage(), true);
+    // [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+
+    // private async Task EnableReorderModeForCompletedGroups()
+    // {
+    //     Snackbar.Add($"Failed to prepare reorderable items: 0 line is error", Severity.Error);
+    //     Convert completed group barcodes to reorderable items
+    //     try{
+            
+    //             Snackbar.Add($"Failed to prepare reorderable items: First line is error", Severity.Error);
+    //             _reorderableItems = groupingService.CompletedGroups
+    //     .SelectMany(g => g.BarcodesByCategory.Values)
+    //     .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
+    //         ? PreferredCategoryOrder.IndexOf(b.Category)
+    //         : int.MaxValue)
+    //     .ThenBy(b => b.ScannedTime)
+    //     .Select(b => new DropBarcodeItem
+    //         {
+    //             Name = $"{b.Category}: {b.Value}",
+    //             Selector = "1",
+    //             Original = b
+    //         })
+    //     .ToList();
+    //             Snackbar.Add($"Failed to prepare reorderable items: Last line error", Severity.Error);
+
+    //     }
+    //     catch(Exception ex)
+    //     {
+    //         Snackbar.Add($"Failed to prepare reorderable items: {ex.Message}", Severity.Error);
+    //         return;
+    //     }
+
+    //     Optional: store reorderable items in a shared service if needed
+    //     scanResultsService.ReorderItems = _reorderableItems;
+
+    //     ✅ Navigate to reorder page
+
+    //     try{
+    //         await App.Current.Windows[0].Page.Navigation.PushModalAsync(new ReorderPage(), true);
             
 
-        }
-        catch(Exception ex)
-        {
-            Snackbar.Add($"Failed to navigate to reorder page: {ex.Message}", Severity.Error);
-        }
+    //     }
+    //     catch(Exception ex)
+    //     {
+    //         Snackbar.Add($"Failed to navigate to reorder page: {ex.Message}", Severity.Error);
+    //     }
         
-    }
+    // }
 
-    private void OnItemDropped(MudItemDropInfo<DropBarcodeItem> dropItem)
-    {
-        dropItem.Item.Selector = dropItem.DropzoneIdentifier;
-        _reorderableItems = _reorderableItems.OrderBy(x => x.Selector).ToList();
-        StateHasChanged();
-    }
+    // private void OnItemDropped(MudItemDropInfo<DropBarcodeItem> dropItem)
+    // {
+    //     dropItem.Item.Selector = dropItem.DropzoneIdentifier;
+    //     _reorderableItems = _reorderableItems.OrderBy(x => x.Selector).ToList();
+    //     StateHasChanged();
+    // }
 
-    public class DropBarcodeItem
-    {
-        public string Name { get; set; } = string.Empty;
-        public string Selector { get; set; } = "1";
-        public ScanBarcodeItemViewModel? Original { get; set; }
-    }
+    // public class DropBarcodeItem
+    // {
+    //     public string Name { get; set; } = string.Empty;
+    //     public string Selector { get; set; } = "1";
+    //     public ScanBarcodeItemViewModel? Original { get; set; }
+    // }
 
 
 }
