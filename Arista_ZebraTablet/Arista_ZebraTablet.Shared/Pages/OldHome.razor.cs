@@ -1,5 +1,6 @@
 ﻿using Arista_ZebraTablet.Shared.Application.Enums;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
+using Arista_ZebraTablet.Shared.Components;
 using Arista_ZebraTablet.Shared.Services;
 using Arista_ZebraTablet.Shared.Shared;
 using Microsoft.AspNetCore.Components;
@@ -15,7 +16,7 @@ namespace Arista_ZebraTablet.Shared.Pages;
 /// Code-behind for the Home component (route "/").
 /// Handles image upload, barcode detection, and result upload flows.
 /// </summary>
-public partial class Home : ComponentBase
+public partial class OldHome : ComponentBase
 {
     #region Dependencies
 
@@ -55,9 +56,17 @@ public partial class Home : ComponentBase
     /// Whitelist of image MIME types accepted by the uploader.
     /// If a file's content type is empty, it is treated as <c>image/jpeg</c>.
     /// </summary>
-    private static readonly string[] allowedContentTypes = { "image/jpeg", "image/png" };
+    private static readonly string[] allowedContentTypes = { "image/jpeg", "image/png", "image/heic", "image/heif" };
 
-    private List<BarcodeGroupItemViewModel> barcodeGroups { get; set; } = new();
+    /// <summary>
+    /// In-memory list of uploaded image files bound to the UI.
+    /// </summary>
+    private List<ImgItemViewModel> uploadedImgFiles { get; set; } = new();
+
+    /// <summary>
+    /// Tracks which image IDs currently have their detected-barcode results expanded in the UI.
+    /// </summary>
+    private HashSet<Guid> displayedDetectedResults { get; set; } = new();
 
     /// <summary>
     /// Current barcode categorizing mode selected by the user (Standard vs Unique).
@@ -151,6 +160,11 @@ public partial class Home : ComponentBase
     private string platform => FormFactor.GetPlatform();
 
     /// <summary>
+    /// Reorderable list of detected barcode items for drag-and-drop UI.
+    /// </summary>
+    private List<DropItem> _reorderableItems = new();
+
+    /// <summary>
     /// The selected image ID for reordering barcodes.
     /// </summary>
     public Guid? SelectedImageId { get; set; }
@@ -168,9 +182,9 @@ public partial class Home : ComponentBase
     /// </remarks>
     protected override void OnInitialized()
     {
-        if (Detector.BarcodeGroups.Count > 0)
+        if (Detector.UploadedImages.Any())
         {
-            barcodeGroups = Detector.BarcodeGroups; // Restore updated list
+            uploadedImgFiles = Detector.UploadedImages; // Restore updated list
         }
     }
 
@@ -193,11 +207,7 @@ public partial class Home : ComponentBase
     /// <summary>
     /// Navigates to the native/hybrid barcode scanner screen for the current <see cref="barcodeMode"/>.
     /// </summary>
-    private async Task OpenBarcodeScanner()
-    {
-        Detector.BarcodeGroups = barcodeGroups;
-        await Detector.NavigateToScannerAsync(barcodeMode);
-    }
+    private async Task OpenBarcodeScanner() => await Detector.NavigateToScannerAsync(barcodeMode);
 
     /// <summary>
     /// Navigates to the native/hybrid zebra tablet barcode scanner screen for the current <see cref="barcodeMode"/>.
@@ -212,13 +222,70 @@ public partial class Home : ComponentBase
     /// <param name="imgId">
     /// The image ID to reorder. If <see langword="null"/>, the method enables “reorder all”.
     /// </param>
-    private void EnableReorderMode(Guid? barcodeGroupId = null)
+    private void EnableReorderMode(Guid? imgId = null)
     {
         // Guid.Empty indicates “reorder all” to the downstream service
-        Detector.SelectedBarcodeSource = barcodeSource;
-        Detector.SelectedBarcodeGroupId = barcodeGroupId ?? Guid.Empty;
-        Detector.BarcodeGroups = barcodeGroups;
+        Detector.SelectedImageId = imgId ?? Guid.Empty;
+        Detector.UploadedImages = uploadedImgFiles;
         NavigationManager.NavigateTo("/reorder");
+    }
+
+    /// <summary>
+    /// Maps a file processing state to an appropriate MudBlazor color.
+    /// </summary>
+    /// <returns>MudBlazor <see cref="Color"/> indicating status.</returns>
+    private static Color ImgFileStateColor(FileState state) => state switch
+    {
+        FileState.Ready => Color.Info,
+        FileState.Detecting => Color.Warning,
+        FileState.Done => Color.Success,
+        FileState.Error => Color.Error,
+        _ => Color.Default
+    };
+
+    /// <summary>
+    /// Friendly label for a given file processing state.
+    /// </summary>
+    /// <returns>Human-readable label for the state.</returns>
+    private static string ImgFileStateLabel(FileState state) => state switch
+    {
+        FileState.Ready => "Ready",
+        FileState.Detecting => "Detecting...",
+        FileState.Done => "Done",
+        FileState.Error => "Error",
+        _ => "—"
+    };
+
+    /// <summary>
+    /// Determines whether the detected barcodes table should be shown for a given image.
+    /// </summary>
+    /// <returns><c>true</c> if expanded; otherwise <c>false</c>.</returns>
+    private bool IsDetectedBarcodesDisplayed(Guid imgId) => displayedDetectedResults.Contains(imgId);
+
+    /// <summary>
+    /// Collapses all detected barcode panels in the UI.
+    /// </summary>
+    private void CloseAllDetectedBarcodes() => displayedDetectedResults.Clear();
+
+    /// <summary>
+    /// Toggles the expanded/collapsed state of the detected barcode panel for a specific image.
+    /// </summary>
+    private void ToggleDisplayDetectedBarcodes(Guid imgId)
+    {
+        // If the ID already exists, remove it (collapse). Otherwise, add (expand).
+        if (!displayedDetectedResults.Add(imgId)) displayedDetectedResults.Remove(imgId);
+    }
+
+    /// <summary>
+    /// Expands detected barcode panels for all images that have at least one detected barcode.
+    /// </summary>
+    /// <remarks>Useful for a "Expand all" toolbar action.</remarks>
+    private void OpenAllDetectedBarcodes()
+    {
+        displayedDetectedResults = uploadedImgFiles
+            .Where(f => f.DetectResult?.Barcodes?.Any() == true)
+            .Select(f => f.Id)
+            .ToHashSet();
     }
 
     /// <summary>
@@ -237,11 +304,17 @@ public partial class Home : ComponentBase
                 break;
 
             // ✅ All barcodes from a single image (e.g., from HomePage card)
-            case BarcodeGroupItemViewModel barcodeGroup when barcodeGroup.Barcodes.Count > 0:
-                var lines = barcodeGroup.Barcodes
+            case ImgItemViewModel img when img?.DetectResult?.Barcodes?.Count > 0:
+                var lines = img.DetectResult.Barcodes
                     .Select(b => $"{b.Value}") // You can also include category: $"{b.Category}: {b.Value}"
                     .ToList();
                 textToCopy = string.Join("\n", lines);
+                break;
+
+            // ✅ All reordered barcode results (e.g., from drag-and-drop UI)
+            case List<DropItem> dropItems when dropItems.Count > 0:
+                var reorderedLines = dropItems.Select(item => item.Name).ToList();
+                textToCopy = string.Join("\n", reorderedLines);
                 break;
 
             default:
@@ -265,9 +338,9 @@ public partial class Home : ComponentBase
     /// </summary>
     private async Task CopyAllResults()
     {
-        var allBarcodes = barcodeGroups
-            .Where(g => g.Barcodes.Count > 0 && g.Source == barcodeSource)
-            .SelectMany(g => g.Barcodes)
+        var allBarcodes = uploadedImgFiles
+            .Where(img => img.DetectResult?.Barcodes?.Count > 0)
+            .SelectMany(img => img.DetectResult.Barcodes)
             .Select(b => $"{b.Value}")
             .ToList();
 
@@ -366,38 +439,26 @@ public partial class Home : ComponentBase
             var thumbnailBytes = data.ToArray();
             var thumbnailUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(thumbnailBytes)}";
 
-            var fileName = string.IsNullOrWhiteSpace(file.Name) ? $"{Guid.NewGuid():N}.jpg" : file.Name;
-
-            barcodeGroups.Add(new BarcodeGroupItemViewModel
+            uploadedImgFiles.Add(new ImgItemViewModel
             {
                 Id = Guid.NewGuid(),
-                Name = fileName,
-                Source = BarcodeSource.Upload,
-                ImgItem = new ImgItemViewModel
-                {
-                    FileName = fileName,
-                    ContentType = contentType,
-                    Bytes = bytes,
-                    ThumbnailUrl = thumbnailUrl,
-                    PreviewDataUrl = previewUrl,
-                    State = FileState.Ready
-                }
+                FileName = string.IsNullOrWhiteSpace(file.Name) ? $"{Guid.NewGuid():N}.jpg" : file.Name,
+                ContentType = contentType,
+                Bytes = bytes,
+                ThumbnailUrl = thumbnailUrl,
+                PreviewDataUrl = previewUrl,
+                State = FileState.Ready
             });
         }
         catch (Exception ex)
         {
-            barcodeGroups.Add(new BarcodeGroupItemViewModel
+            uploadedImgFiles.Add(new ImgItemViewModel
             {
                 Id = Guid.NewGuid(),
-                Name = file.Name ?? "image",
-                Source = BarcodeSource.Upload,
-                ErrorMessage = ex.Message,
-                ImgItem = new ImgItemViewModel
-                {
-                    FileName = file.Name ?? "image",
-                    ContentType = contentType,
-                    State = FileState.Error
-                }
+                FileName = file.Name ?? "image",
+                ContentType = contentType,
+                State = FileState.Error,
+                ErrorMessage = ex.Message
             });
         }
         StateHasChanged();
@@ -406,6 +467,87 @@ public partial class Home : ComponentBase
     #endregion
 
     #region Confirmation / dialogs
+
+    /// <summary>
+    /// Displays a confirmation dialog asking the user to confirm deleting the
+    /// current uploaded image.
+    /// </summary>
+    /// <remarks>Action is disabled while uploading/decoding to prevent race conditions.</remarks>
+    private async Task DeleteUploadedImgConfirmationAsync(ImgItemViewModel imgItem)
+    {
+        if (isUploadingImg || isUploadingResults || isBusy)
+            return;
+
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { x => x.ContentText, "Are you sure you want to delete this uploaded image? This action is permanent and cannot be undone." },
+            { x => x.SubmitBtnText, "Delete" },
+            { x => x.DialogIcon, Icons.Material.Rounded.Warning },
+            { x => x.DialogIconColor, Color.Error }
+        };
+        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Confirmation", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            uploadedImgFiles.Remove(imgItem);
+        }
+    }
+
+    /// <summary>
+    /// Opens a dialog to edit the category of a detected barcode item.
+    /// </summary>
+    private async Task OpenCategoryEditDialogAsync(ScanBarcodeItemViewModel barcodeItem)
+    {
+        var parameters = new DialogParameters<CategoryEditDialog>
+        {
+            { x => x.BarcodeItem, barcodeItem },
+        };
+        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<CategoryEditDialog>("Edit Category", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            StateHasChanged();
+            Snackbar.Add("Category updated.", Severity.Success);
+        }
+    }
+
+    /// <summary>
+    /// Displays a confirmation dialog asking the user to confirm deleting the
+    /// current detected barcode result.
+    /// </summary>
+    private async Task DeleteDetectedBarcodeConfirmationAsync(ImgItemViewModel imgItem, ScanBarcodeItemViewModel barcodeItem)
+    {
+        if (isUploadingImg || isUploadingResults || isBusy)
+            return;
+
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { x => x.ContentText, "Are you sure you want to delete this detected barcode? This action is permanent and cannot be undone." },
+            { x => x.SubmitBtnText, "Delete" },
+            { x => x.DialogIcon, Icons.Material.Rounded.Warning },
+            { x => x.DialogIconColor, Color.Error }
+        };
+        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Confirmation", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            if (imgItem.DetectResult.Barcodes.Contains(barcodeItem))
+                imgItem.DetectResult.Barcodes.Remove(barcodeItem);
+
+
+            // Remove from reorderable list
+            var dropItem = _reorderableItems.FirstOrDefault(x => x.Original == barcodeItem);
+            if (dropItem != null)
+                _reorderableItems.Remove(dropItem);
+            StateHasChanged();
+        }
+    }
 
     /// <summary>
     /// Displays a confirmation dialog asking the user to confirm clearing all uploaded images in the list.
@@ -425,9 +567,80 @@ public partial class Home : ComponentBase
 
         if (!result.Canceled)
         {
-            barcodeGroups.RemoveAll(g => g.Source == barcodeSource);
+            uploadedImgFiles.Clear();
             isBusy = false;
             decodeProgress = 0;
+        }
+    }
+
+    /// <summary>
+    /// Opens a full-screen dialog to preview images, starting at a specific image ID if found.
+    /// </summary>
+    private async Task OpenPreviewImgDialogAsync(Guid imgFileId)
+    {
+        if (uploadedImgFiles == null || uploadedImgFiles.Count == 0)
+        {
+            Snackbar.Add("No images to preview.", Severity.Warning);
+            return;
+        }
+
+        // Resolve starting index; default to 0 if the id is not found
+        var index = uploadedImgFiles.FindIndex(x => x.Id == imgFileId);
+        if (index < 0) index = 0;
+
+        var parameters = new DialogParameters<PreviewImgDialog>
+        {
+            { x => x.ImageFiles, uploadedImgFiles },        // pass the SAME list instance
+            { x => x.SelectedFileIndex, index },            // start at resolved index
+        };
+        var options = new DialogOptions() { NoHeader = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.Large, FullWidth = true };
+
+        try
+        {
+            var dialog = await DialogService.ShowAsync<PreviewImgDialog>("Preview Image", parameters, options);
+            var result = await dialog.Result;
+            return;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to open image preview: {ex.Message}", Severity.Error);
+        }
+    }
+
+    /// <summary>
+    /// Displays a confirmation dialog asking the user to confirm uploading all the
+    /// detected barcodes.
+    /// </summary>
+    private async Task SaveDetectedBarcodesConfirmationAsync()
+    {
+        var totalBarcodes = uploadedImgFiles
+            .Where(f => f.DetectResult?.Barcodes?.Any() ?? false)
+            .Sum(f => f.DetectResult.Barcodes.Count);
+
+        var message = totalBarcodes == 1
+            ? "Are you sure you want to upload this detected barcode?"
+            : $"Are you sure you want to upload these {totalBarcodes} detected barcodes?";
+
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { x => x.ContentText, message },
+            { x => x.SubmitBtnText, "Upload" },
+            { x => x.DialogIconColor, Color.Info }
+        };
+        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Upload Confirmation", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                await SaveDetectedBarcodesAsync();
+            }
+            catch
+            {
+                Snackbar.Add("An unexpected error occurred while uploading the detected barcodes. Please try again.", Severity.Error);
+            }
         }
     }
     #endregion
@@ -443,8 +656,7 @@ public partial class Home : ComponentBase
     /// </remarks>
     private async Task DecodeBarcodes()
     {
-        var uploadedImgFiles = barcodeGroups.Where(g => g.Source == BarcodeSource.Upload).ToList();
-        if (uploadedImgFiles.Count == 0 || isBusy)
+        if (!uploadedImgFiles.Any() || isBusy)
             return;
 
         isBusy = true;
@@ -455,28 +667,50 @@ public partial class Home : ComponentBase
             int index = 0;
             foreach (var item in uploadedImgFiles)
             {
-                if (item.ImgItem.Bytes is null)
+                if (item.Bytes is null)
                 {
-                    item.ImgItem.State = FileState.Error;
+                    item.State = FileState.Error;
                     continue;
-                }  
+                }
 
-                item.ImgItem.State = FileState.Detecting;
+                item.State = FileState.Detecting;
                 StateHasChanged();
 
                 // Optional short delay for visible UI progress.
                 await Task.Delay(100);
 
                 // Use the decoder service to extract barcode values.
-                var results = Detector.DecodeFromImage(item.ImgItem.Bytes, barcodeMode);
+                var results = Detector.DecodeFromImage(item.Bytes, barcodeMode);
+
 
                 // Sorts the detected barcode results based on a predefined category order.Categories are matched against the PreferredCategoryOrder list.
                 // If a category is not found in the list, it is placed at the end.Results with the same category are further sorted by scan time.
-                item.Barcodes = results
-                    .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0 ? PreferredCategoryOrder.IndexOf(b.Category) : int.MaxValue)
-                    .ThenBy(b => b.ScannedTime) // optional: secondary sort
+                item.DetectResult = new DetectResultViewModel
+                {
+                    Barcodes = results
+                        .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
+                        ? PreferredCategoryOrder.IndexOf(b.Category)
+                        : int.MaxValue)
+                        .ThenBy(b => b.ScannedTime) // optional: secondary sort
+                        .ToList()
+                };
+                _reorderableItems = results
+                    .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
+                        ? PreferredCategoryOrder.IndexOf(b.Category)
+                        : int.MaxValue)
+                    .ThenBy(b => b.ScannedTime)
+                    .Select(b => new DropItem
+                    {
+                        Name = $"{b.Category}: {b.Value}",
+                        Selector = "1",
+                        Original = b
+                    })
                     .ToList();
-                item.ImgItem.State = FileState.Done;
+                item.State = FileState.Done;
+
+                // Auto-expand results the first time we have something to show.
+                if (!IsDetectedBarcodesDisplayed(item.Id) && item.DetectResult.Barcodes.Count > 0)
+                    ToggleDisplayDetectedBarcodes(item.Id);
 
                 index++;
                 decodeProgress = Math.Clamp(5 + (int)((double)index / uploadedImgFiles.Count * 95), 5, 100);
@@ -488,13 +722,68 @@ public partial class Home : ComponentBase
         {
             foreach (var item in uploadedImgFiles)
             {
-                item.ImgItem.State = FileState.Error;
+                item.State = FileState.Error;
                 item.ErrorMessage ??= ex.Message;
             }
         }
         finally
         {
             isBusy = false;
+            StateHasChanged();
+        }
+    }
+
+    /// <summary>
+    /// Uploads the current detected barcode results to the backend via <see cref="IScannedBarcodeService"/>.
+    /// </summary>
+    /// <remarks>
+    /// Deduplication is handled by the service layer. Uses a short timeout to keep UX snappy on mobile.
+    /// Clears <see cref="uploadedImgFiles"/> on success.
+    /// </remarks>
+    private async Task SaveDetectedBarcodesAsync()
+    {
+        if (isUploadingImg || isUploadingResults || isBusy)
+            return;
+
+        var barcodeItems = uploadedImgFiles
+            .Where(f => f.DetectResult?.Barcodes?.Any() ?? false)
+            .SelectMany(f => f.DetectResult.Barcodes)
+            .ToList();
+
+        if (barcodeItems.Count == 0)
+        {
+            Snackbar.Add("No detected barcodes to upload.", Severity.Normal);
+            return;
+        }
+
+        isUploadingResults = true;
+        try
+        {
+            // Short timeout to keep UX snappy on mobile
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+
+            var response = await ScannedBarcodeService.AddScannedBarcodesAsync(barcodeItems, cts.Token);
+            if (response.Success)
+            {
+                Snackbar.Add(response.Message ?? $"{response.Data} barcode(s) uploaded.", Severity.Success);
+                uploadedImgFiles.Clear();
+            }
+            else
+            {
+                Snackbar.Add(response.Message ?? "Upload failed.", Severity.Error);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Snackbar.Add("Upload cancelled or timed out.", Severity.Warning);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Upload error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isUploadingResults = false;
             StateHasChanged();
         }
     }
@@ -513,15 +802,27 @@ public partial class Home : ComponentBase
         "PCA"
     };
 
-    #endregion
+    /// <summary>
+    /// Represents an item in the drag-and-drop reorderable list.
+    /// </summary> 
 
-    private MudTabs barcodeSoureTabs = null!;
-
-    private BarcodeSource barcodeSource { get; set; } = BarcodeSource.Upload;
-
-    void ChangeBarcodeResultTabPanel(BarcodeSource source)
+    public class DropItem
     {
-        barcodeSource = source;
-        barcodeSoureTabs.ActivatePanel(source.ToString());
+        public string Name { get; set; } = string.Empty; // Display text: "Category: Value"
+        public string Selector { get; set; } = "1";      // Optional: grouping zone
+        public ScanBarcodeItemViewModel? Original { get; set; } // Reference to original data
     }
+    private void OnItemDropped(MudItemDropInfo<DropItem> dropItem)
+    {
+        dropItem.Item.Selector = dropItem.DropzoneIdentifier;
+
+        // ✅ Rebuild _reorderableItems based on current order in MudDropContainer
+        _reorderableItems = _reorderableItems
+            .OrderBy(x => x.Selector) // If you have multiple zones
+            .ToList();
+
+        StateHasChanged();
+    }
+
+    #endregion
 }

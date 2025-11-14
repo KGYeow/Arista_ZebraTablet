@@ -18,15 +18,13 @@ public partial class BarcodeGroupItemViewModel
 
     public DateTime Timestamp { get; set; } = DateTime.Now;
 
-    public ImgItemViewModel? ImgItem { get; set; }
-
     /// <summary>
     /// Error message if processing failed.
     /// </summary>
     public string? ErrorMessage { get; set; }
 
-    /// <summary>
+    public ImgItemViewModel ImgItem { get; set; } = null!;
+
     /// Barcode detection results associated with this barcode group item.
-    /// </summary>
-    public DetectResultViewModel DetectResult { get; set; } = null!;
+    public List<ScanBarcodeItemViewModel> Barcodes { get; set; } = new();
 }

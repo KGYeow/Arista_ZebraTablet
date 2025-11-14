@@ -72,11 +72,15 @@ public sealed class BarcodeDetectorService : IBarcodeDetectorService
     /// <inheritdoc/>
     public List<ImgItemViewModel> UploadedImages { get; set; } = new();
 
+    public List<BarcodeGroupItemViewModel> BarcodeGroups { get; set; } = new();
+
     /// <inheritdoc/>
     /// <remarks>
     /// Use <see cref="Guid.Empty"/> to indicate that the reorder scope is “all images”.
     /// </remarks>
     public Guid? SelectedImageId { get; set; }
+    public Guid? SelectedBarcodeGroupId { get; set; }
+    public BarcodeSource SelectedBarcodeSource { get; set; }
 
     public void RaiseScanReceived(ScanBarcodeItemViewModel barcode)
     {

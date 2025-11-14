@@ -23,7 +23,7 @@ namespace Arista_ZebraTablet;
 /// </remarks>
 public partial class LiveBarcodeScannerPage : ContentPage
 {
-    private readonly BarcodeDetectorService _scannerService;
+    private readonly BarcodeDetectorService _detectorService;
     private readonly BarcodeScannerService _scannerControlService;
     private readonly BarcodeMode _mode;
     private readonly GroupingService _groupingService;
@@ -33,14 +33,14 @@ public partial class LiveBarcodeScannerPage : ContentPage
     /// Configures the camera reader, wires control events, and primes autofocus.
     /// </summary>
     /// <param name="scannerControlService">Mediator for UI control actions (switch camera, torch, pause/resume).</param>
-    /// <param name="scannerService">Collector/service that stores and manages detected barcode results.</param>
+    /// <param name="detectorService">Collector/service that stores and manages detected barcode results.</param>
     /// <param name="mode">Classification mode (e.g., <see cref="BarcodeMode.Standard"/> or <see cref="BarcodeMode.Unique"/>).</param>
-    public LiveBarcodeScannerPage(BarcodeScannerService scannerControlService, BarcodeDetectorService scannerService, BarcodeMode mode, GroupingService groupingService)
+    public LiveBarcodeScannerPage(BarcodeScannerService scannerControlService, BarcodeDetectorService detectorService, BarcodeMode mode, GroupingService groupingService)
     {
         InitializeComponent();
 
         _scannerControlService = scannerControlService;
-        _scannerService = scannerService;
+        _detectorService = detectorService;
         _mode = mode;
         _groupingService = groupingService;
 
@@ -191,7 +191,7 @@ public partial class LiveBarcodeScannerPage : ContentPage
         var newValues = barcodeResults.Select(r => r.Value).OrderBy(v => v).ToList();
 
         // Check last frame
-        var lastFrame = _scannerService.Frames.LastOrDefault();
+        var lastFrame = _detectorService.Frames.LastOrDefault();
         if (lastFrame != null)
         {
             var lastValues = lastFrame.DetectResult.Barcodes.Select(b => b.Value).OrderBy(v => v).ToList();
@@ -212,6 +212,13 @@ public partial class LiveBarcodeScannerPage : ContentPage
             DetectResult = new DetectResultViewModel()
         };
 
+        var barcodeGroup = new BarcodeGroupItemViewModel
+        {
+            Id = Guid.NewGuid(),
+            Name = "Scanned Barcode Group",
+            Source = BarcodeSource.Camera,
+        };
+
         foreach (var result in barcodeResults)
         {
             var category = _mode == BarcodeMode.Standard
@@ -224,19 +231,19 @@ public partial class LiveBarcodeScannerPage : ContentPage
                 Value = result.Value,
                 Category = category,
                 BarcodeType = result.Format.ToString(),
-                ScannedTime = DateTime.Now
             };
+            barcodeGroup.Barcodes.Add(barcodeItem);
 
             frameItem.DetectResult.Barcodes.Add(barcodeItem);
 
-            // ✅ Notify Razor component
-            _scannerService.RaiseScanReceived(barcodeItem);
+            // Notify Razor component
+            _detectorService.RaiseScanReceived(barcodeItem);
 
-            // ✅ Update grouping service
+            // Update grouping service
             _groupingService.AddBarcode(barcodeItem);
         }
 
-        _scannerService.Frames.Add(frameItem);
+        _detectorService.Frames.Add(frameItem);
 
     }
 }

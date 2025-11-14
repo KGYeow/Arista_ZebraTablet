@@ -5,7 +5,6 @@ public sealed class ScanBarcodeItemViewModel
     public Guid Id { get; set; }
     public string Value { get; set; } = null!;
     public string Category { get; set; } = null!;
-    public DateTime ScannedTime { get; set; }
+    public DateTime ScannedTime { get; set; } = DateTime.Now;
     public string BarcodeType { get; set; } = null!;
-    public Guid FrameId { get; set; } = Guid.NewGuid();
 };

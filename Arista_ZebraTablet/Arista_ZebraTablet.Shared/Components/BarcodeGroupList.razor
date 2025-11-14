@@ -1,0 +1,231 @@
+﻿@using Arista_ZebraTablet.Shared.Application.Enums
+@using Arista_ZebraTablet.Shared.Application.ViewModels
+
+<MudStack Class="h-100 px-0" Spacing="2">
+    @foreach (var barcodeGroup in FilteredBarcodeGroups)
+    {
+        <!-- Barcode Group Item Card -->
+        <MudCard Elevation="0">
+            <MudCardContent Class="pa-3">
+                <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
+                    <!-- Barcode Group Thumbnail -->
+                    @if (Source == BarcodeSource.Upload)
+                    {
+                        @if (!string.IsNullOrWhiteSpace(barcodeGroup.ImgItem?.ThumbnailUrl))
+                        {
+                            <MudLink OnClick="() => OpenPreviewImgDialogAsync(barcodeGroup.Id)">
+                                <MudImage
+                                    Src="@barcodeGroup.ImgItem?.ThumbnailUrl"
+                                    Class="rounded-lg me-3"
+                                    Width="56"
+                                    Height="56"
+                                    ObjectFit="ObjectFit.Cover"
+                                />
+                            </MudLink>
+                        }
+                        else
+                        {
+                            <MudAvatar Class="me-3" Size="Size.Large" Color="Color.Default" Rounded>
+                                <MudIcon Icon="@Icons.Material.Rounded.Image" />
+                            </MudAvatar>
+                        }
+                    }
+                    else
+                    {
+                        <MudAvatar Class="me-3" Size="Size.Large" Color="Color.Default" Rounded>
+                            <MudIcon Icon="@Icons.Material.Rounded.Scanner" />
+                        </MudAvatar>
+                    }
+
+                    <!-- Barcode Group Information -->
+                    <MudStack Spacing="0" Class="overflow-hidden">
+                        <MudText Typo="Typo.subtitle2" Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            @barcodeGroup.Name
+                        </MudText>
+
+                        <!-- Barcode Group with Image File's Status -->
+                        @if (Source == BarcodeSource.Upload)
+                        {
+                            <MudStack Row Spacing="0">
+                                <MudChip T="string" Color="@ImgFileStateColor(barcodeGroup.ImgItem?.State ?? FileState.Error)" Size="Size.Small">
+                                    @ImgFileStateLabel(barcodeGroup.ImgItem?.State ?? FileState.Error)
+                                </MudChip>
+
+                                @if (barcodeGroup.ImgItem?.State == FileState.Done)
+                                {
+                                    <MudChip T="string" Color="Color.Primary" Size="Size.Small">
+                                        @($"{barcodeGroup.Barcodes.Count} barcode(s)")
+                                    </MudChip>
+                                }
+                            </MudStack>
+                        }
+                    </MudStack>
+
+                    <MudSpacer />
+
+                    <!-- Barcode Group Card Actions -->
+                    <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
+                        <!-- Barcode Group Card Actions (Display on Larger Screen) -->
+                        <MudHidden Breakpoint="Breakpoint.Xs">
+                            @if (barcodeGroup.Barcodes.Count > 0)
+                            {
+                                <!-- Copy Button -->
+                                <MudTooltip Text="Copy Results" Placement="Placement.Top" Delay="400" Arrow>
+                                    <MudIconButton
+                                        Icon="@Icons.Material.Rounded.ContentCopy"
+                                        Color="Color.Primary"
+                                        Size="Size.Small"
+                                        Disabled="@IsBusy"
+                                        OnClick="() => CopyToClipboard(barcodeGroup)"
+                                    />
+                                </MudTooltip>
+
+                                <!-- Reorder Button -->
+                                <MudTooltip Text="Reorder" Placement="Placement.Top" Delay="400" Arrow>
+                                    <MudIconButton
+                                        Icon="@Icons.Material.Rounded.Reorder"
+                                        Color="Color.Primary"
+                                        Size="Size.Small"
+                                        Disabled="@IsBusy"
+                                        OnClick="() => EnableReorderMode(barcodeGroup.Id)"
+                                    />
+                                </MudTooltip>
+                            }
+                            <!-- Delete Image Button -->
+                            <MudTooltip Text="Delete" Placement="Placement.Top" Delay="400" Arrow>
+                                <MudIconButton
+                                    Icon="@Icons.Material.Rounded.DeleteOutline"
+                                    Color="Color.Error"
+                                    Size="Size.Small"
+                                    Disabled="@IsBusy"
+                                    OnClick="() => DeleteBarcodeGroupConfirmationAsync(barcodeGroup)"
+                                />
+                            </MudTooltip>
+                        </MudHidden>
+
+                        <!-- Barcode Group Card Actions (Display on Smaller Screen) -->
+                        <MudHidden Breakpoint="Breakpoint.SmAndUp">
+                            <MudMenu
+                                Icon="@Icons.Material.Rounded.MoreVert"
+                                Size="Size.Small"
+                                AnchorOrigin="Origin.BottomLeft"
+                                TransformOrigin="Origin.CenterRight"
+                                Disabled="IsBusy"
+                                Dense
+                            >
+                                @if (barcodeGroup.Barcodes.Count > 0)
+                                {
+                                    <MudMenuItem
+                                        Label="Copy Results"
+                                        Icon="@Icons.Material.Rounded.ContentCopy"
+                                        OnClick="() => CopyToClipboard(barcodeGroup)"
+                                    />
+                                    <MudMenuItem
+                                        Label="Reorder"
+                                        Icon="@Icons.Material.Rounded.Reorder"
+                                        OnClick="() => EnableReorderMode(barcodeGroup.Id)"
+                                    />
+                                }
+                                <MudMenuItem
+                                    Label="Delete"
+                                    Icon="@Icons.Material.Rounded.DeleteOutline"
+                                    OnClick="@(() => DeleteBarcodeGroupConfirmationAsync(barcodeGroup))"
+                                />
+                            </MudMenu>
+                        </MudHidden>
+                    </MudStack>
+                </MudStack>
+
+                @if (!string.IsNullOrWhiteSpace(barcodeGroup.ErrorMessage))
+                {
+                    <MudAlert Class="mt-2" Severity="Severity.Error" Dense NoIcon>
+                        <MudText Typo="Typo.caption">@barcodeGroup.ErrorMessage</MudText>
+                    </MudAlert>
+                }
+
+                <!-- Collapse Barcode Group Detected/Scanned Results inside the Card -->
+                <MudCollapse Expanded="barcodeGroup.Barcodes.Count > 0">
+                    <MudSimpleTable Class="mt-3" Dense Bordered Hover Outlined>
+                        <tbody>
+                            @foreach (var detectedBarcode in barcodeGroup.Barcodes)
+                            {
+                                <tr>
+                                    <td>@detectedBarcode.Category</td>
+                                    <td>@detectedBarcode.Value</td>
+                                    <td style="width: 0;">
+                                        <!-- Detected Barcode Results Actions -->
+                                        <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
+                                            <!-- Detected Barcode Results Actions (Display on Larger Screen) -->
+                                            <MudHidden Breakpoint="Breakpoint.Xs">
+                                                <!-- Copy to Clipboard Button -->
+                                                <MudTooltip Text="Copy" Placement="Placement.Top" Delay="400" Arrow>
+                                                    <MudIconButton
+                                                        Icon="@Icons.Material.Rounded.ContentCopy"
+                                                        Color="Color.Primary"
+                                                        Size="Size.Small"
+                                                        Disabled="@IsUploadingResults"
+                                                        OnClick="() => CopyToClipboard(detectedBarcode.Value)"
+                                                    />
+                                                </MudTooltip>
+
+                                                <!-- Edit Detected Result Button -->
+                                                <MudTooltip Text="Edit" Placement="Placement.Top" Delay="400" Arrow>
+                                                    <MudIconButton
+                                                        Icon="@Icons.Material.Rounded.Edit"
+                                                        Color="Color.Primary"
+                                                        Size="Size.Small"
+                                                        Disabled="@IsUploadingResults"
+                                                        OnClick="() => OpenCategoryEditDialogAsync(detectedBarcode)"
+                                                    />
+                                                </MudTooltip>
+
+                                                <!-- Delete Detected Result Button -->
+                                                <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
+                                                    <MudIconButton
+                                                        Icon="@Icons.Material.Rounded.DeleteOutline"
+                                                        Color="Color.Error"
+                                                        Size="Size.Small"
+                                                        Disabled="@IsUploadingResults"
+                                                        OnClick="() => DeleteDetectedBarcodeConfirmationAsync(barcodeGroup, detectedBarcode)"
+                                                    />
+                                                </MudTooltip>
+                                            </MudHidden>
+
+                                            <!-- Detected Barcode Results Actions (Display on Smaller Screen) -->
+                                            <MudHidden Breakpoint="Breakpoint.SmAndUp">
+                                                <MudMenu
+                                                    Icon="@Icons.Material.Rounded.MoreVert"
+                                                    Size="Size.Small"
+                                                    AnchorOrigin="Origin.TopRight"
+                                                    TransformOrigin="Origin.BottomRight"
+                                                    Disabled="IsBusy"
+                                                    Dense
+                                                >
+                                                    <MudMenuItem
+                                                        Label="Copy"
+                                                        Icon="@Icons.Material.Rounded.ContentCopy"
+                                                        OnClick="() => CopyToClipboard(detectedBarcode.Value)"
+                                                    />
+                                                    <MudMenuItem
+                                                        Label="Edit"
+                                                        Icon="@Icons.Material.Rounded.Edit"
+                                                        OnClick="() => OpenCategoryEditDialogAsync(detectedBarcode)"
+                                                    />
+                                                    <MudMenuItem
+                                                        Label="Delete"
+                                                        Icon="@Icons.Material.Rounded.DeleteOutline"
+                                                        OnClick="() => DeleteDetectedBarcodeConfirmationAsync(barcodeGroup, detectedBarcode)"
+                                                    />
+                                                </MudMenu>
+                                            </MudHidden>
+                                        </MudStack>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCollapse>
+            </MudCardContent>
+        </MudCard>
+    }
+</MudStack>

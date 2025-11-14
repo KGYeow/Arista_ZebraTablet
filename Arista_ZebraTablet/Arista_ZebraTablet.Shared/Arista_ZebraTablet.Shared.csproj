@@ -16,6 +16,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Pages\OldHome.razor.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Pages\OldHome.razor" />
+  </ItemGroup>
+
+  <ItemGroup>
     <SupportedPlatform Include="browser" />
   </ItemGroup>
 
