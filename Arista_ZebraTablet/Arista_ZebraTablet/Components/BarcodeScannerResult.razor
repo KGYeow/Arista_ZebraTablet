@@ -4,13 +4,6 @@
 @using Arista_ZebraTablet.Shared.Services
 @using Arista_ZebraTablet.Shared.Application.Enums
 
-@inject BarcodeDetectorService scanResultsService
-@inject IScannedBarcodeService ScannedBarcodeService
-@inject GroupingService groupingService
-@inject IBarcodeDetectorService Detector
-@inject NavigationManager NavigationManager
-@implements IDisposable
-
 <MobileComponentLayout>
     <Body>
         <MudContainer Class="py-4" MaxWidth="MaxWidth.Large">
@@ -33,54 +26,24 @@
                 <MudStack Row AlignItems="AlignItems.Center" Spacing="2">
                     <!-- Action Buttons (Display on Larger Screen) -->
                     <MudHidden Breakpoint="Breakpoint.Xs">
-                        <!-- If not in "Reorder" state -->
-                        @if (true)
-                        {
-                            <!-- Copy to Clipboard Button -->
-                            <MudTooltip Text="Copy Results" Placement="Placement.Bottom" Delay="400" Arrow>
-                                <MudIconButton Color="Color.Primary"
-                                                Icon="@Icons.Material.Rounded.ContentCopy"
-                                                Size="Size.Small"
-                                                Disabled="@(!scanResultsService.Results.Any() || isSaving)"
-                                            OnClick="CopyAllGroupedResultsAsync" />
-                            </MudTooltip>
+                        <!-- Copy to Clipboard Button -->
+                        <MudTooltip Text="Copy Results" Placement="Placement.Bottom" Delay="400" Arrow>
+                            <MudIconButton Color="Color.Primary"
+                                            Icon="@Icons.Material.Rounded.ContentCopy"
+                                            Size="Size.Small"
+                                            Disabled="@(!scanResultsService.Results.Any() || isSaving)"
+                                        OnClick="CopyAllGroupedResultsAsync" />
+                        </MudTooltip>
 
-                            <!-- Upload to Database Button -->
-                            @* <MudTooltip Text="Upload to Database" Placement="Placement.Bottom" Delay="400" Arrow>
-                                <MudIconButton Color="Color.Primary"
-                                                Icon="material-symbols-rounded/database_upload"
-                                                Size="Size.Small"
-                                                Disabled="isSaving"
-                                                OnClick="SaveScannedResultConfirmationAsync" />
-                            </MudTooltip> *@
-
-                            <!-- Clear All Button -->
-                            <MudTooltip Text="Clear All" Placement="Placement.Left" Delay="400" Arrow>
-                                <MudIconButton Color="Color.Warning"
-                                                Icon="@Icons.Material.Rounded.ClearAll"
-                                                Variant="Variant.Outlined"
-                                                Size="Size.Small"
-                                                Disabled="isSaving"
-                                                OnClick="ClearAllScannedResultConfirmationAsync" />
-                            </MudTooltip>
-                        }
-                        else
-                        {
-                            <!-- Confirm Reorder Button -->
-                            <MudTooltip Text="Confirm Reorder" Placement="Placement.Bottom" Delay="400" Arrow>
-                                <MudIconButton Icon="@Icons.Material.Rounded.Check"
-                                                Color="Color.Success"
-                                                Size="Size.Small" />
-                            </MudTooltip>
-
-                            <!-- Cancel Reorder Button -->
-                            <MudTooltip Text="Cancel Reorder" Placement="Placement.Left" Delay="400" Arrow>
-                                <MudIconButton Icon="@Icons.Material.Rounded.Close"
-                                                Color="Color.Error"
-                                                Size="Size.Small" />
-                            </MudTooltip>
-                        }
-                    
+                        <!-- Clear All Button -->
+                        <MudTooltip Text="Clear All" Placement="Placement.Left" Delay="400" Arrow>
+                            <MudIconButton Color="Color.Warning"
+                                            Icon="@Icons.Material.Rounded.ClearAll"
+                                            Variant="Variant.Outlined"
+                                            Size="Size.Small"
+                                            Disabled="isSaving"
+                                            OnClick="ClearAllScannedResultConfirmationAsync" />
+                        </MudTooltip>
                     </MudHidden>
 
                     <!-- Action Buttons (Display on Smaller Screen) -->
@@ -93,36 +56,18 @@
                             Disabled="isSaving"
                             Dense
                         >
-                            <!-- If not in "Reorder" state -->
-                            @if (true)
-                            {
-                                <MudMenuItem
-                                    Label="Copy Results"
-                                    Icon="@Icons.Material.Rounded.ContentCopy"
-                                            OnClick="CopyAllGroupedResultsAsync" />
+                            <MudMenuItem
+                                Label="Copy Results"
+                                Icon="@Icons.Material.Rounded.ContentCopy"
+                                        OnClick="CopyAllGroupedResultsAsync" />
 
-                                <!-- ✅ NEW: Reorder Completed Results Button -->
-                                @* <MudMenuItem Label="Reorder Completed Results"
-                                             Icon="@Icons.Material.Rounded.Reorder"
-                                             OnClick="EnableReorderModeForCompletedGroups" /> *@
+                            <MudMenuItem
+                                Label="Clear All"
+                                Icon="@Icons.Material.Rounded.ClearAll"
+                                OnClick="ClearAllScannedResultConfirmationAsync"
+                            />
 
-                                <MudMenuItem
-                                    Label="Clear All"
-                                    Icon="@Icons.Material.Rounded.ClearAll"
-                                    OnClick="ClearAllScannedResultConfirmationAsync"
-                                />
-                            }
-                            else
-                            {
-                                <MudMenuItem
-                                    Label="Confirm Reorder"
-                                    Icon="@Icons.Material.Rounded.Check"
-                                />
-                                <MudMenuItem
-                                    Label="Cancel Reorder"
-                                    Icon="@Icons.Material.Rounded.Close"
-                                />
-                            }
+
                         </MudMenu>
                     </MudHidden>
                 </MudStack>
@@ -131,7 +76,7 @@
             <MudItem>
                 <!-- Scanned Barcode's Result Cards -->
                 <MudStack Class="position-relative" Spacing="2">
-                    @if (!groupingService.CurrentGroup.BarcodesByCategory.Any())
+                    @if (!scanResultsService.CurrentGroup.Barcodes.Any())
                     {
                         <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
                             No scans yet. Aim the camera at a code.
@@ -140,61 +85,59 @@
                     else
                     {
                         <MudStack Row Spacing="2" Class="mt-2">
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" FullWidth="true" OnClick="NextMachine">Next</MudButton>
+                            <MudButton Color="Color.Primary" Variant="Variant.Filled" FullWidth="true" OnClick="CompleteCurrentScanningGroup">Next</MudButton>
                         </MudStack>
+
                         <MudCard Class="mb-3" Elevation="1">
                             <MudCardContent>
-                            <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
-                                <MudText Typo="Typo.subtitle2">Current Frame</MudText>
-                                <MudTooltip Text="Delete Current Frame" Placement="Placement.Left" Delay="400" Arrow>
-                                    <MudIconButton
-                                        Icon="@Icons.Material.Filled.Delete"
-                                        Color="Color.Error"
-                                        Size="Size.Small"
-                                        Disabled="@isSaving"
-                                        OnClick="@DeleteCurrentGroup" />
-                                </MudTooltip>
-                            </MudStack>
+                                <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
+                                    <MudText Typo="Typo.subtitle2">Current Frame</MudText>
+                                    <MudTooltip Text="Delete Current Frame" Placement="Placement.Left" Delay="400" Arrow>
+                                        <MudIconButton
+                                            Icon="@Icons.Material.Filled.Delete"
+                                            Color="Color.Error"
+                                            Size="Size.Small"
+                                            Disabled="@isSaving"
+                                            OnClick="@(() => DeleteCurrentScanningBarcodeGroupConfirmationAsync())" />
+                                    </MudTooltip>
+                                </MudStack>
+
                                 <MudDivider Class="my-2" />
 
                                 <MudSimpleTable Dense Bordered Hover Outlined>
                                     <tbody>
 
-                                        @foreach (var category in groupingService.CurrentGroup.BarcodesByCategory.Keys
-                                                                            .OrderBy(c => PreferredCategoryOrder.IndexOf(c) >= 0 ? PreferredCategoryOrder.IndexOf(c) : int.MaxValue))
+                                        @foreach (var detectedBarcode in scanResultsService.CurrentGroup.Barcodes)
                                         {
                                             <tr>
-                                                <td>@category</td>
-                                                <td>@groupingService.CurrentGroup.BarcodesByCategory[category].Value</td>
-                                                <td>
-                                                    @if (groupingService.CurrentGroup.BarcodesByCategory.ContainsKey(category))
-                                                    {
-                                                        var barcodeItem = groupingService.CurrentGroup.BarcodesByCategory[category];
-                                                        <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
-                                                            <MudTooltip Text="Copy" Placement="Placement.Top" Delay="400" Arrow>
-                                                                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-                                                                               Color="Color.Primary"
-                                                                               Size="Size.Small"
-                                                                               OnClick="@(() => CopySingleBarcode(barcodeItem.Value))" />
-                                                            </MudTooltip>
+                                                <td>@detectedBarcode.Category</td>
+                                                <td>@detectedBarcode.Value</td>
+                                                <td style="width: 0;">
+                                                    <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
+                                                        <MudTooltip Text="Copy" Placement="Placement.Top" Delay="400" Arrow>
+                                                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                                                            Color="Color.Primary"
+                                                                            Size="Size.Small"
+                                                                           OnClick="@(() => CopySingleBarcodeAsync(detectedBarcode.Value))" />
+                                                        </MudTooltip>
 
-                                                            <MudTooltip Text="Edit" Placement="Placement.Left" Delay="400" Arrow>
-                                                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                                               Color="Color.Primary"
-                                                                               Size="Size.Small"
-                                                                               Disabled="@isSaving"
-                                                                               OnClick="@(() => OpenCategoryEditDialogAsync(barcodeItem))" />
-                                                            </MudTooltip>
+                                                        <MudTooltip Text="Edit" Placement="Placement.Left" Delay="400" Arrow>
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                                            Color="Color.Primary"
+                                                                            Size="Size.Small"
+                                                                            Disabled="@isSaving"
+                                                                           OnClick="@(() => OpenCategoryEditDialogAsync(detectedBarcode))" />
+                                                        </MudTooltip>
 
-                                                            <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
-                                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                                               Color="Color.Error"
-                                                                               Size="Size.Small"
-                                                                               Disabled="@isSaving"
-                                                                               OnClick="@(() => DeleteScannedResultConfirmationAsync(barcodeItem))" />
-                                                            </MudTooltip>
-                                                        </MudStack>
-                                                    }
+                                                        <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
+                                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                                            Color="Color.Error"
+                                                                            Size="Size.Small"
+                                                                            Disabled="@isSaving"
+                                                                            OnClick="@(() => DeleteScannedResultConfirmationAsync(detectedBarcode))" />
+                                                        </MudTooltip>
+                                                    </MudStack>
+
                                                 </td>
                                             </tr>
 
@@ -205,7 +148,7 @@
                         </MudCard>
                     }
 
-                    @if (!groupingService.CompletedGroups.Any())
+                    @if (!scanResultsService.BarcodeGroups.Any())
                     {
                         @* <MudText>No completed machines yet.</MudText> *@
                     }
@@ -213,75 +156,13 @@
                     {
 
                         <MudText Typo="Typo.h6" Class="mt-4">Final result</MudText>
-                        <div class="mt-3 text-center">
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="@CompleteAndNavigateHome">
-                                Complete
-                            </MudButton>
-                        </div>
-                        @for (int i = 0; i < groupingService.CompletedGroups.Count; i++)
-                        {
-                            var group = groupingService.CompletedGroups[i];
-                            <MudCard Class="mb-3" Elevation="1">
-                                <MudCardContent>
-                                <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
-                                    <MudText Typo="Typo.subtitle2">Machine #@(i + 1)</MudText>
-                                    <MudStack>
-                                        <MudIconButton Color="Color.Primary" Icon="@Icons.Material.Rounded.ContentCopy" Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => CopyGroup(group))">
-                                            Copy
-                                        </MudIconButton>
-                                            <MudTooltip Text="Delete Machine" Placement="Placement.Left" Delay="400" Arrow>
-                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                               Color="Color.Error"
-                                                               Size="Size.Small"
-                                                               Disabled="@isSaving"
-                                                               OnClick="@(() => DeleteCompletedGroup(group))" />
-                                            </MudTooltip>
+                        <MudButton Color="Color.Primary" FullWidth="true" Variant="Variant.Filled" OnClick="CompleteAndNavigateHomeAsync">
+                            Complete
+                        </MudButton>
 
-                                    </MudStack>
-                                </MudStack>
-                                    <MudDivider Class="my-2" />
-
-                                    <MudSimpleTable Dense Bordered Hover Outlined>
-                                        <tbody>
-                                            @foreach (var category in group.BarcodesByCategory.Keys
-                                                                                .OrderBy(c => PreferredCategoryOrder.IndexOf(c) >= 0 ? PreferredCategoryOrder.IndexOf(c) : int.MaxValue))
-                                            {
-                                                <tr>
-                                                    <td>@category</td>
-                                                    <td>@group.BarcodesByCategory[category].Value</td>
-                                                    <td>
-                                                        <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
-                                                            <MudTooltip Text="Copy" Placement="Placement.Top" Delay="400" Arrow>
-                                                                <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-                                                                               Color="Color.Primary"
-                                                                               Size="Size.Small"
-                                                                               OnClick="@(() => CopySingleBarcode(group.BarcodesByCategory[category].Value))" />
-                                                            </MudTooltip>
-
-                                                            <MudTooltip Text="Edit" Placement="Placement.Left" Delay="400" Arrow>
-                                                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                                               Color="Color.Primary"
-                                                                               Size="Size.Small"
-                                                                               Disabled="@isSaving"
-                                                                               OnClick="@(() => OpenCategoryEditDialogAsync(group.BarcodesByCategory[category]))" />
-                                                            </MudTooltip>
-
-                                                            <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
-                                                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                                               Color="Color.Error"
-                                                                               Size="Size.Small"
-                                                                               Disabled="@isSaving"
-                                                                               OnClick="@(() => DeleteCompletedGroupBarcodeAsync(group, group.BarcodesByCategory[category]))" />
-                                                            </MudTooltip>
-                                                        </MudStack>
-                                                    </td>
-                                                </tr>
-                                            }
-                                        </tbody>
-                                    </MudSimpleTable>
-                                </MudCardContent>
-                            </MudCard>
-                        }
+                        <!-- Scanned Barcode Preview Cards -->
+                        <BarcodeGroupList BarcodeGroups="scanResultsService.BarcodeGroups"
+                                          Source="BarcodeSource.Camera" />
                     }
 
                 </MudStack>
@@ -290,475 +171,3 @@
     </Body>
 </MobileComponentLayout>
 
-@code {
-        // Event handler field or subscribes for observing collection changes
-    private System.Collections.Specialized.NotifyCollectionChangedEventHandler? _collectionChangedSub;
-
-    // Flag to track whether a save operation is in progress
-    private bool isSaving;
-
-    // Event-based refresh is more reliable with BlazorWebView
-    // private void OnScanReceived(object? sender, ScanBarcodeItemViewModel e) => InvokeAsync(StateHasChanged);
-
-    private void OnScanReceived(object? sender, ScanBarcodeItemViewModel scanned)
-    {
-        groupingService.AddBarcode(scanned);
-        InvokeAsync(StateHasChanged);
-    }
-
-    /// <summary>
-    /// This code makes a Blazor component automatically refresh when a data collection changes,
-    /// and cleans up the subscription when the component is destroyed.
-    /// </summary>
-    protected override void OnInitialized()
-    {
-        // Subscribe to service event (recommended)
-        scanResultsService.ScanReceived += OnScanReceived;
-
-        // Create an event handler that triggers a UI re-render on collection changes
-        _collectionChangedSub = (_, __) => InvokeAsync(StateHasChanged);
-        // Subscribe the handler to the collection's change event
-        // scanResultsService.Results.CollectionChanged += _collectionChangedSub;
-        // scanResultsService.Frames.CollectionChanged += _collectionChangedSub;
-
-        groupingService.PropertyChanged += (_, __) => InvokeAsync(StateHasChanged);
-    }
-
-
-    /// <summary>
-    /// Called when the component is disposed (removed from the UI)
-    /// Unsubscribes from the collection change event to prevent memory leaks
-    /// </summary>
-    public void Dispose()
-    {
-        scanResultsService.ScanReceived -= OnScanReceived;
-        // if (_collectionChangedSub is not null)
-        //     scanResultsService.Results.CollectionChanged -= _collectionChangedSub;
-        //     scanResultsService.Frames.CollectionChanged -= _collectionChangedSub;
-    }
-
-    /// <summary>
-    /// Displays a dialog prompting the user to edit the
-    /// current scanned barcode result's category.
-    /// </summary>
-    private async Task OpenCategoryEditDialogAsync(ScanBarcodeItemViewModel barcodeItem)
-    {
-        var parameters = new DialogParameters<CategoryEditDialog>
-        {
-            { x => x.BarcodeItem, barcodeItem }
-        };
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<CategoryEditDialog>("Edit Category", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            StateHasChanged();
-            Snackbar.Add("Category updated.", Severity.Success);
-        }
-    }
-
-    /// <summary>
-    /// Displays a confirmation dialog asking the user to confirm uploading all the
-    /// scanned barcode results.
-    /// </summary>
-    private async Task SaveScannedResultConfirmationAsync()
-    {
-        var message = scanResultsService.Results.Count == 1
-            ? "Are you sure you want to upload this scanned barcode result?"
-            : $"Are you sure you want to upload these {scanResultsService.Results.Count} scanned barcode results?";
-
-        var parameters = new DialogParameters<ConfirmationDialog>
-        {
-            { x => x.ContentText, message },
-            { x => x.SubmitBtnText, "Upload" },
-            { x => x.DialogIconColor, Color.Info }
-        };
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Upload Confirmation", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            try
-            {
-                await SaveScannedResultAsync();
-            }
-            catch
-            {
-                Snackbar.Add("An unexpected error occurred while uploading the scanned barcode results. Please try again.", Severity.Error);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Uploads the current scanned results to the database via IScannedBarcodeService.
-    /// Deduplication is handled by the service layer.
-    /// </summary>
-    private async Task SaveScannedResultAsync()
-    {
-        if (isSaving || !scanResultsService.Results.Any())
-            return;
-
-        isSaving = true;
-        try
-        {
-            // Map to a new list to avoid collection mutation during async call
-            var barcodeItems = scanResultsService.Results.ToList();
-            if (barcodeItems.Count == 0)
-            {
-                Snackbar.Add("Nothing to upload.", Severity.Normal);
-                return;
-            }
-
-            // Short timeout to keep UX snappy on mobile
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-
-            var response = await ScannedBarcodeService.AddScannedBarcodesAsync(barcodeItems, cts.Token);
-            if (response.Success)
-            {
-                Snackbar.Add(response.Message ?? $"{response.Data} barcode(s) uploaded.", Severity.Success);
-                scanResultsService.Clear();
-            }
-            else
-            {
-                Snackbar.Add(response.Message ?? "Upload failed.", Severity.Error);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            Snackbar.Add("Upload cancelled or timed out.", Severity.Warning);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Upload error: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isSaving = false;
-            StateHasChanged();
-        }
-    }
-
-    /// <summary>
-    /// Displays a confirmation dialog asking the user to confirm deleting the
-    /// current scanned barcode result.
-    /// </summary>
-    private async Task DeleteScannedResultConfirmationAsync(ScanBarcodeItemViewModel barcodeItem)
-    {
-        var parameters = new DialogParameters<ConfirmationDialog>
-    {
-        { x => x.ContentText, "Are you sure you want to delete this scanned result? This action is permanent and cannot be undone." },
-        { x => x.SubmitBtnText, "Delete" },
-        { x => x.DialogIcon, Icons.Material.Rounded.Warning },
-        { x => x.DialogIconColor, Color.Error }
-    };
-
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Confirmation", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            // ✅ Remove from CurrentGroup
-            var categoryToRemove = barcodeItem.Category;
-            if (groupingService.CurrentGroup.BarcodesByCategory.ContainsKey(categoryToRemove))
-            {
-                groupingService.CurrentGroup.BarcodesByCategory.Remove(categoryToRemove);
-                InvokeAsync(StateHasChanged);
-                Snackbar.Add($"Deleted {barcodeItem.Category} from current machine.", Severity.Warning);
-            }
-        }
-    }
-
-    private async Task DeleteCompletedGroupBarcodeAsync(GroupedMachineScanViewModel group, ScanBarcodeItemViewModel barcodeItem)
-    {
-        var parameters = new DialogParameters<ConfirmationDialog>
-    {
-        { x => x.ContentText, "Are you sure you want to delete this barcode from the completed machine?" },
-        { x => x.SubmitBtnText, "Delete" },
-        { x => x.DialogIcon, Icons.Material.Rounded.Warning },
-        { x => x.DialogIconColor, Color.Error }
-    };
-
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Confirmation", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            var categoryToRemove = barcodeItem.Category;
-            if (group.BarcodesByCategory.ContainsKey(categoryToRemove))
-            {
-                group.BarcodesByCategory.Remove(categoryToRemove);
-                InvokeAsync(StateHasChanged);
-                Snackbar.Add($"Deleted {barcodeItem.Category} from Machine.", Severity.Warning);
-            }
-        }
-    }
-    private void DeleteCurrentGroup()
-    {
-        groupingService.CurrentGroup = new GroupedMachineScanViewModel();
-        Snackbar.Add("Current machine cleared.", Severity.Error);
-    }
-
-    // private async Task DeleteCompletedGroup(int index)
-    // {
-    //     var parameters = new DialogParameters<ConfirmationDialog>
-    // {
-    //     { x => x.ContentText, $"Are you sure you want to delete Machine #{index + 1}? This action is permanent and cannot be undone." },
-    //     { x => x.SubmitBtnText, "Delete" },
-    //     { x => x.DialogIcon, Icons.Material.Rounded.Warning },
-    //     { x => x.DialogIconColor, Color.Error }
-    // };
-
-    //     var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-    //     var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Machine Confirmation", parameters, options);
-    //     var result = await dialog.Result;
-
-    //     if (!result.Canceled)
-    //     {
-    //         if (index >= 0 && index < groupingService.CompletedGroups.Count)
-    //         {
-    //             groupingService.CompletedGroups.RemoveAt(index);
-    //         }
-    //     }
-    // }
-
-    private async Task DeleteCompletedGroup(GroupedMachineScanViewModel group)
-    {
-        var parameters = new DialogParameters
-    {
-        { "ContentText", "Are you sure you want to delete this frame?" },
-        { "SubmitBtnText", "Delete" },
-        { "DialogIcon", Icons.Material.Rounded.Error },
-        { "DialogIconColor", Color.Error }
-    };
-
-        var options = new DialogOptions
-        {
-            CloseButton = true,
-            CloseOnEscapeKey = true,
-            MaxWidth = MaxWidth.ExtraSmall,
-            FullWidth = true
-        };
-
-        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Machine Confirmation", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            groupingService.CompletedGroups.Remove(group);
-            await InvokeAsync(StateHasChanged);
-            Snackbar.Add("Frame deleted.", Severity.Error);
-        }
-    }
-
-    /// <summary>
-    /// Displays a confirmation dialog asking the user to confirm clearing all
-    /// scanned barcode results currently shown in the list.
-    /// </summary> 
-    private async Task ClearAllScannedResultConfirmationAsync()
-    {
-        if (isSaving || (!groupingService.CurrentGroup.BarcodesByCategory.Any() && !groupingService.CompletedGroups.Any()))
-            return;
-
-        var parameters = new DialogParameters<ConfirmationDialog>
-    {
-        { x => x.ContentText, "Are you sure you want to clear all grouped machine results? This action is permanent and cannot be undone." },
-        { x => x.SubmitBtnText, "Clear" },
-        { x => x.DialogIcon, Icons.Material.Rounded.Warning },
-        { x => x.DialogIconColor, Color.Error }
-    };
-
-        var options = new DialogOptions() { CloseButton = true, CloseOnEscapeKey = true, MaxWidth = MaxWidth.ExtraSmall, FullWidth = true };
-        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Clear All Confirmation", parameters, options);
-        var result = await dialog.Result;
-
-        if (!result.Canceled)
-        {
-            // ✅ Clear grouped machine data
-            groupingService.CompletedGroups.Clear();
-            groupingService.CurrentGroup = new GroupedMachineScanViewModel();
-
-            // ✅ Optional: Clear frames if needed
-            // scanResultsService.Frames.Clear();
-
-            Snackbar.Add("All results cleared.", Severity.Success);
-        }
-    }
-    /// <summary>
-    /// Returns barcode results sorted by preferred category order.
-    /// Unknown categories are placed at the end.
-    /// Results with same category are sorted by scan time.
-    /// </summary> 
-
-
-    /// <summary>
-    /// Defines the desired order for barcode categories.
-    /// Used for sorting both display and copy operations.
-    /// </summary> 
-    private static readonly List<string> PreferredCategoryOrder = new()
-    {
-        "ASY",
-        "ASY-OTL",
-        "Serial Number",
-        "MAC Address",
-        "Deviation",
-        "PCA"
-    };
-    /// <summary>
-    /// Copies all sorted barcode results to clipboard.
-    /// Uses MAUI Clipboard API and shows feedback via Snackbar.
-    /// </summary> 
-
-    private async Task CopyAllGroupedResultsAsync()
-    {
-        // Combine current group and completed groups
-        var allGroups = groupingService.CompletedGroups
-            .Append(groupingService.CurrentGroup) // Include current machine
-            .ToList();
-
-        if (!allGroups.Any() || allGroups.All(g => !g.BarcodesByCategory.Any()))
-        {
-            Snackbar.Add("No results to copy.", Severity.Warning);
-            return;
-        }
-
-        // Flatten all barcodes from all groups
-        var allBarcodes = allGroups
-            .SelectMany(g => g.BarcodesByCategory.Values)
-            .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
-                ? PreferredCategoryOrder.IndexOf(b.Category)
-                : int.MaxValue)
-            .ThenBy(b => b.ScannedTime)
-            .ToList();
-
-        if (!allBarcodes.Any())
-        {
-            Snackbar.Add("No barcodes found.", Severity.Warning);
-            return;
-        }
-
-        var lines = allBarcodes.Select(b => b.Value).ToList();
-        var textToCopy = string.Join("\n", lines);
-
-        try
-        {
-            await Clipboard.Default.SetTextAsync(textToCopy);
-            Snackbar.Add("All grouped results copied to clipboard.", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Failed to copy: {ex.Message}", Severity.Error);
-        }
-    }
-    /// <summary>
-    /// Copies single barcode value to clipboard.
-    /// </summary>
-    private async Task CopySingleBarcode(string value)
-    {
-        await Clipboard.Default.SetTextAsync(value);
-        Snackbar.Add("Copied barcode.", Severity.Success);
-    }
-    private async Task CopyGroup(GroupedMachineScanViewModel group)
-    {
-        var lines = group.BarcodesByCategory.Values.Select(b => b.Value).ToList();
-        var textToCopy = string.Join("\n", lines);
-        await Clipboard.Default.SetTextAsync(textToCopy);
-        Snackbar.Add("Copied barcodes.", Severity.Success);
-    }
-
-    /// <summary>
-    /// Goes to the next machine group.
-    /// </summary>
-    private void NextMachine()
-    {
-        groupingService.NextGroup();
-    }
-
-    private void CompleteAndNavigateHome()
-    {
-        // ✅ Store grouped results in a shared service for Home page
-        Detector.UploadedImages = groupingService.CompletedGroups
-            .Select(g => new ImgItemViewModel
-            {
-                Id = Guid.NewGuid(),
-                FileName = $"Machine-{DateTime.Now:HHmmss}",
-                DetectResult = new DetectResultViewModel
-                {
-                    Barcodes = g.BarcodesByCategory.Values.ToList()
-                },
-                State = FileState.Done
-            }).ToList();
-
-        NavigationManager.NavigateTo("/");
-    }
-
-
-    // private List<DropBarcodeItem> _reorderableItems = new();
-
-    // [Inject] private NavigationManager NavigationManager { get; set; } = default!;
-
-    // private async Task EnableReorderModeForCompletedGroups()
-    // {
-    //     Snackbar.Add($"Failed to prepare reorderable items: 0 line is error", Severity.Error);
-    //     Convert completed group barcodes to reorderable items
-    //     try{
-            
-    //             Snackbar.Add($"Failed to prepare reorderable items: First line is error", Severity.Error);
-    //             _reorderableItems = groupingService.CompletedGroups
-    //     .SelectMany(g => g.BarcodesByCategory.Values)
-    //     .OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0
-    //         ? PreferredCategoryOrder.IndexOf(b.Category)
-    //         : int.MaxValue)
-    //     .ThenBy(b => b.ScannedTime)
-    //     .Select(b => new DropBarcodeItem
-    //         {
-    //             Name = $"{b.Category}: {b.Value}",
-    //             Selector = "1",
-    //             Original = b
-    //         })
-    //     .ToList();
-    //             Snackbar.Add($"Failed to prepare reorderable items: Last line error", Severity.Error);
-
-    //     }
-    //     catch(Exception ex)
-    //     {
-    //         Snackbar.Add($"Failed to prepare reorderable items: {ex.Message}", Severity.Error);
-    //         return;
-    //     }
-
-    //     Optional: store reorderable items in a shared service if needed
-    //     scanResultsService.ReorderItems = _reorderableItems;
-
-    //     ✅ Navigate to reorder page
-
-    //     try{
-    //         await App.Current.Windows[0].Page.Navigation.PushModalAsync(new ReorderPage(), true);
-            
-
-    //     }
-    //     catch(Exception ex)
-    //     {
-    //         Snackbar.Add($"Failed to navigate to reorder page: {ex.Message}", Severity.Error);
-    //     }
-        
-    // }
-
-    // private void OnItemDropped(MudItemDropInfo<DropBarcodeItem> dropItem)
-    // {
-    //     dropItem.Item.Selector = dropItem.DropzoneIdentifier;
-    //     _reorderableItems = _reorderableItems.OrderBy(x => x.Selector).ToList();
-    //     StateHasChanged();
-    // }
-
-    // public class DropBarcodeItem
-    // {
-    //     public string Name { get; set; } = string.Empty;
-    //     public string Selector { get; set; } = "1";
-    //     public ScanBarcodeItemViewModel? Original { get; set; }
-    // }
-
-
-}

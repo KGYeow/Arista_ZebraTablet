@@ -7,6 +7,8 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Channels;
 using ZXing.Net.Maui.Controls;
+using CommunityToolkit.Maui;
+
 
 
 namespace Arista_ZebraTablet
@@ -19,6 +21,8 @@ namespace Arista_ZebraTablet
             builder
                 .UseMauiApp<App>()
                 .UseBarcodeReader()
+                .UseMauiCommunityToolkit()
+                .UseMauiCommunityToolkitCamera()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
