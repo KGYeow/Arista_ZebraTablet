@@ -27,4 +27,10 @@ public partial class BarcodeGroupItemViewModel
 
     /// Barcode detection results associated with this barcode group item.
     public List<ScanBarcodeItemViewModel> Barcodes { get; set; } = new();
+
+
+    // ✅ For live scan
+    public List<FrameItemViewModel> Frames { get; set; } = new();
+    public GroupedMachineScanViewModel GroupedMachine { get; set; } = new();
+
 }
