@@ -3,6 +3,7 @@ using Arista_ZebraTablet.Shared.Application.ViewModels;
 using Arista_ZebraTablet.Shared.Services;
 using SkiaSharp;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using ZXing.Common;
 using ZXing.SkiaSharp;
 using static Arista_ZebraTablet.Shared.Pages.Home;
@@ -51,6 +52,29 @@ public sealed class BarcodeDetectorService : IBarcodeDetectorService
     public event EventHandler<ScanBarcodeItemViewModel>? ScanReceived;
 
     public ObservableCollection<FrameItemViewModel> Frames { get; } = new();
+
+    // New property for active group
+    public BarcodeGroupItemViewModel CurrentGroup { get; set; } = new();
+
+    private static readonly List<string> PreferredCategoryOrder = new()
+    {
+        "ASY", "ASY-OTL", "Serial Number", "MAC Address", "Deviation", "PCA"
+    };
+
+    public void AddBarcodeToCurrentGroup(ScanBarcodeItemViewModel barcode)
+    {
+        if (barcode != null)
+        {
+            CurrentGroup.Barcodes.Add(barcode);
+            CurrentGroup.Barcodes = CurrentGroup.Barcodes.OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0 ? PreferredCategoryOrder.IndexOf(b.Category) : int.MaxValue).ToList();
+        }
+    }
+
+    public void CompleteCurrentGroup()
+    {
+        BarcodeGroups.Add(CurrentGroup);
+        CurrentGroup = new BarcodeGroupItemViewModel();
+    }
 
     #endregion
 
@@ -131,27 +155,29 @@ public sealed class BarcodeDetectorService : IBarcodeDetectorService
     /// <remarks>
     /// Duplicate values are ignored during a session; comparison is case-insensitive.
     /// </remarks>
-    public void Add(string value, string barcodeType, string category)
-    {
-        if (string.IsNullOrWhiteSpace(value)) return;
-        //Console.WriteLine($"Adding barcode to Results: {value}");
+    //public void Add(string value, string barcodeType, string category)
+    //{
+    //    if (string.IsNullOrWhiteSpace(value)) return;
+    //    //Console.WriteLine($"Adding barcode to Results: {value}");
 
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            if (_seen.Add(value))
-            {
-                var vm = new ScanBarcodeItemViewModel
-                {
-                    Value = value,
-                    BarcodeType = barcodeType,
-                    Category = category,
-                    ScannedTime = DateTime.Now
-                };
-                Results.Insert(0, vm);
-                ScanReceived?.Invoke(this, vm); // <--- TELL UI
-            }
-        });
-    }
+    //    MainThread.BeginInvokeOnMainThread(() =>
+    //    {
+    //        if (_seen.Add(value))
+    //        {
+    //            var vm = new ScanBarcodeItemViewModel
+    //            {
+    //                Value = value,
+    //                BarcodeType = barcodeType,
+    //                Category = category,
+    //                ScannedTime = DateTime.Now
+    //            };
+    //            Results.Insert(0, vm);
+    //            AddBarcodeToCurrentGroup(vm); // <-- after Results.Insert(0, vm);
+    //            ScanReceived?.Invoke(this, vm); // <--- TELL UI
+    //        }
+    //    });
+
+    //}
 
     /// <summary>
     /// Clears <see cref="Results"/> and the in-memory duplicate filter.

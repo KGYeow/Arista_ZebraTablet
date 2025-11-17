@@ -187,36 +187,12 @@ public partial class LiveBarcodeScannerPage : ContentPage
         var barcodeResults = e.Results?.Where(r => !string.IsNullOrWhiteSpace(r.Value)).ToList();
         if (barcodeResults == null || !barcodeResults.Any()) return;
 
-        // Extract values for comparison
-        var newValues = barcodeResults.Select(r => r.Value).OrderBy(v => v).ToList();
-
-        // Check last frame
-        var lastFrame = _detectorService.Frames.LastOrDefault();
-        if (lastFrame != null)
-        {
-            var lastValues = lastFrame.DetectResult.Barcodes.Select(b => b.Value).OrderBy(v => v).ToList();
-
-            // If same barcodes, update instead of adding
-            if (newValues.SequenceEqual(lastValues))
-            {
-                // Optional: update timestamp or preview image
-                lastFrame.CapturedTime = DateTime.Now;
-                return; // Do nothing else
-            }
-        }
-
-        // Otherwise, create new frame
-        var frameItem = new FrameItemViewModel
-        {
-            CapturedTime = DateTime.Now,
-            DetectResult = new DetectResultViewModel()
-        };
-
-        var barcodeGroup = new BarcodeGroupItemViewModel
+        var currentGroup = _detectorService.CurrentGroup ?? new BarcodeGroupItemViewModel
         {
             Id = Guid.NewGuid(),
             Name = "Scanned Barcode Group",
             Source = BarcodeSource.Camera,
+            Timestamp = DateTime.Now
         };
 
         foreach (var result in barcodeResults)
@@ -231,19 +207,28 @@ public partial class LiveBarcodeScannerPage : ContentPage
                 Value = result.Value,
                 Category = category,
                 BarcodeType = result.Format.ToString(),
+                ScannedTime = DateTime.Now
             };
-            barcodeGroup.Barcodes.Add(barcodeItem);
 
-            frameItem.DetectResult.Barcodes.Add(barcodeItem);
+            // ✅ Replace if category exists, else add
+            var existingItem = currentGroup.Barcodes.FirstOrDefault(b => b.Category == category);
+            if (existingItem != null)
+            {
+                // Replace existing barcode
+                var index = currentGroup.Barcodes.IndexOf(existingItem);
+                currentGroup.Barcodes[index] = barcodeItem;
+            }
+            else
+            {
+                // Add new barcode
+                currentGroup.Barcodes.Add(barcodeItem);
+            }
 
             // Notify Razor component
             _detectorService.RaiseScanReceived(barcodeItem);
-
-            // Update grouping service
-            _groupingService.AddBarcode(barcodeItem);
         }
 
-        _detectorService.Frames.Add(frameItem);
-
+        currentGroup.Timestamp = DateTime.Now;
+        _detectorService.CurrentGroup = currentGroup;
     }
 }

@@ -30,7 +30,6 @@ public partial class BarcodeGroupItemViewModel
 
 
     // ✅ For live scan
-    public List<FrameItemViewModel> Frames { get; set; } = new();
-    public GroupedMachineScanViewModel GroupedMachine { get; set; } = new();
+    //public GroupedMachineScanViewModel GroupedMachine { get; set; } = new();
 
 }

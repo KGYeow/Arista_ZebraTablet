@@ -20,12 +20,6 @@ namespace Arista_ZebraTablet.Services
             }
         }
 
-        //public void AddBarcode(ScanBarcodeItemViewModel barcode)
-        //{
-        //    CurrentGroup.BarcodesByCategory[barcode.Category] = barcode;
-        //    OnPropertyChanged(nameof(CurrentGroup));
-        //}
-
         public void AddBarcode(ScanBarcodeItemViewModel barcode)
         {
             // Add or replace barcode by category (even if category is unexpected)
