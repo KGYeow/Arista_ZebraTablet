@@ -1,7 +1,6 @@
 ﻿using Arista_ZebraTablet.Services;
 using Arista_ZebraTablet.Shared.Services;
 using BarcodeScanning;
-using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
@@ -22,9 +21,7 @@ namespace Arista_ZebraTablet
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
-                .UseBarcodeReader()
-                .UseMauiCommunityToolkit()
-                .UseMauiCommunityToolkitCamera()
+                .UseBarcodeReader()             
                 .UseBarcodeScanning()
 
                 .ConfigureFonts(fonts =>
@@ -101,10 +98,6 @@ namespace Arista_ZebraTablet
 
             });
 
-
-
-
-
             static X509Certificate2Collection LoadCertificatesFromApp(string assetName)
             {
                 using var s = FileSystem.OpenAppPackageFileAsync(assetName).GetAwaiter().GetResult();
@@ -153,6 +146,7 @@ namespace Arista_ZebraTablet
                 }
                 return col;
             }
+
 
             builder.Services.AddTransient<LiveBarcodeScannerPage>();
 
