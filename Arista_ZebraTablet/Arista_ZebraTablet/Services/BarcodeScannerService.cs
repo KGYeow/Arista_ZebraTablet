@@ -36,6 +36,8 @@ public sealed class BarcodeScannerService
     /// </remarks>
     public event Action? ToggleScanPausedRequested;
 
+
+
     #endregion
 
     #region Constructor
