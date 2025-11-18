@@ -16,7 +16,6 @@ namespace Arista_ZebraTablet.Services;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <strong>Threading:</strong> Methods that update UI-bound state (e.g., <see cref="Add"/>, <see cref="Clear"/>) 
 /// marshal to the main thread via <see cref="MainThread"/>. Consumers can subscribe to 
 /// <see cref="ScanReceived"/> to react to new scan items as they arrive.
 /// </para>
@@ -38,20 +37,20 @@ public sealed class BarcodeDetectorService : IBarcodeDetectorService
     /// <summary>
     /// Used to filter out duplicate barcodes in a single session (case-insensitive).
     /// </summary>
-    private readonly HashSet<string> _seen = new(StringComparer.OrdinalIgnoreCase);
+    //private readonly HashSet<string> _seen = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Live collection of scan results shown in the UI when scanning via camera.
     /// New items are inserted at index 0.
     /// </summary>
-    public ObservableCollection<ScanBarcodeItemViewModel> Results { get; } = [];
+    //public ObservableCollection<ScanBarcodeItemViewModel> Results { get; } = [];
 
     /// <summary>
     /// Raised after a new scan result has been added to <see cref="Results"/>.
     /// </summary>
     public event EventHandler<ScanBarcodeItemViewModel>? ScanReceived;
 
-    public ObservableCollection<FrameItemViewModel> Frames { get; } = new();
+    //public ObservableCollection<FrameItemViewModel> Frames { get; } = new();
 
     // New property for active group
     public BarcodeGroupItemViewModel CurrentGroup { get; set; } = new();
@@ -178,18 +177,6 @@ public sealed class BarcodeDetectorService : IBarcodeDetectorService
     //    });
 
     //}
-
-    /// <summary>
-    /// Clears <see cref="Results"/> and the in-memory duplicate filter.
-    /// </summary>
-    public void Clear()
-    {
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            Results.Clear();
-            _seen.Clear();
-        });
-    }
 
     #endregion
 
