@@ -1,35 +1,46 @@
 ﻿using Arista_ZebraTablet.Shared.Application.Enums;
 
-namespace Arista_ZebraTablet.Shared.Application.ViewModels;
-
-/// <summary>
-/// Represents an barcode group item and its associated barcode detection results.
-/// </summary>
-public partial class BarcodeGroupItemViewModel
+namespace Arista_ZebraTablet.Shared.Application.ViewModels
 {
     /// <summary>
-    /// Unique identifier for the barcode group item.
+    /// Represents a grouped barcode item that combines barcode detection results
+    /// from either image uploads or live scanner input.
     /// </summary>
-    public Guid Id { get; set; }
+    public partial class BarcodeGroupItemViewModel
+    {
+        /// <summary>
+        /// Unique identifier for the barcode group item.
+        /// </summary>
+        public Guid Id { get; set; }
 
-    public string Name { get; set; } = null!;
+        /// <summary>
+        /// Display name for the group (e.g., image file name or scanner session name).
+        /// </summary>
+        public string Name { get; set; } = null!;
 
-    public BarcodeSource Source { get; set; }
+        /// <summary>
+        /// Indicates the source of the barcode group (Image Upload or Scanner).
+        /// </summary>
+        public BarcodeSource Source { get; set; }
 
-    public DateTime Timestamp { get; set; } = DateTime.Now;
+        /// <summary>
+        /// Timestamp when the group was created or last updated.
+        /// </summary>
+        public DateTime Timestamp { get; set; } = DateTime.Now;
 
-    /// <summary>
-    /// Error message if processing failed.
-    /// </summary>
-    public string? ErrorMessage { get; set; }
+        /// <summary>
+        /// Optional error message if barcode processing failed.
+        /// </summary>
+        public string? ErrorMessage { get; set; }
 
-    public ImgItemViewModel ImgItem { get; set; } = null!;
+        /// <summary>
+        /// Associated image item if the source is Image Upload.
+        /// </summary>
+        public ImgItemViewModel ImgItem { get; set; } = null!;
 
-    /// Barcode detection results associated with this barcode group item.
-    public List<ScanBarcodeItemViewModel> Barcodes { get; set; } = new();
-
-
-    // ✅ For live scan
-    //public GroupedMachineScanViewModel GroupedMachine { get; set; } = new();
-
+        /// <summary>
+        /// Collection of barcodes detected or scanned for this group.
+        /// </summary>
+        public List<ScanBarcodeItemViewModel> Barcodes { get; set; } = new();
+    }
 }
