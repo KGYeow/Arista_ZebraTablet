@@ -80,6 +80,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Services\ScannedBarcodeService.cs" />
     <Compile Remove="ZebraBarcodeScannerPage.xaml.cs" />
   </ItemGroup>
 
@@ -116,16 +117,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="ReorderPage.xaml.cs">
-      <DependentUpon>ReorderPage.xaml</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
     <MauiXaml Update="LiveBarcodeScannerPage.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </MauiXaml>
-    <MauiXaml Update="ReorderPage.xaml">
       <Generator>MSBuild:Compile</Generator>
     </MauiXaml>
   </ItemGroup>

@@ -6,6 +6,7 @@ using System.ComponentModel;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 using BarcodeScanning;
+using Arista_ZebraTablet.Shared.Application.Regex;
 
 namespace Arista_ZebraTablet;
 
@@ -28,7 +29,6 @@ public partial class LiveBarcodeScannerPage : ContentPage
     private readonly BarcodeDetectorService _detectorService;
     private readonly BarcodeScannerService _scannerControlService;
     private readonly BarcodeMode _mode;
-    private readonly GroupingService _groupingService;
     private static readonly List<string> PreferredCategoryOrder = new()
     {
         "ASY", "ASY-OTL", "Serial Number", "MAC Address", "Deviation", "PCA"
@@ -41,14 +41,13 @@ public partial class LiveBarcodeScannerPage : ContentPage
     /// <param name="scannerControlService">Mediator for UI control actions (switch camera, torch, pause/resume).</param>
     /// <param name="detectorService">Collector/service that stores and manages detected barcode results.</param>
     /// <param name="mode">Classification mode (e.g., <see cref="BarcodeMode.Standard"/> or <see cref="BarcodeMode.Unique"/>).</param>
-    public LiveBarcodeScannerPage(BarcodeScannerService scannerControlService, BarcodeDetectorService detectorService, BarcodeMode mode, GroupingService groupingService)
+    public LiveBarcodeScannerPage(BarcodeScannerService scannerControlService, BarcodeDetectorService detectorService, BarcodeMode mode)
     {
         InitializeComponent();
 
         _scannerControlService = scannerControlService;
         _detectorService = detectorService;
         _mode = mode;
-        _groupingService = groupingService;
 
         // Configure barcode detection behavior.
         //Camera = new BarcodeReaderOptions

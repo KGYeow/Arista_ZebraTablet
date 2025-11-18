@@ -1,33 +1,41 @@
 using Arista_ZebraTablet.Shared.Application.Enums;
+using Arista_ZebraTablet.Shared.Application.Regex;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
 using Arista_ZebraTablet.Shared.Services;
 using SkiaSharp;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using ZXing.Common;
 using ZXing.SkiaSharp;
-using static Arista_ZebraTablet.Shared.Pages.Home;
 
 namespace Arista_ZebraTablet.Services;
 
 /// <summary>
-/// Provides navigation to the live scanner page, manages in-memory scan results,
-/// and decodes barcodes from image bytes using ZXing + SkiaSharp.
+/// Provides barcode detection services for the application.
+/// Handles navigation to the live scanner page, manages in-memory barcode groups,
+/// and decodes barcodes from image bytes using ZXing and SkiaSharp.
 /// </summary>
 /// <remarks>
 /// <para>
-/// marshal to the main thread via <see cref="MainThread"/>. Consumers can subscribe to 
-/// <see cref="ScanReceived"/> to react to new scan items as they arrive.
+/// Consumers can subscribe to <see cref="ScanReceived"/> to react to new scan items as they arrive.
+/// State sharing between pages is achieved through <see cref="BarcodeGroups"/> and
+/// <see cref="SelectedBarcodeGroupId"/> for operations like reordering.
 /// </para>
 /// <para>
-/// <strong>State sharing:</strong> <see cref="UploadedImages"/> and <see cref="SelectedImageId"/> are used by
-/// the web/hybrid UI to persist selections across page navigation (e.g., Reorder page).
+/// Navigation uses <see cref="MainThread"/> to ensure UI thread execution.
+/// Decoding is CPU-bound and should be run on a background thread for large batches.
 /// </para>
 /// </remarks>
 public sealed class BarcodeDetectorService : IBarcodeDetectorService
 {
     #region Dependencies
 
+    /// <summary>
+    /// Provides access to the application's service provider for resolving dependencies
+    /// and creating instances of pages or components via <see cref="ActivatorUtilities"/>.
+    /// </summary>
+    /// <remarks>
+    /// This is primarily used for navigation scenarios where the scanner page requires
+    /// dependency injection to construct its view model or services.
+    /// </remarks>
     private readonly IServiceProvider _services;
 
     #endregion
@@ -35,40 +43,19 @@ public sealed class BarcodeDetectorService : IBarcodeDetectorService
     #region State & events
 
     /// <summary>
-    /// Used to filter out duplicate barcodes in a single session (case-insensitive).
-    /// </summary>
-    //private readonly HashSet<string> _seen = new(StringComparer.OrdinalIgnoreCase);
-
-    /// <summary>
-    /// Live collection of scan results shown in the UI when scanning via camera.
-    /// New items are inserted at index 0.
-    /// </summary>
-    //public ObservableCollection<ScanBarcodeItemViewModel> Results { get; } = [];
-
-    /// <summary>
-    /// Raised after a new scan result has been added to <see cref="Results"/>.
+    /// Raised after a new scan result has been added to <see cref="CurrentGroup"/>.
     /// </summary>
     public event EventHandler<ScanBarcodeItemViewModel>? ScanReceived;
 
-    //public ObservableCollection<FrameItemViewModel> Frames { get; } = new();
-
-    // New property for active group
+    /// <summary>
+    /// Represents the currently active barcode group being populated during scanning.
+    /// </summary>
     public BarcodeGroupItemViewModel CurrentGroup { get; set; } = new();
 
-    private static readonly List<string> PreferredCategoryOrder = new()
-    {
-        "ASY", "ASY-OTL", "Serial Number", "MAC Address", "Deviation", "PCA"
-    };
-
-    public void AddBarcodeToCurrentGroup(ScanBarcodeItemViewModel barcode)
-    {
-        if (barcode != null)
-        {
-            CurrentGroup.Barcodes.Add(barcode);
-            CurrentGroup.Barcodes = CurrentGroup.Barcodes.OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0 ? PreferredCategoryOrder.IndexOf(b.Category) : int.MaxValue).ToList();
-        }
-    }
-
+    /// <summary>
+    /// Completes the current group and adds it to <see cref="BarcodeGroups"/>.
+    /// Resets <see cref="CurrentGroup"/> for the next session.
+    /// </summary>
     public void CompleteCurrentGroup()
     {
         BarcodeGroups.Add(CurrentGroup);
@@ -93,18 +80,18 @@ public sealed class BarcodeDetectorService : IBarcodeDetectorService
     #region Properties (IBarcodeDetectorService)
 
     /// <inheritdoc/>
-    public List<ImgItemViewModel> UploadedImages { get; set; } = new();
-
     public List<BarcodeGroupItemViewModel> BarcodeGroups { get; set; } = new();
 
     /// <inheritdoc/>
-    /// <remarks>
-    /// Use <see cref="Guid.Empty"/> to indicate that the reorder scope is “all images”.
-    /// </remarks>
-    public Guid? SelectedImageId { get; set; }
     public Guid? SelectedBarcodeGroupId { get; set; }
+
+    /// <inheritdoc/>
     public BarcodeSource SelectedBarcodeSource { get; set; }
 
+    /// <summary>
+    /// Raises the <see cref="ScanReceived"/> event for the specified barcode.
+    /// </summary>
+    /// <param name="barcode">The barcode item that was scanned.</param>
     public void RaiseScanReceived(ScanBarcodeItemViewModel barcode)
     {
         ScanReceived?.Invoke(this, barcode);
@@ -114,13 +101,11 @@ public sealed class BarcodeDetectorService : IBarcodeDetectorService
 
     #region Navigation
 
-    /// <inheritdoc/>
+    /// <inheritdoc />
     /// <remarks>
     /// <para>
-    /// The navigation is executed on the UI thread. Any exceptions are shown via a modal alert.
-    /// </para>
-    /// <para>
-    /// The page is pushed <em>modally</em> to isolate scanning UX; adjust to non-modal if preferred.
+    /// Navigation is executed on the UI thread using <see cref="MainThread"/>.
+    /// The scanner page is pushed modally for isolation of scanning UX.
     /// </para>
     /// </remarks>
     public async Task NavigateToScannerAsync(BarcodeMode mode)
@@ -139,44 +124,6 @@ public sealed class BarcodeDetectorService : IBarcodeDetectorService
             }
         });
     }
-
-    #endregion
-
-    #region Result management (camera scanning)
-
-    /// <summary>
-    /// Adds a scanned barcode to <see cref="Results"/> (if not already present) and
-    /// raises <see cref="ScanReceived"/> for subscribers.
-    /// </summary>
-    /// <param name="value">The decoded barcode value.</param>
-    /// <param name="barcodeType">A human-readable barcode format (e.g., "QR_CODE", "CODE_128").</param>
-    /// <param name="category">App-specific category assigned to the value.</param>
-    /// <remarks>
-    /// Duplicate values are ignored during a session; comparison is case-insensitive.
-    /// </remarks>
-    //public void Add(string value, string barcodeType, string category)
-    //{
-    //    if (string.IsNullOrWhiteSpace(value)) return;
-    //    //Console.WriteLine($"Adding barcode to Results: {value}");
-
-    //    MainThread.BeginInvokeOnMainThread(() =>
-    //    {
-    //        if (_seen.Add(value))
-    //        {
-    //            var vm = new ScanBarcodeItemViewModel
-    //            {
-    //                Value = value,
-    //                BarcodeType = barcodeType,
-    //                Category = category,
-    //                ScannedTime = DateTime.Now
-    //            };
-    //            Results.Insert(0, vm);
-    //            AddBarcodeToCurrentGroup(vm); // <-- after Results.Insert(0, vm);
-    //            ScanReceived?.Invoke(this, vm); // <--- TELL UI
-    //        }
-    //    });
-
-    //}
 
     #endregion
 

@@ -12,8 +12,9 @@ using Color = MudBlazor.Color;
 namespace Arista_ZebraTablet.Shared.Pages;
 
 /// <summary>
-/// Code-behind for the Home component (route "/").
-/// Handles image upload, barcode detection, and result upload flows.
+/// Code-behind for the Home page component (route "/").
+/// Provides the main interface for barcode operations, including image upload,
+/// live scanner navigation, barcode detection, and result management.
 /// </summary>
 public partial class Home : ComponentBase
 {
@@ -56,9 +57,16 @@ public partial class Home : ComponentBase
     private static readonly string[] allowedContentTypes = { "image/jpeg", "image/png" };
 
     /// <summary>
-    /// Collection of barcode groups representing uploaded images and their detected barcodes.
+    /// Collection of barcode groups representing detection results from multiple sources.
+    /// Each group may originate from an image upload or a live scanner session.
     /// </summary>
     private List<BarcodeGroupItemViewModel> barcodeGroups { get; set; } = new();
+
+    /// <summary>
+    /// Current barcode source selected by the user (Upload or Camera).
+    /// Determines which results are displayed in the UI.
+    /// </summary>
+    private BarcodeSource barcodeSource { get; set; } = BarcodeSource.Upload;
 
     /// <summary>
     /// Current barcode categorizing mode selected by the user (Standard vs Unique).
@@ -108,6 +116,183 @@ public partial class Home : ComponentBase
     private MudSwipeArea swipeArea = null!;
 
     /// <summary>
+    /// Current device form factor ("Web", "Android", "iOS", etc.) as provided by <see cref="IFormFactorService"/>.
+    /// </summary>
+    private string factor => FormFactor.GetFormFactor();
+
+    /// <summary>
+    /// Current platform string ("Browser", "MAUI", etc.) as provided by <see cref="IFormFactorService"/>.
+    /// </summary>
+    private string platform => FormFactor.GetPlatform();
+
+    /// <summary>
+    /// The selected image ID for reordering barcodes.
+    /// </summary>
+    public Guid? SelectedImageId { get; set; }
+
+    /// <summary>
+    /// Reference to MudTabs for switching between sources.
+    /// </summary>
+    private MudTabs barcodeSoureTabs = null!;
+
+    /// 
+    /// <summary>
+    /// Specifies the preferred sort order for barcode categories.
+    /// Used to organize detected barcodes consistently in UI and copy operations.
+    /// </summary>
+    private static readonly List<string> PreferredCategoryOrder = new()
+    {
+        "ASY",
+        "ASY-OTL",
+        "Serial Number",
+        "MAC Address",
+        "Deviation",
+        "PCA"
+    };
+
+    #endregion
+
+    #region Lifecycle
+
+    /// <summary>
+    /// Initializes the Home component and restores previously detected barcode groups from the shared service.
+    /// This ensures that when the user navigates back from other pages (such as the reorder screen),
+    /// the UI reflects the latest state without requiring re-upload or re-scan.
+    /// </summary>
+    /// <remarks>
+    /// This method runs during the component's initialization phase and checks <see cref="Detector.BarcodeGroups"/>.
+    /// If any groups exist, they are assigned to the local <c>barcodeGroups</c> collection for display and further actions.
+    /// </remarks>
+    protected override void OnInitialized()
+    {
+        if (Detector.BarcodeGroups.Count > 0)
+        {
+            barcodeGroups = Detector.BarcodeGroups; // Restore updated list
+        }
+    }
+
+    #endregion
+
+    #region UI actions & helpers
+
+    /// <summary>
+    /// Changes the active tab panel to display results for the specified barcode source.
+    /// Tabs represent two sources: Image Upload Detection and Scanner Results.
+    /// </summary>
+    /// <param name="source">The barcode source to activate (Upload or Scanner).</param>
+    void ChangeBarcodeResultTabPanel(BarcodeSource source)
+    {
+        barcodeSource = source;
+        barcodeSoureTabs.ActivatePanel(source.ToString());
+    }
+
+    /// <summary>
+    /// Called by <c>MudBreakpointProvider</c> when the viewport breakpoint changes.
+    /// Updates <see cref="currentBreakpoint"/> and requests a re-render.
+    /// </summary>
+    private Task HandleBreakpointChanged(Breakpoint bp)
+    {
+        currentBreakpoint = bp;
+
+        // Re-render when breakpoint changes to ensure the responsive layout updates.
+        return InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Navigates to the native/hybrid barcode scanner screen for the current <see cref="barcodeMode"/>.
+    /// </summary>
+    private async Task OpenBarcodeScanner()
+    {
+        Detector.BarcodeGroups = barcodeGroups;
+        await Detector.NavigateToScannerAsync(barcodeMode);
+    }
+
+    /// <summary>
+    /// Enables reorder mode and navigates to the reorder page.
+    /// If <paramref name="barcodeGroupId"/> is provided, reorders only that barcode group; otherwise reorders all.
+    /// </summary>
+    private void EnableReorderMode(Guid? barcodeGroupId = null)
+    {
+        // Guid.Empty indicates “reorder all” to the downstream service
+        Detector.SelectedBarcodeSource = barcodeSource;
+        Detector.SelectedBarcodeGroupId = barcodeGroupId ?? Guid.Empty;
+        Detector.BarcodeGroups = barcodeGroups;
+        NavigationManager.NavigateTo("/reorder");
+    }
+
+    /// <summary>
+    /// Copies either a single barcode value, or all detected barcodes from a specific group.
+    /// </summary>
+    /// <param name="content">
+    /// The content to copy: either a string (single barcode) or a barcode group.
+    /// </param>
+    private async Task CopyToClipboard(object content)
+    {
+        string textToCopy;
+
+        switch (content)
+        {
+            // Single barcode value (e.g., from individual result row)
+            case string singleText:
+                textToCopy = singleText;
+                break;
+
+            // All barcodes from a single barcode group (e.g., from HomePage card)
+            case BarcodeGroupItemViewModel barcodeGroup when barcodeGroup.Barcodes.Count > 0:
+                var lines = barcodeGroup.Barcodes
+                    .Select(b => $"{b.Value}") // You can also include category: $"{b.Category}: {b.Value}"
+                    .ToList();
+                textToCopy = string.Join("\n", lines);
+                break;
+
+            default:
+                Snackbar.Add("Nothing to copy.", Severity.Warning);
+                return;
+        }
+
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", textToCopy);
+            Snackbar.Add("Copied to clipboard.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to copy: {ex.Message}", Severity.Error);
+        }
+    }
+
+    /// <summary>
+    /// Copies all detected results from all barcode groups to the clipboard.
+    /// </summary>
+    /// <remarks>
+    /// Aggregates all detected barcode values from every barcode group associated with the currently active source.
+    /// This method filters <see cref="barcodeGroups"/> by <see cref="barcodeSource"/> to ensure only results
+    /// from the selected source tab are included.
+    /// </remarks>
+    private async Task CopyAllResults()
+    {
+        var allBarcodes = barcodeGroups
+            .Where(g => g.Barcodes.Count > 0 && g.Source == barcodeSource)
+            .SelectMany(g => g.Barcodes)
+            .Select(b => $"{b.Value}")
+            .ToList();
+
+        if (allBarcodes.Count == 0)
+        {
+            Snackbar.Add("No barcode results to copy.", Severity.Warning);
+            return;
+        }
+
+        await CopyToClipboard(string.Join("\n", allBarcodes));
+    }
+
+    /// <summary>
+    /// Toggles the visibility of the "More Options" drawer.
+    /// Called by the UI when the user clicks the floating action button.
+    /// </summary>
+    private void ToggleMoreDrawer() => moreDrawerOpen = !moreDrawerOpen;
+
+    /// <summary>
     /// Handles swipe movement events from the MudSwipeArea.
     /// Closes the "More Options" drawer when a top-to-bottom swipe is detected.
     /// </summary>
@@ -136,156 +321,7 @@ public partial class Home : ComponentBase
     /// <summary>
     /// Requests a UI refresh after swipe-related state changes.
     /// </summary>
-    private void ResetSwipeArea()
-    {
-        StateHasChanged();
-    }
-
-    /// <summary>
-    /// Current device form factor ("Web", "Android", "iOS", etc.) as provided by <see cref="IFormFactorService"/>.
-    /// </summary>
-    private string factor => FormFactor.GetFormFactor();
-
-    /// <summary>
-    /// Current platform string ("Browser", "MAUI", etc.) as provided by <see cref="IFormFactorService"/>.
-    /// </summary>
-    private string platform => FormFactor.GetPlatform();
-
-    /// <summary>
-    /// The selected image ID for reordering barcodes.
-    /// </summary>
-    public Guid? SelectedImageId { get; set; }
-
-    #endregion
-
-    #region Lifecycle
-
-    /// <summary>
-    /// Restores the uploaded image list from <see cref="Detector.UploadedImages"/> if available.
-    /// </summary>
-    /// <remarks>
-    /// Ensures continuity when navigating back from other pages (e.g., reorder screen),
-    /// so the UI reflects the previously uploaded images without requiring re-upload.
-    /// </remarks>
-    protected override void OnInitialized()
-    {
-        if (Detector.BarcodeGroups.Count > 0)
-        {
-            barcodeGroups = Detector.BarcodeGroups; // Restore updated list
-        }
-    }
-
-    #endregion
-
-    #region UI actions & helpers
-
-    /// <summary>
-    /// Called by <c>MudBreakpointProvider</c> when the viewport breakpoint changes.
-    /// Updates <see cref="currentBreakpoint"/> and requests a re-render.
-    /// </summary>
-    private Task HandleBreakpointChanged(Breakpoint bp)
-    {
-        currentBreakpoint = bp;
-
-        // Re-render when breakpoint changes to ensure the responsive layout updates.
-        return InvokeAsync(StateHasChanged);
-    }
-
-    /// <summary>
-    /// Navigates to the native/hybrid barcode scanner screen for the current <see cref="barcodeMode"/>.
-    /// </summary>
-    private async Task OpenBarcodeScanner()
-    {
-        Detector.BarcodeGroups = barcodeGroups;
-        await Detector.NavigateToScannerAsync(barcodeMode);
-    }
-
-    /// <summary>
-    /// Navigates to the native/hybrid zebra tablet barcode scanner screen for the current <see cref="barcodeMode"/>.
-    /// </summary>
-    //private async Task OpenZebraScanner() => await Detector.NavigateToZebraScannerAsync();
-    //private async void OpenZebraScanner() => await Detector.NavigateToZebraScannerAsync();
-
-    /// <summary>
-    /// Enables reorder mode and navigates to the reorder page.
-    /// If <paramref name="imgId"/> is provided, reorders only that image; otherwise reorders all.
-    /// </summary>
-    /// <param name="imgId">
-    /// The image ID to reorder. If <see langword="null"/>, the method enables “reorder all”.
-    /// </param>
-    private void EnableReorderMode(Guid? barcodeGroupId = null)
-    {
-        // Guid.Empty indicates “reorder all” to the downstream service
-        Detector.SelectedBarcodeSource = barcodeSource;
-        Detector.SelectedBarcodeGroupId = barcodeGroupId ?? Guid.Empty;
-        Detector.BarcodeGroups = barcodeGroups;
-        NavigationManager.NavigateTo("/reorder");
-    }
-
-    /// <summary>
-    /// Copies either a single barcode value, all detected barcodes from an image,
-    /// or all reordered barcode results (from drag-and-drop UI).
-    /// </summary>
-    private async Task CopyToClipboard(object content)
-    {
-        string textToCopy;
-
-        switch (content)
-        {
-            // ✅ Single barcode value (e.g., from individual result row)
-            case string singleText:
-                textToCopy = singleText;
-                break;
-
-            // ✅ All barcodes from a single image (e.g., from HomePage card)
-            case BarcodeGroupItemViewModel barcodeGroup when barcodeGroup.Barcodes.Count > 0:
-                var lines = barcodeGroup.Barcodes
-                    .Select(b => $"{b.Value}") // You can also include category: $"{b.Category}: {b.Value}"
-                    .ToList();
-                textToCopy = string.Join("\n", lines);
-                break;
-
-            default:
-                Snackbar.Add("Nothing to copy.", Severity.Warning);
-                return;
-        }
-
-        try
-        {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", textToCopy);
-            Snackbar.Add("Copied to clipboard.", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Failed to copy: {ex.Message}", Severity.Error);
-        }
-    }
-
-    /// <summary>
-    /// Copies all results from all uploaded images to the clipboard.
-    /// </summary>
-    private async Task CopyAllResults()
-    {
-        var allBarcodes = barcodeGroups
-            .Where(g => g.Barcodes.Count > 0 && g.Source == barcodeSource)
-            .SelectMany(g => g.Barcodes)
-            .Select(b => $"{b.Value}")
-            .ToList();
-
-        if (allBarcodes.Count == 0)
-        {
-            Snackbar.Add("No barcode results to copy.", Severity.Warning);
-            return;
-        }
-
-        await CopyToClipboard(string.Join("\n", allBarcodes));
-    }
-
-    /// <summary>
-    /// Toggles the visibility of the "More Options" drawer.
-    /// Called by the UI when the user clicks the floating action button.
-    /// </summary>
-    private void ToggleMoreDrawer() => moreDrawerOpen = !moreDrawerOpen;
+    private void ResetSwipeArea() => StateHasChanged();
 
     #endregion
 
@@ -338,7 +374,6 @@ public partial class Home : ComponentBase
     /// </summary>
     /// <remarks>
     /// Rejects files whose <c>ContentType</c> is not recognized as an image.
-    /// Converts the content into a base64 data URL for thumbnail preview.
     /// </remarks>
     private async Task AddImageFileAsync(IBrowserFile file)
     {
@@ -500,29 +535,5 @@ public partial class Home : ComponentBase
         }
     }
 
-    /// <summary>
-    /// Defines the desired order for barcode categories.
-    /// Used for sorting both display and copy operations.
-    /// </summary> 
-    private static readonly List<string> PreferredCategoryOrder = new()
-    {
-        "ASY",
-        "ASY-OTL",
-        "Serial Number",
-        "MAC Address",
-        "Deviation",
-        "PCA"
-    };
-
     #endregion
-
-    private MudTabs barcodeSoureTabs = null!;
-
-    private BarcodeSource barcodeSource { get; set; } = BarcodeSource.Upload;
-
-    void ChangeBarcodeResultTabPanel(BarcodeSource source)
-    {
-        barcodeSource = source;
-        barcodeSoureTabs.ActivatePanel(source.ToString());
-    }
 }

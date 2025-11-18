@@ -9,7 +9,7 @@
     <MudContainer Class="pt-5 pb-0 px-4 position-sticky" MaxWidth="MaxWidth.Large">
         <!-- Barcode Source Toggle Button -->
         <MudGrid Spacing="4" Justify="Justify.Center">
-            <MudItem Class="d-flex gap-3" xs="12" sm="4">
+            <MudItem Class="d-flex gap-3" xs="12" sm="6">
                 <MudToggleGroup T="BarcodeSource"
                                 Value="@barcodeSource"
                                 ValueChanged="ChangeBarcodeResultTabPanel"
@@ -23,6 +23,7 @@
                     <MudToggleItem Text="Scanner" Value="BarcodeSource.Camera" Class="ma-1 rounded" />
                 </MudToggleGroup>
 
+                <!-- Setting Button & Setting Options Drawer  -->
                 <BarcodeSettingsDrawer BarcodeMode="barcodeMode"/>
             </MudItem>
         </MudGrid>
@@ -56,7 +57,7 @@
                             <MudStack Spacing="3" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                                 <!-- Instruction Section -->
                                 <MudStack Spacing="2" AlignItems="AlignItems.Center">
-                                    <MudText Typo="Typo.h5" Class="fw-bold">Scan Barcodes</MudText>
+                                    <MudText Typo="Typo.h5" Class="fw-bold">Image Upload Detection</MudText>
                                     <MudText Typo="Typo.body2" Class="text-center">
                                         Upload one or more images and tap <MudIcon Size="Size.Small" Icon="material-symbols-rounded/scan" /><b> Detect Barcodes</b> to begin.<br />
                                     </MudText>

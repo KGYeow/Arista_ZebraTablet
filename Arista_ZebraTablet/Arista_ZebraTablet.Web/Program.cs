@@ -26,9 +26,7 @@ builder.Services.AddMudServices(config =>
 
 // Add device-specific services used by the Arista_ZebraTablet.Shared project
 builder.Services.AddSingleton<IFormFactorService, FormFactorService>();
-//builder.Services.AddSingleton<UploadBarcodeDecoderService>();
 builder.Services.AddScoped<IBarcodeDetectorService, BarcodeDetectorService>();
-builder.Services.AddScoped<IScannedBarcodeService, ScannedBarcodeService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

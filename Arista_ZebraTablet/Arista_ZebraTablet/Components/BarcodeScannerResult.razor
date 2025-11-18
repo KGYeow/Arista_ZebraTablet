@@ -7,15 +7,16 @@
 <MobileComponentLayout>
     <Body>
         <MudContainer Class="py-4" MaxWidth="MaxWidth.Large">
+            <!-- Header Section -->
             <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
-                <!-- Title + Live Scanned Result Count -->
+                <!-- Title + Live Scanned Barcode Result Count -->
                 <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
-                    <MudText Typo="Typo.h6">Scanned Results</MudText>
+                    <MudText Typo="Typo.h6">Scanning Barcodes</MudText>
 
-                    @if (scanResultsService.Results.Count > 0)
+                    @if (CameraBarcodeGroups.Any())
                     {
                         <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
-                            @scanResultsService.Results.Count
+                            @CameraBarcodeGroups.Count()
                         </MudChip>
                     }
                 </MudStack>
@@ -28,21 +29,25 @@
                     <MudHidden Breakpoint="Breakpoint.Xs">
                         <!-- Copy to Clipboard Button -->
                         <MudTooltip Text="Copy Results" Placement="Placement.Bottom" Delay="400" Arrow>
-                            <MudIconButton Color="Color.Primary"
-                                            Icon="@Icons.Material.Rounded.ContentCopy"
-                                            Size="Size.Small"
-                                            Disabled="@(!scanResultsService.Results.Any() || isSaving)"
-                                        OnClick="CopyAllGroupedResultsAsync" />
+                            <MudIconButton
+                                Color="Color.Primary"
+                                Icon="@Icons.Material.Rounded.ContentCopy"
+                                Size="Size.Small"
+                                Disabled="@(!CameraBarcodeGroups.Any() || isSaving)"
+                                OnClick="CopyAllGroupedResultsAsync"
+                            />
                         </MudTooltip>
 
                         <!-- Clear All Button -->
                         <MudTooltip Text="Clear All" Placement="Placement.Left" Delay="400" Arrow>
-                            <MudIconButton Color="Color.Warning"
-                                            Icon="@Icons.Material.Rounded.ClearAll"
-                                            Variant="Variant.Outlined"
-                                            Size="Size.Small"
-                                            Disabled="isSaving"
-                                            OnClick="ClearAllScannedResultConfirmationAsync" />
+                            <MudIconButton
+                                Color="Color.Warning"
+                                Icon="@Icons.Material.Rounded.ClearAll"
+                                Variant="Variant.Outlined"
+                                Size="Size.Small"
+                                Disabled="isSaving"
+                                OnClick="ClearAllScannedResultConfirmationAsync"
+                            />
                         </MudTooltip>
                     </MudHidden>
 
@@ -59,114 +64,151 @@
                             <MudMenuItem
                                 Label="Copy Results"
                                 Icon="@Icons.Material.Rounded.ContentCopy"
-                                        OnClick="CopyAllGroupedResultsAsync" />
-
+                                OnClick="CopyAllGroupedResultsAsync"
+                            />
                             <MudMenuItem
                                 Label="Clear All"
                                 Icon="@Icons.Material.Rounded.ClearAll"
                                 OnClick="ClearAllScannedResultConfirmationAsync"
                             />
-
-
                         </MudMenu>
                     </MudHidden>
                 </MudStack>
             </MudStack>              
 
+            <!-- Current Scanning Barcodes Result Session Card -->
             <MudItem>
-                <!-- Scanned Barcode's Result Cards -->
-                <MudStack Class="position-relative" Spacing="2">
-                    @if (!scanResultsService.CurrentGroup.Barcodes.Any())
-                    {
-                        <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
-                            No scans yet. Aim the camera at a code.
-                        </MudAlert>
-                    }
-                    else
-                    {
-                        <MudStack Row Spacing="2" Class="mt-2">
-                            <MudButton Color="Color.Primary" Variant="Variant.Filled" FullWidth="true" OnClick="CompleteCurrentScanningGroup">Next</MudButton>
-                        </MudStack>
-
-                        <MudCard Class="mb-3" Elevation="1">
+                @if (!scanResultsService.CurrentGroup.Barcodes.Any())
+                {
+                    <MudAlert Severity="Severity.Info" ContentAlignment="HorizontalAlignment.Center">
+                        No scans yet. Aim the camera at a code.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudStack Spacing="2">
+                        <MudCard Class="mb-3" Elevation="0">
                             <MudCardContent>
-                                <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-2">
-                                    <MudText Typo="Typo.subtitle2">Current Frame</MudText>
-                                    <MudTooltip Text="Delete Current Frame" Placement="Placement.Left" Delay="400" Arrow>
-                                        <MudIconButton
-                                            Icon="@Icons.Material.Filled.Delete"
-                                            Color="Color.Error"
-                                            Size="Size.Small"
-                                            Disabled="@isSaving"
-                                            OnClick="@(() => DeleteCurrentScanningBarcodeGroupConfirmationAsync())" />
-                                    </MudTooltip>
+                                <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
+                                    <!-- Barcode Group Thumbnail -->
+                                    <MudAvatar Class="me-3" Size="Size.Large" Color="Color.Default" Rounded>
+                                        <MudIcon Icon="@Icons.Material.Rounded.Scanner" />
+                                    </MudAvatar>
+
+                                    <!-- Barcode Group Information -->
+                                    <MudStack Spacing="0" Class="overflow-hidden">
+                                        <MudText Typo="Typo.subtitle2" Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                            Current Frame
+                                        </MudText>
+
+                                        <MudStack Row Spacing="0">
+                                            <MudChip T="string" Color="Color.Info" Size="Size.Small">
+                                                Scanning
+                                            </MudChip>
+                                        </MudStack>
+                                    </MudStack>
+
+                                    <MudSpacer />
+
+                                    <!-- Barcode Group Card Actions -->
+                                    <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
+                                        <!-- Delete Barcode Group Button -->
+                                        <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
+                                            <MudIconButton
+                                                Icon="@Icons.Material.Rounded.DeleteOutline"
+                                                Color="Color.Error"
+                                                Size="Size.Small"
+                                                Disabled="@isSaving"
+                                                OnClick="() => DeleteCurrentScanningBarcodeGroupConfirmationAsync()"
+                                            />
+                                        </MudTooltip>
+                                    </MudStack>
                                 </MudStack>
 
-                                <MudDivider Class="my-2" />
-
-                                <MudSimpleTable Dense Bordered Hover Outlined>
+                                <MudSimpleTable Class="mt-3" Dense Bordered Hover Outlined>
                                     <tbody>
-
                                         @foreach (var detectedBarcode in scanResultsService.CurrentGroup.Barcodes)
                                         {
                                             <tr>
                                                 <td>@detectedBarcode.Category</td>
                                                 <td>@detectedBarcode.Value</td>
                                                 <td style="width: 0;">
+                                                    <!-- Detected Barcode Results Actions -->
                                                     <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
-                                                        <MudTooltip Text="Copy" Placement="Placement.Top" Delay="400" Arrow>
-                                                            <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
-                                                                            Color="Color.Primary"
-                                                                            Size="Size.Small"
-                                                                           OnClick="@(() => CopySingleBarcodeAsync(detectedBarcode.Value))" />
-                                                        </MudTooltip>
+                                                        <!-- Detected Barcode Results Actions (Display on Larger Screen) -->
+                                                        <MudHidden Breakpoint="Breakpoint.Xs">
+                                                            <MudTooltip Text="Edit" Placement="Placement.Left" Delay="400" Arrow>
+                                                                <MudIconButton
+                                                                    Icon="@Icons.Material.Rounded.Edit"
+                                                                    Color="Color.Primary"
+                                                                    Size="Size.Small"
+                                                                    Disabled="@isSaving"
+                                                                    OnClick="@(() => OpenCategoryEditDialogAsync(detectedBarcode))" />
+                                                            </MudTooltip>
 
-                                                        <MudTooltip Text="Edit" Placement="Placement.Left" Delay="400" Arrow>
-                                                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                                            Color="Color.Primary"
-                                                                            Size="Size.Small"
-                                                                            Disabled="@isSaving"
-                                                                           OnClick="@(() => OpenCategoryEditDialogAsync(detectedBarcode))" />
-                                                        </MudTooltip>
+                                                            <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
+                                                                <MudIconButton
+                                                                    Icon="@Icons.Material.Rounded.DeleteOutline"
+                                                                    Color="Color.Error"
+                                                                    Size="Size.Small"
+                                                                    Disabled="@isSaving"
+                                                                    OnClick="@(() => DeleteScannedResultConfirmationAsync(detectedBarcode))" />
+                                                            </MudTooltip>
+                                                        </MudHidden>
 
-                                                        <MudTooltip Text="Delete" Placement="Placement.Left" Delay="400" Arrow>
-                                                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
-                                                                            Color="Color.Error"
-                                                                            Size="Size.Small"
-                                                                            Disabled="@isSaving"
-                                                                            OnClick="@(() => DeleteScannedResultConfirmationAsync(detectedBarcode))" />
-                                                        </MudTooltip>
+                                                        <!-- Detected Barcode Results Actions (Display on Smaller Screen) -->
+                                                        <MudHidden Breakpoint="Breakpoint.SmAndUp">
+                                                            <MudMenu
+                                                                Icon="@Icons.Material.Rounded.MoreVert"
+                                                                Size="Size.Small"
+                                                                AnchorOrigin="Origin.TopRight"
+                                                                TransformOrigin="Origin.BottomRight"
+                                                                Disabled="isSaving"
+                                                                Dense
+                                                            >
+                                                                <MudMenuItem
+                                                                    Label="Edit"
+                                                                    Icon="@Icons.Material.Rounded.Edit"
+                                                                    OnClick="() => OpenCategoryEditDialogAsync(detectedBarcode)"
+                                                                />
+                                                                <MudMenuItem
+                                                                    Label="Delete"
+                                                                    Icon="@Icons.Material.Rounded.DeleteOutline"
+                                                                    OnClick="() => DeleteScannedResultConfirmationAsync(detectedBarcode)"
+                                                                />
+                                                            </MudMenu>
+                                                        </MudHidden>
                                                     </MudStack>
-
                                                 </td>
                                             </tr>
-
                                         }
                                     </tbody>
                                 </MudSimpleTable>
                             </MudCardContent>
                         </MudCard>
-                    }
 
-                    @if (!scanResultsService.BarcodeGroups.Any())
-                    {
-                        @* <MudText>No completed machines yet.</MudText> *@
-                    }
-                    else
-                    {
-
-                        <MudText Typo="Typo.h6" Class="mt-4">Final result</MudText>
-                        <MudButton Color="Color.Primary" FullWidth="true" Variant="Variant.Filled" OnClick="CompleteAndNavigateHomeAsync">
-                            Complete
+                        <MudButton
+                            Color="Color.Primary"
+                            Variant="Variant.Filled"
+                            DropShadow="false"
+                            OnClick="CompleteCurrentScanningGroup"
+                            FullWidth
+                        >
+                            Next
                         </MudButton>
-
-                        <!-- Scanned Barcode Preview Cards -->
-                        <BarcodeGroupList BarcodeGroups="scanResultsService.BarcodeGroups"
-                                          Source="BarcodeSource.Camera" />
-                    }
-
-                </MudStack>
+                    </MudStack>
+                }
             </MudItem>
+
+            <!-- Scanned Barcode's Result Cards -->
+            @if (CameraBarcodeGroups.Any())
+            {
+                <MudDivider/>
+                <MudText Typo="Typo.body2" Class="mt-4">Scanned Result</MudText>
+
+                <!-- Scanned Barcode Preview Cards -->
+                <BarcodeGroupList BarcodeGroups="scanResultsService.BarcodeGroups" Source="BarcodeSource.Camera" />
+            }
         </MudContainer>
     </Body>
 </MobileComponentLayout>

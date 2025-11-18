@@ -3,37 +3,37 @@
 namespace Arista_ZebraTablet.Shared.Application.ViewModels;
 
 /// <summary>
-/// Represents an uploaded image and its associated barcode detection results.
+/// Represents an image used for barcode detection, including metadata and UI preview details.
 /// </summary>
 public partial class ImgItemViewModel
 {
     /// <summary>
-    /// Original file name of the uploaded image.
+    /// The original file name of the image.
     /// </summary>
     public string? FileName { get; set; }
 
     /// <summary>
-    /// MIME type of the image (e.g., image/jpeg, image/png).
+    /// The MIME type of the image (e.g., "image/jpeg", "image/png").
     /// </summary>
     public string? ContentType { get; set; }
 
     /// <summary>
-    /// Raw image bytes.
+    /// The raw image data as a byte array.
     /// </summary>
     public byte[]? Bytes { get; set; }
 
     /// <summary>
-    /// ThumbnailUrl
+    /// A URL pointing to the thumbnail version of the image for quick display.
     /// </summary>
     public string? ThumbnailUrl { get; set; }
 
     /// <summary>
-    /// Base64-encoded data URL for previewing the image in the UI.
+    /// A Base64-encoded data URL for rendering the full-size image preview in the UI.
     /// </summary>
     public string? PreviewDataUrl { get; set; }
 
     /// <summary>
-    /// Current processing state of the image (e.g., Ready, Detecting, Done, Error).
+    /// The current processing state of the image (e.g., Ready, Detecting, Done, Error).
     /// </summary>
     public FileState State { get; set; }
 }

@@ -17,9 +17,11 @@
 
   <ItemGroup>
     <Compile Remove="Pages\OldHome.razor.cs" />
+    <Compile Remove="Services\IScannedBarcodeService.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Remove="Pages\HistoricalScannedBarcode.razor" />
     <Content Remove="Pages\OldHome.razor" />
   </ItemGroup>
 

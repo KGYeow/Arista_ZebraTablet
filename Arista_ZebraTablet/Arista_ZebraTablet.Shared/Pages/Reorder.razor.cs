@@ -3,23 +3,30 @@ using Arista_ZebraTablet.Shared.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
-using static Arista_ZebraTablet.Shared.Pages.Home;
 
 namespace Arista_ZebraTablet.Shared.Pages;
 
 /// <summary>
 /// Code-behind for the <c>Reorder</c> page (route <c>/reorder</c>).
 /// Handles initializing the reorderable barcode list, drag-and-drop reordering,
-/// clipboard copying, and simple navigation.
+/// clipboard copying, and navigation.
 /// </summary>
 /// <remarks>
+/// The page supports reordering barcodes from both sources:
+/// Image Upload Detection and Scanner Results.
 /// The markup declares a single <see cref="MudDropZone{T}"/> with identifier <c>"1"</c>.
-/// Items are maintained in <see cref="reorderableBarcodeItems"/> and re-ordered in-place
-/// upon each drop event so that the current list order can be copied directly.
+/// Items are maintained in <see cref="reorderableBarcodeItems"/> and updated in-place
+/// upon each drop event so the current order can be copied directly.
 /// </remarks>
 public partial class Reorder : ComponentBase
 {
     #region Dependencies
+
+    /// <summary>
+    /// Provides access to barcode groups from both sources (Image Upload and Scanner)
+    /// and communicates the reorder scope using <see cref="IBarcodeDetectorService.SelectedBarcodeGroupId"/>.
+    /// </summary>
+    [Inject] public IBarcodeDetectorService Detector { get; set; } = default!;
 
     /// <summary>
     /// Provides navigation helpers for moving between pages.
@@ -30,14 +37,6 @@ public partial class Reorder : ComponentBase
     /// Provides clipboard interop and other JS functionality.
     /// </summary>
     [Inject] private IJSRuntime JS { get; set; } = default!;
-
-    /// <summary>
-    /// Supplies uploaded images and communicates the "reorder scope"
-    /// via <see cref="IBarcodeDetectorService.SelectedImageId"/>.
-    /// </summary>
-    [Inject] public IBarcodeDetectorService Detector { get; set; } = default!;
-
-
 
     #endregion
 
@@ -60,9 +59,9 @@ public partial class Reorder : ComponentBase
     #region Lifecycle
 
     /// <summary>
-    /// Builds the reorderable list based on <see cref="IBarcodeDetectorService.SelectedImageId"/>.
-    /// If <see cref="Guid.Empty"/> is selected, aggregates barcodes from all uploaded images.
-    /// Otherwise, loads barcodes from the chosen image only.
+    /// Builds the reorderable list based on <see cref="IBarcodeDetectorService.SelectedBarcodeGroupId"/>.
+    /// If <see cref="Guid.Empty"/> is selected, aggregates barcodes from all groups of the selected source.
+    /// Otherwise, loads barcodes from the chosen group only.
     /// </summary>
     protected override void OnInitialized()
     {
@@ -100,46 +99,6 @@ public partial class Reorder : ComponentBase
                     .ToList();
             }
         }
-    }
-
-    #endregion
-
-    #region Drag-and-drop handlers
-
-    /// <summary>
-    /// Reorders <see cref="reorderableBarcodeItems"/> when an item is dropped within the zone.
-    /// </summary>
-    /// <param name="dropItem">Information about the dropped item and target location.</param>
-    /// <remarks>
-    /// <para>
-    /// MudBlazor does not automatically re-order the backing list. We remove the item from its
-    /// current index and insert it at the target index.
-    /// </para>
-    /// </remarks>
-    private void ItemUpdated(MudItemDropInfo<DropBarcodeItem> dropItem)
-    {
-        // Keep zone selection current
-        dropItem.Item.Selector = dropItem.DropzoneIdentifier;
-
-        var item = dropItem.Item;
-        if (item is null) return;
-
-        // Current position in the backing list.
-        var currentIndex = reorderableBarcodeItems.IndexOf(item);
-        if (currentIndex < 0) return;
-
-        // Target position within this zone.
-        var newIndex = dropItem.IndexInZone;
-
-        if (currentIndex != newIndex)
-        {
-            // Remove from old position
-            reorderableBarcodeItems.RemoveAt(currentIndex);
-
-            // Insert at new position
-            reorderableBarcodeItems.Insert(newIndex, item);
-        }
-        StateHasChanged();
     }
 
     #endregion
@@ -189,6 +148,46 @@ public partial class Reorder : ComponentBase
     private void CancelReorder()
     {
         NavigationManager.NavigateTo("/");
+    }
+
+    #endregion
+
+    #region Drag-and-drop handlers
+
+    /// <summary>
+    /// Reorders <see cref="reorderableBarcodeItems"/> when an item is dropped within the zone.
+    /// </summary>
+    /// <param name="dropItem">Information about the dropped item and target location.</param>
+    /// <remarks>
+    /// <para>
+    /// MudBlazor does not automatically re-order the backing list. We remove the item from its
+    /// current index and insert it at the target index.
+    /// </para>
+    /// </remarks>
+    private void ItemUpdated(MudItemDropInfo<DropBarcodeItem> dropItem)
+    {
+        // Keep zone selection current
+        dropItem.Item.Selector = dropItem.DropzoneIdentifier;
+
+        var item = dropItem.Item;
+        if (item is null) return;
+
+        // Current position in the backing list.
+        var currentIndex = reorderableBarcodeItems.IndexOf(item);
+        if (currentIndex < 0) return;
+
+        // Target position within this zone.
+        var newIndex = dropItem.IndexInZone;
+
+        if (currentIndex != newIndex)
+        {
+            // Remove from old position
+            reorderableBarcodeItems.RemoveAt(currentIndex);
+
+            // Insert at new position
+            reorderableBarcodeItems.Insert(newIndex, item);
+        }
+        StateHasChanged();
     }
 
     #endregion

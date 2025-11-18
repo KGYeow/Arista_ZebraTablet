@@ -9,37 +9,65 @@ using Color = MudBlazor.Color;
 
 namespace Arista_ZebraTablet.Shared.Components;
 
+/// <summary>
+/// Code-behind for the BarcodeGroupList component.
+/// Displays barcode groups from both sources (Image Upload and Scanner), provides actions for copy, reorder, edit, and delete.
+/// </summary>
 public partial class BarcodeGroupList : ComponentBase
 {
     #region Dependencies
 
     /// <summary>
-    /// Service that decodes barcodes from image bytes and can navigate to the native scanner.
+    /// Provides barcode detection and navigation services.
     /// </summary>
     [Inject] public IBarcodeDetectorService Detector { get; set; } = default!;
 
     /// <summary>
-    /// Service responsible for uploading scanned barcode data to the backend.
+    /// Provides navigation capabilities within the application.
     /// </summary>
-    [Inject] public IScannedBarcodeService ScannedBarcodeService { get; set; } = default!;
+    [Inject] public NavigationManager NavigationManager { get; set; } = default!;
 
     /// <summary>
-    /// Service responsible for copy result to clipboard.
+    /// Provides JavaScript interop for clipboard operations.
     /// </summary>
     [Inject] private IJSRuntime JS { get; set; } = default!;
 
-    [Inject] public NavigationManager NavigationManager { get; set; } = default!;
+    #endregion
+
+    #region Parameters
+
+    /// <summary>
+    /// Collection of barcode groups to display.
+    /// </summary>
+    [Parameter] public List<BarcodeGroupItemViewModel> BarcodeGroups { get; set; } = new();
+    
+    /// <summary>
+    /// The source of barcode groups (Upload or Camera).
+    /// </summary>
+    [Parameter] public BarcodeSource Source { get; set; }
+    
+    /// <summary>
+    /// Indicates if the component is busy processing actions.
+    /// </summary>
+    [Parameter] public bool IsBusy { get; set; }
+    
+    /// <summary>
+    /// Indicates if image upload is in progress.
+    /// </summary>
+    [Parameter] public bool IsUploadingImg { get; set; }
+    
+    /// <summary>
+    /// Indicates if barcode results upload is in progress.
+    /// </summary>
+    [Parameter] public bool IsUploadingResults { get; set; }
 
     #endregion
 
-    [Parameter] public List<BarcodeGroupItemViewModel> BarcodeGroups { get; set; } = new();
-    [Parameter] public BarcodeSource Source { get; set; }
-    [Parameter] public bool IsBusy { get; set; }
-    [Parameter] public bool IsUploadingImg { get; set; }
-    [Parameter] public bool IsUploadingResults { get; set; }
-
     #region Constants & state
 
+    /// <summary>
+    /// Returns barcode groups filtered by the selected source.
+    /// </summary>
     private List<BarcodeGroupItemViewModel> FilteredBarcodeGroups => BarcodeGroups.Where(x => x.Source == Source).ToList();
 
     #endregion
@@ -73,8 +101,7 @@ public partial class BarcodeGroupList : ComponentBase
     };
 
     /// <summary>
-    /// Copies either a single barcode value, all detected barcodes from an image,
-    /// or all reordered barcode results (from drag-and-drop UI).
+    /// Copies either a single barcode value, or all detected barcodes from a barcode group.
     /// </summary>
     private async Task CopyToClipboard(object content)
     {
@@ -113,10 +140,10 @@ public partial class BarcodeGroupList : ComponentBase
 
     /// <summary>
     /// Enables reorder mode and navigates to the reorder page.
-    /// If <paramref name="imgId"/> is provided, reorders only that image; otherwise reorders all.
+    /// If <paramref name="barcodeGroupId"/> is provided, reorders only that barcode group; otherwise reorders all.
     /// </summary>
-    /// <param name="imgId">
-    /// The image ID to reorder. If <see langword="null"/>, the method enables “reorder all”.
+    /// <param name="barcodeGroupId">
+    /// The barcode group ID to reorder. If <see langword="null"/>, the method enables “reorder all”.
     /// </param>
     private void EnableReorderMode(Guid? barcodeGroupId = null)
     {
@@ -132,7 +159,7 @@ public partial class BarcodeGroupList : ComponentBase
     #region Confirmation / dialogs
 
     /// <summary>
-    /// Opens a full-screen dialog to preview images, starting at a specific image ID if found.
+    /// Opens a full-screen dialog to preview images, starting at a specific barcode group ID if found.
     /// </summary>
     private async Task OpenPreviewImgDialogAsync(Guid barcodeGroupId)
     {
@@ -167,7 +194,7 @@ public partial class BarcodeGroupList : ComponentBase
 
     /// <summary>
     /// Displays a confirmation dialog asking the user to confirm deleting the
-    /// current uploaded image.
+    /// current barcode group.
     /// </summary>
     /// <remarks>Action is disabled while uploading/decoding to prevent race conditions.</remarks>
     private async Task DeleteBarcodeGroupConfirmationAsync(BarcodeGroupItemViewModel group)

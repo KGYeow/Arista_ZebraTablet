@@ -1,40 +1,43 @@
 using Arista_ZebraTablet.Shared.Application.Enums;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
-using static Arista_ZebraTablet.Shared.Pages.Home;
 
 namespace Arista_ZebraTablet.Shared.Services;
 
 /// <summary>
-/// Defines operations for barcode detection and navigation within the application.
+/// Defines operations for barcode detection, state management, and navigation within the application.
 /// </summary>
 /// <remarks>
 /// This service acts as a mediator between UI components and barcode processing logic.
-/// It stores uploaded image data, manages the selected image for reordering, and provides
-/// methods for decoding barcodes and navigating to the scanner page.
+/// It stores barcode groups from both sources (Image Upload and Scanner), manages reorder scope,
+/// and provides methods for decoding barcodes and navigating to the scanner page.
 /// </remarks>
 public interface IBarcodeDetectorService
 {
-    /// <summary>
-    /// Gets or sets the list of uploaded images along with their detection results.
-    /// </summary>
-    /// <remarks>
-    /// This collection is shared across pages to maintain state between navigation.
-    /// </remarks>
-    List<ImgItemViewModel> UploadedImages { get; set; }
+    #region State Properties
 
-    // Gets or sets the list of barcode groups (upload image/ scanned result) along with their detection results.
+    /// <summary>
+    /// Gets or sets the list of barcode groups representing detection results from both sources:
+    /// Image Upload and Scanner.
+    /// </summary>
     List<BarcodeGroupItemViewModel> BarcodeGroups { get; set; }
 
     /// <summary>
-    /// Gets or sets the identifier of the image selected for barcode reordering.
+    /// Gets or sets the identifier of the barcode group selected for reordering.
     /// </summary>
     /// <remarks>
-    /// Use <see cref="Guid.Empty"/> to indicate that all images should be included in the reorder operation.
+    /// Use <see cref="Guid.Empty"/> to indicate that all barcode groups should be included in the reorder operation.
     /// </remarks>
-    Guid? SelectedImageId { get; set; }
     Guid? SelectedBarcodeGroupId { get; set; }
 
+    /// <summary>
+    /// Gets or sets the currently active barcode source (Upload or Camera).
+    /// Used to determine which results are displayed and processed.
+    /// </summary>
     BarcodeSource SelectedBarcodeSource { get; set; }
+
+    #endregion
+
+    #region Navigation Methods
 
     /// <summary>
     /// Navigates to the live barcode scanner page for the specified mode.
@@ -46,6 +49,10 @@ public interface IBarcodeDetectorService
     /// A task that represents the asynchronous navigation operation.
     /// </returns>
     Task NavigateToScannerAsync(BarcodeMode mode);
+
+    #endregion
+
+    #region Barcode Decoding
 
     /// <summary>
     /// Decodes barcodes from the provided image byte array using the specified mode.
@@ -59,4 +66,5 @@ public interface IBarcodeDetectorService
     /// </returns>
     List<ScanBarcodeItemViewModel> DecodeFromImage(byte[] imageBytes, BarcodeMode mode);
 
+    #endregion
 }

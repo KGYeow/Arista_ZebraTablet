@@ -5,14 +5,15 @@ using Arista_ZebraTablet.Shared.Data;
 namespace Arista_ZebraTablet.Shared.Services;
 
 /// <summary>
-/// Defines operations for querying and mutating scanned barcode records.
+/// Defines operations for querying and modifying scanned barcode records in the data store.
 /// </summary>
 /// <remarks>
-/// This contract is host-agnostic and suitable for use from UI components in the Shared library.
-/// The Web project provides an EF Core implementation; other hosts could provide API-based implementations.
+/// This interface is host-agnostic and can be implemented using EF Core or API-based approaches.
 /// </remarks>
 public interface IScannedBarcodeService
 {
+    #region Query Operations
+
     /// <summary>
     /// Gets the list of historical scanned barcodes from the data store (read-only).
     /// </summary>
@@ -21,6 +22,10 @@ public interface IScannedBarcodeService
     /// or an error message if the operation fails.
     /// </returns>
     Task<ServiceResponse<List<ScannedBarcode>>> GetScannedBarcodeListAsync(CancellationToken ct = default);
+
+    #endregion
+
+    #region Mutation Operations
 
     /// <summary>
     /// Adds a list of scanned barcode items to the data store.
@@ -42,4 +47,6 @@ public interface IScannedBarcodeService
     /// Implementations should be idempotent: deleting a non-existent id should return <c>Ok(0)</c>.
     /// </remarks>
     Task<ServiceResponse<int>> DeleteScannedBarcodeAsync(int id, CancellationToken ct = default);
+
+    #endregion
 }
