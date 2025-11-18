@@ -1,4 +1,5 @@
 using Arista_ZebraTablet.Shared.Application.Enums;
+using Arista_ZebraTablet.Shared.Application.Regex;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
 using Arista_ZebraTablet.Shared.Services;
 using SkiaSharp;
