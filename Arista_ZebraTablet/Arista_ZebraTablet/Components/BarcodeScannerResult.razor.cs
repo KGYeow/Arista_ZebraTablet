@@ -56,7 +56,7 @@ public partial class BarcodeScannerResult : ComponentBase, IDisposable
     /// </summary>
     private void OnScanReceived(object? sender, ScanBarcodeItemViewModel scanned)
     {
-        scanResultsService.AddBarcodeToCurrentGroup(scanned);
+        //scanResultsService.AddBarcodeToCurrentGroup(scanned);
         InvokeAsync(StateHasChanged);
     }
     #endregion

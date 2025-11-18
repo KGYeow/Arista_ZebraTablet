@@ -1,5 +1,7 @@
 ﻿using Arista_ZebraTablet.Services;
 using Arista_ZebraTablet.Shared.Services;
+using BarcodeScanning;
+using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 using MudBlazor.Services;
@@ -7,7 +9,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Channels;
 using ZXing.Net.Maui.Controls;
-using CommunityToolkit.Maui;
+
 
 
 
@@ -23,6 +25,8 @@ namespace Arista_ZebraTablet
                 .UseBarcodeReader()
                 .UseMauiCommunityToolkit()
                 .UseMauiCommunityToolkitCamera()
+                .UseBarcodeScanning()
+
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");

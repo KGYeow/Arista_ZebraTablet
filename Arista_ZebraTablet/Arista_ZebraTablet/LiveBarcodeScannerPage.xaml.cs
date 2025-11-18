@@ -1,9 +1,11 @@
 ﻿using Arista_ZebraTablet.Services;
 using Arista_ZebraTablet.Shared.Application.Enums;
+using Arista_ZebraTablet.Shared.Application.ViewModels;
+using BarcodeScanning;
 using System.ComponentModel;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
-using Arista_ZebraTablet.Shared.Application.ViewModels;
+using BarcodeScanning;
 
 namespace Arista_ZebraTablet;
 
@@ -27,6 +29,10 @@ public partial class LiveBarcodeScannerPage : ContentPage
     private readonly BarcodeScannerService _scannerControlService;
     private readonly BarcodeMode _mode;
     private readonly GroupingService _groupingService;
+    private static readonly List<string> PreferredCategoryOrder = new()
+    {
+        "ASY", "ASY-OTL", "Serial Number", "MAC Address", "Deviation", "PCA"
+    };
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LiveBarcodeScannerPage"/> class.
@@ -45,13 +51,13 @@ public partial class LiveBarcodeScannerPage : ContentPage
         _groupingService = groupingService;
 
         // Configure barcode detection behavior.
-        CameraView.Options = new BarcodeReaderOptions
-        {
-            AutoRotate = true,
-            Multiple = true,
-            TryHarder = true,
-            Formats = BarcodeFormats.All
-        };
+        //Camera = new BarcodeReaderOptions
+        //{
+        //    AutoRotate = true,
+        //    Multiple = true,
+        //    TryHarder = true,
+        //    Formats = (BarcodeForma,
+        //};
 
         // Subscribe to control events published by the mediator service.
         _scannerControlService.SwitchCameraRequested += OnSwitchCamera;
@@ -59,20 +65,25 @@ public partial class LiveBarcodeScannerPage : ContentPage
         _scannerControlService.ToggleScanPausedRequested += OnTogglePauseScan;
 
         // Prime the camera's autofocus on startup.
-        CameraView.AutoFocus();
+        Camera.Focus();
     }
 
     /// <summary>
     /// Starts listening for camera state changes and aligns the pause overlay with
     /// the current detection state when the page appears.
     /// </summary>
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
-        CameraView.PropertyChanged += CameraViewPropertyChanged;
+        //Camera.PropertyChanged += CameraViewPropertyChanged;
 
         // Sync overlay with current detection state.
-        UpdatePauseOverlay(paused: !CameraView.IsDetecting);
+        //UpdatePauseOverlay(paused: !CameraView.IsDetecting);
+
+        // Ask camera permission (recommended by the library)
+        await Methods.AskForRequiredPermissionAsync(); // from BarcodeScanning.Native.Maui
+        Camera.CameraEnabled = true;   // s
+
     }
 
     /// <summary>
@@ -84,8 +95,9 @@ public partial class LiveBarcodeScannerPage : ContentPage
     /// </remarks>
     protected override void OnDisappearing()
     {
-        CameraView.PropertyChanged -= CameraViewPropertyChanged;
+        //CameraView.PropertyChanged -= CameraViewPropertyChanged;
         base.OnDisappearing();
+
     }
 
     /// <summary>
@@ -94,16 +106,16 @@ public partial class LiveBarcodeScannerPage : ContentPage
     /// </summary>
     /// <param name="sender">The camera view.</param>
     /// <param name="e">Property change arguments.</param>
-    private void CameraViewPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(CameraBarcodeReaderView.IsDetecting))
-        {
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                UpdatePauseOverlay(paused: !CameraView.IsDetecting).ConfigureAwait(false);
-            });
-        }
-    }
+    //private void CameraViewPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    //{
+    //    if (e.PropertyName == nameof(CameraBarcodeReaderView.IsDetecting))
+    //    {
+    //        MainThread.BeginInvokeOnMainThread(() =>
+    //        {
+    //            UpdatePauseOverlay(paused: Camera.IsDetecting).ConfigureAwait(false);
+    //        });
+    //    }
+    //}
 
     /// <summary>
     /// Shows or hides the pause overlay and toggles the camera preview visibility
@@ -114,7 +126,9 @@ public partial class LiveBarcodeScannerPage : ContentPage
     private async Task UpdatePauseOverlay(bool paused)
     {
         await AnimatePauseOverlayAsync(paused);
-        CameraView.IsVisible = !paused;
+        Camera.PauseScanning = true;
+        PauseOverlay.IsVisible = true;
+
     }
 
     /// <summary>
@@ -125,9 +139,11 @@ public partial class LiveBarcodeScannerPage : ContentPage
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            CameraView.CameraLocation = CameraView.CameraLocation == CameraLocation.Rear
-                ? CameraLocation.Front
-                : CameraLocation.Rear;
+
+            Camera.CameraFacing = Camera.CameraFacing == CameraFacing.Back
+                ? CameraFacing.Front
+                : CameraFacing.Back; // toggle
+
         });
     }
 
@@ -138,7 +154,7 @@ public partial class LiveBarcodeScannerPage : ContentPage
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            CameraView.IsTorchOn = !CameraView.IsTorchOn;
+            Camera.TorchOn = !Camera.TorchOn;
         });
     }
 
@@ -150,9 +166,13 @@ public partial class LiveBarcodeScannerPage : ContentPage
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            CameraView.IsDetecting = !CameraView.IsDetecting;
+
+            Camera.PauseScanning = !Camera.PauseScanning;
+            PauseOverlay.IsVisible = Camera.PauseScanning;
+
         });
     }
+
 
     /// <summary>
     /// Animates the pause overlay in or out.
@@ -182,9 +202,9 @@ public partial class LiveBarcodeScannerPage : ContentPage
     /// <param name="sender">The camera view raising the event.</param>
     /// <param name="e">Detection results containing zero or more barcodes.</param>
 
-    private void OnBarcodesDetected(object sender, BarcodeDetectionEventArgs e)
+    private void OnDetectionFinished(object sender, OnDetectionFinishedEventArg e)
     {
-        var barcodeResults = e.Results?.Where(r => !string.IsNullOrWhiteSpace(r.Value)).ToList();
+        var barcodeResults = e.BarcodeResults?.Where(r => !string.IsNullOrWhiteSpace(r.RawValue)).ToList();
         if (barcodeResults == null || !barcodeResults.Any()) return;
 
         var currentGroup = _detectorService.CurrentGroup ?? new BarcodeGroupItemViewModel
@@ -198,15 +218,15 @@ public partial class LiveBarcodeScannerPage : ContentPage
         foreach (var result in barcodeResults)
         {
             var category = _mode == BarcodeMode.Standard
-                ? BarcodeClassifier.Classify(result.Value)
-                : UniqueBarcodeClassifier.Classify(result.Value);
+                ? BarcodeClassifier.Classify(result.RawValue)
+                : UniqueBarcodeClassifier.Classify(result.RawValue);
 
             var barcodeItem = new ScanBarcodeItemViewModel
             {
                 Id = Guid.NewGuid(),
-                Value = result.Value,
+                Value = result.RawValue,
                 Category = category,
-                BarcodeType = result.Format.ToString(),
+                BarcodeType = result.BarcodeFormat.ToString(),
                 ScannedTime = DateTime.Now
             };
 
@@ -229,6 +249,7 @@ public partial class LiveBarcodeScannerPage : ContentPage
         }
 
         currentGroup.Timestamp = DateTime.Now;
+        currentGroup.Barcodes = currentGroup.Barcodes.OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0 ? PreferredCategoryOrder.IndexOf(b.Category) : int.MaxValue).ToList();
         _detectorService.CurrentGroup = currentGroup;
     }
 }
