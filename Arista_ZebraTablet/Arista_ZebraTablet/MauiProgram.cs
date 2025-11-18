@@ -18,7 +18,7 @@ namespace Arista_ZebraTablet
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
-                .UseBarcodeReader()
+                .UseBarcodeReader()             
                 .UseBarcodeScanning()
                 .ConfigureFonts(fonts =>
                 {
@@ -129,6 +129,7 @@ namespace Arista_ZebraTablet
             //    }
             //    return col;
             //}
+
 
             builder.Services.AddTransient<LiveBarcodeScannerPage>();
 

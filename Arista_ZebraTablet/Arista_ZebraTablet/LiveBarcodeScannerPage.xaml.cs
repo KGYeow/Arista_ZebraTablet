@@ -3,6 +3,7 @@ using Arista_ZebraTablet.Shared.Application.Enums;
 using Arista_ZebraTablet.Shared.Application.ViewModels;
 using BarcodeScanning;
 using System.ComponentModel;
+using BarcodeFormats = BarcodeScanning.BarcodeFormats;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 using BarcodeScanning;
@@ -49,14 +50,16 @@ public partial class LiveBarcodeScannerPage : ContentPage
         _detectorService = detectorService;
         _mode = mode;
 
-        // Configure barcode detection behavior.
-        //Camera = new BarcodeReaderOptions
-        //{
-        //    AutoRotate = true,
-        //    Multiple = true,
-        //    TryHarder = true,
-        //    Formats = (BarcodeForma,
-        //};
+
+        // ===== Native scanner configuration =====
+        // Narrow formats to what you use most; add/remove as needed.
+        Camera.BarcodeSymbologies = BarcodeFormats.All;              // flags enum
+        Camera.ViewfinderMode = true;                                // detect only what’s visible in preview
+        Camera.AimMode = false;                                      // center-only detection (set true if you want)
+        Camera.PoolingInterval = 250;                                // pool results for better multi-barcode grouping
+        Camera.CaptureQuality = CaptureQuality.Highest;               // speed/quality tradeoff
+        Camera.TapToFocusEnabled = true;                             // user tap to focus
+
 
         // Subscribe to control events published by the mediator service.
         _scannerControlService.SwitchCameraRequested += OnSwitchCamera;
@@ -74,14 +77,14 @@ public partial class LiveBarcodeScannerPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        //Camera.PropertyChanged += CameraViewPropertyChanged;
-
-        // Sync overlay with current detection state.
-        //UpdatePauseOverlay(paused: !CameraView.IsDetecting);
+        Camera.PropertyChanged += CameraPropertyChanged;
 
         // Ask camera permission (recommended by the library)
         await Methods.AskForRequiredPermissionAsync(); // from BarcodeScanning.Native.Maui
         Camera.CameraEnabled = true;   // s
+      
+        // Sync overlay with current detection state.
+        //await UpdatePauseOverlay(paused: Camera.PauseScanning);
 
     }
 
@@ -94,7 +97,7 @@ public partial class LiveBarcodeScannerPage : ContentPage
     /// </remarks>
     protected override void OnDisappearing()
     {
-        //CameraView.PropertyChanged -= CameraViewPropertyChanged;
+        Camera.PropertyChanged -= CameraPropertyChanged;
         base.OnDisappearing();
 
     }
@@ -105,16 +108,16 @@ public partial class LiveBarcodeScannerPage : ContentPage
     /// </summary>
     /// <param name="sender">The camera view.</param>
     /// <param name="e">Property change arguments.</param>
-    //private void CameraViewPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    //{
-    //    if (e.PropertyName == nameof(CameraBarcodeReaderView.IsDetecting))
-    //    {
-    //        MainThread.BeginInvokeOnMainThread(() =>
-    //        {
-    //            UpdatePauseOverlay(paused: Camera.IsDetecting).ConfigureAwait(false);
-    //        });
-    //    }
-    //}
+
+    private async void CameraPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(BarcodeScanning.CameraView.PauseScanning))
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+                UpdatePauseOverlay(paused: Camera.PauseScanning));
+        }
+    }
+
 
     /// <summary>
     /// Shows or hides the pause overlay and toggles the camera preview visibility
@@ -251,4 +254,61 @@ public partial class LiveBarcodeScannerPage : ContentPage
         currentGroup.Barcodes = currentGroup.Barcodes.OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0 ? PreferredCategoryOrder.IndexOf(b.Category) : int.MaxValue).ToList();
         _detectorService.CurrentGroup = currentGroup;
     }
+
+    /// <summary>
+    /// Pinch-to-zoom gesture handler.
+    /// </summary>
+
+    // Fields to track pinch state
+    double _startZoomFactor = -1;
+    bool _pinchActive;
+
+    void ResetPinchState()
+    {
+        _pinchActive = false;
+        _startZoomFactor = -1;
+    }
+
+    // Called by XAML PinchGestureRecognizer
+    private void OnPinchUpdated(object sender, PinchGestureUpdatedEventArgs e)
+    {
+        // Safety: camera may not be ready yet
+        if (Camera == null || !Camera.CameraEnabled)
+            return;
+
+        switch (e.Status)
+        {
+            case GestureStatus.Started:
+                _pinchActive = true;
+
+                // Take the current zoom as baseline at gesture start
+                // If CurrentZoomFactor is not yet reported (could be -1), fall back to MinZoomFactor
+                var current = Camera.CurrentZoomFactor > 0 ? Camera.CurrentZoomFactor : Camera.MinZoomFactor;
+                _startZoomFactor = current;
+                break;
+
+            case GestureStatus.Running:
+                if (!_pinchActive || _startZoomFactor < 0)
+                    return;
+
+                // e.Scale is relative since start; >1 = zoom in, <1 = zoom out
+                var desired = (float)(_startZoomFactor * e.Scale);
+
+                // Clamp to camera limits
+                var min = Camera.MinZoomFactor > 0 ? Camera.MinZoomFactor : 1f;
+                var max = Camera.MaxZoomFactor > 0 ? Camera.MaxZoomFactor : Math.Max(1f, desired);
+
+                desired = Math.Clamp(desired, min, max);
+
+                // Apply to the camera
+                Camera.RequestZoomFactor = desired;  // native control will update CurrentZoomFactor
+                break;
+
+            case GestureStatus.Canceled:
+            case GestureStatus.Completed:
+                ResetPinchState();
+                break;
+        }
+    }
+
 }
