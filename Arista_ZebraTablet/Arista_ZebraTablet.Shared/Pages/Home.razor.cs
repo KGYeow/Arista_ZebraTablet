@@ -30,15 +30,13 @@ public partial class Home : ComponentBase
     [Inject] public IBarcodeDetectorService Detector { get; set; } = default!;
 
     /// <summary>
-    /// Service responsible for uploading scanned barcode data to the backend.
-    /// </summary>
-    [Inject] public IScannedBarcodeService ScannedBarcodeService { get; set; } = default!;
-
-    /// <summary>
     /// Service responsible for copy result to clipboard.
     /// </summary>
     [Inject] private IJSRuntime JS { get; set; } = default!;
 
+    /// <summary>
+    /// Provides navigation capabilities within the Blazor application.
+    /// </summary>
     [Inject] public NavigationManager NavigationManager { get; set; } = default!;
 
     #endregion
@@ -57,6 +55,9 @@ public partial class Home : ComponentBase
     /// </summary>
     private static readonly string[] allowedContentTypes = { "image/jpeg", "image/png" };
 
+    /// <summary>
+    /// Collection of barcode groups representing uploaded images and their detected barcodes.
+    /// </summary>
     private List<BarcodeGroupItemViewModel> barcodeGroups { get; set; } = new();
 
     /// <summary>
