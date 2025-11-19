@@ -45,7 +45,16 @@ public partial class BarcodeGroupList : ComponentBase
     /// The source of barcode groups (Upload or Camera).
     /// </summary>
     [Parameter] public BarcodeSource Source { get; set; }
-    
+
+    /// <summary>
+    /// Determines whether the reorder button is displayed for each barcode group card.
+    /// </summary>
+    /// <remarks>
+    /// Set this property to <c>true</c> to show the reorder button, or <c>false</c> to hide it.
+    /// Useful for scenarios where reordering is disabled, such as read-only views or restricted modes.
+    /// </remarks>
+    [Parameter] public bool ShowReorderButton { get; set; } = true;
+
     /// <summary>
     /// Indicates if the component is busy processing actions.
     /// </summary>
