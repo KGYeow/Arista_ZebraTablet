@@ -17,6 +17,16 @@ public partial class BarcodeSettingsDrawer : ComponentBase
     /// </summary>
     [Parameter] public BarcodeMode BarcodeMode { get; set; }
 
+    /// <summary>
+    /// Callback invoked when the barcode classification mode changes in the UI.
+    /// </summary>
+    /// <remarks>
+    /// This event provides the new <see cref="BarcodeMode"/> value selected by the user.
+    /// Use this to update application state or trigger logic when switching between
+    /// modes such as <c>Standard</c> and <c>Unique</c>.
+    /// </remarks>
+    [Parameter] public EventCallback<BarcodeMode> BarcodeModeChanged { get; set; }
+
     #endregion
 
     #region State

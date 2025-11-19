@@ -24,7 +24,8 @@
                     <MudListItem Gutters="false">
                         <MudToggleGroup
                             T="BarcodeMode"
-                            @bind-Value="BarcodeMode"
+                            Value="BarcodeMode"
+                            ValueChanged="async mode => await BarcodeModeChanged.InvokeAsync(mode)"
                             SelectionMode="SelectionMode.SingleSelection"
                             SelectedClass="bg-white"
                             Color="Color.Inherit"
