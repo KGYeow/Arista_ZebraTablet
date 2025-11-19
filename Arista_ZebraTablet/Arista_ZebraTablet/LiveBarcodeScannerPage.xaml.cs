@@ -35,6 +35,10 @@ public partial class LiveBarcodeScannerPage : ContentPage
         "ASY", "ASY-OTL", "Serial Number", "MAC Address", "Deviation", "PCA"
     };
 
+    // LiveBarcodeScannerPage.xaml.cs
+    private bool _isDetectionProcessing;   // show a spinner while handling a batch
+    private int? _detectionProgress;       // optional 0–100 if you reveal rows progressively
+
     /// <summary>
     /// Initializes a new instance of the <see cref="LiveBarcodeScannerPage"/> class.
     /// Configures the camera reader, wires control events, and primes autofocus.
@@ -82,9 +86,9 @@ public partial class LiveBarcodeScannerPage : ContentPage
         // Ask camera permission (recommended by the library)
         await Methods.AskForRequiredPermissionAsync(); // from BarcodeScanning.Native.Maui
         Camera.CameraEnabled = true;   // s
-      
+
         // Sync overlay with current detection state.
-        //await UpdatePauseOverlay(paused: Camera.PauseScanning);
+        await UpdatePauseOverlay(paused: Camera.PauseScanning);
 
     }
 
@@ -128,8 +132,7 @@ public partial class LiveBarcodeScannerPage : ContentPage
     private async Task UpdatePauseOverlay(bool paused)
     {
         await AnimatePauseOverlayAsync(paused);
-        Camera.PauseScanning = true;
-        PauseOverlay.IsVisible = true;
+        Camera.IsVisible = !paused;
 
     }
 
@@ -168,10 +171,7 @@ public partial class LiveBarcodeScannerPage : ContentPage
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-
             Camera.PauseScanning = !Camera.PauseScanning;
-            PauseOverlay.IsVisible = Camera.PauseScanning;
-
         });
     }
 
@@ -196,6 +196,20 @@ public partial class LiveBarcodeScannerPage : ContentPage
         }
     }
 
+    /// <summary>
+    /// Logical flag indicating whether detection processing is underway.
+    /// </summary>
+    public bool IsDetectionProcessing
+    {
+        get => _isDetectionProcessing;
+        set { _isDetectionProcessing = value; OnPropertyChanged(); }
+    }
+    public int? DetectionProgress
+    {
+        get => _detectionProgress;
+        set { _detectionProgress = value; OnPropertyChanged(); }
+    }
+
     /// 
     /// <summary>
     /// Processes detected barcodes and adds them to the scanner service,
@@ -204,10 +218,18 @@ public partial class LiveBarcodeScannerPage : ContentPage
     /// <param name="sender">The camera view raising the event.</param>
     /// <param name="e">Detection results containing zero or more barcodes.</param>
 
-    private void OnDetectionFinished(object sender, OnDetectionFinishedEventArg e)
+    private async void OnDetectionFinished(object sender, OnDetectionFinishedEventArg e)
     {
+        // === Show loader & pause camera during UI update ===
+        IsDetectionProcessing = true;
+        DetectionProgress = 0;
+
+
         var barcodeResults = e.BarcodeResults?.Where(r => !string.IsNullOrWhiteSpace(r.RawValue)).ToList();
         if (barcodeResults == null || !barcodeResults.Any()) return;
+
+        // Give the UI a chance to render the spinner before heavy work
+        await Task.Yield();
 
         var currentGroup = _detectorService.CurrentGroup ?? new BarcodeGroupItemViewModel
         {
@@ -217,8 +239,11 @@ public partial class LiveBarcodeScannerPage : ContentPage
             Timestamp = DateTime.Now
         };
 
-        foreach (var result in barcodeResults)
+
+        for (int i = 0; i < barcodeResults.Count; i++)
         {
+            var result = barcodeResults[i];
+
             var category = _mode == BarcodeMode.Standard
                 ? BarcodeClassifier.Classify(result.RawValue)
                 : UniqueBarcodeClassifier.Classify(result.RawValue);
@@ -248,11 +273,21 @@ public partial class LiveBarcodeScannerPage : ContentPage
 
             // Notify Razor component
             _detectorService.RaiseScanReceived(barcodeItem);
+
+            // Update the batch progress (0–100) and let UI animate the spinner
+            DetectionProgress = (int)Math.Round(((i + 1) * 100.0) / barcodeResults.Count);
+            await Task.Yield();
+
         }
 
         currentGroup.Timestamp = DateTime.Now;
         currentGroup.Barcodes = currentGroup.Barcodes.OrderBy(b => PreferredCategoryOrder.IndexOf(b.Category) >= 0 ? PreferredCategoryOrder.IndexOf(b.Category) : int.MaxValue).ToList();
         _detectorService.CurrentGroup = currentGroup;
+
+        // === Hide loader & resume scanning (or leave paused if you need a "confirm" step) ===
+        IsDetectionProcessing = false;
+        DetectionProgress = null;
+
     }
 
     /// <summary>

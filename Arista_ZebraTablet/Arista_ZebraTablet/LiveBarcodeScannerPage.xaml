@@ -6,7 +6,9 @@
     xmlns:components="clr-namespace:Arista_ZebraTablet.Components;assembly=Arista_ZebraTablet"
     xmlns:services="clr-namespace:Arista_ZebraTablet.Services;assembly=Arista_ZebraTablet"
     xmlns:scanner="clr-namespace:BarcodeScanning;assembly=BarcodeScanning.Native.Maui"
-    x:Class="Arista_ZebraTablet.LiveBarcodeScannerPage"
+    x:Class="Arista_ZebraTablet.LiveBarcodeScannerPage"  
+    x:Name="ThisPage"
+    BindingContext="{x:Reference ThisPage}"
     Title="Scan Barcodes">
 
     <Grid RowDefinitions="0.6*,0.4*">
@@ -31,6 +33,27 @@
                                     AimMode="False"
                                     PoolingInterval="250"
                                     OnDetectionFinished="OnDetectionFinished" />
+            </Grid>
+
+            <!-- 🔵 Batch loader overlay (AFTER camera grid & BEFORE closing AbsoluteLayout) -->
+            <Grid x:Name="BatchLoader"
+                  AbsoluteLayout.LayoutBounds="0,0,1,0.12"  
+                  AbsoluteLayout.LayoutFlags="All"
+                  IsVisible="{Binding IsDetectionProcessing}"
+                  BackgroundColor="#66000000"
+                  Padding="10"
+                  HorizontalOptions="Fill"
+                  VerticalOptions="Start"
+                  ZIndex="30"
+                  InputTransparent="False">
+
+                <StackLayout Orientation="Horizontal" Spacing="8" HorizontalOptions="Center">
+                    <ActivityIndicator IsRunning="True" IsVisible="True" Color="White"/>
+                    <Label Text="Processing…" TextColor="White"/>
+                    <!-- Keep this simple: no boolean converter needed -->
+                    <Label Text="{Binding DetectionProgress, StringFormat=' {0}%'}"
+               TextColor="White"/>
+                </StackLayout>
             </Grid>
 
             <!-- Scanning Paused Screen Overlay -->
@@ -77,6 +100,7 @@
                     </BlazorWebView.RootComponents>
                 </BlazorWebView>
             </Grid>
+
         </AbsoluteLayout>
 
         <!-- Results List -->
