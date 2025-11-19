@@ -229,7 +229,7 @@ public partial class LiveBarcodeScannerPage : ContentPage
         if (barcodeResults == null || !barcodeResults.Any()) return;
 
         // Give the UI a chance to render the spinner before heavy work
-        await Task.Yield();
+        //await Task.Yield();
 
         var currentGroup = _detectorService.CurrentGroup ?? new BarcodeGroupItemViewModel
         {
