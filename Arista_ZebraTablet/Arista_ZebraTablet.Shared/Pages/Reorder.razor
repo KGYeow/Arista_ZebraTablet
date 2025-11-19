@@ -4,36 +4,33 @@
 
 <PageTitle>Reorder Barcodes</PageTitle>
 
-<!-- Reorder Page Container -->
-<MudContainer
-    Class="py-6 d-flex flex-column position-relative"
-    MaxWidth="MaxWidth.Large"
-    Style="flex: 1 1 auto; min-height: 0;"
->
-    <!-- Drag-and-Drop List -->
+<MudText Typo="Typo.h6" Class="pt-5 pb-0 px-4">
+    Reorder Barcodes
+</MudText>
+
+<MudContainer Class="my-3 px-4 h-100 d-flex flex-column gap-3 overflow-auto" MaxWidth="MaxWidth.Large" Style="flex: 1 1 auto; min-height: 0;">
     <MudDropContainer
         T="DropBarcodeItem"
         Items="reorderableBarcodeItems"
         ItemsSelector="@((item, dropzone) => item.Selector == dropzone)"
         ItemDropped="ItemUpdated"
-        Class="d-flex flex-wrap flex-grow-1 overflow-auto"
+        Class="d-flex flex-wrap flex-grow-1"
+        ItemDraggingClass="bg-black bg-opacity-25"
     >
         <!-- The Single Drop Zone with a Header ===== -->
         <ChildContent>
-            <MudPaper Elevation="0" Class="flex-grow-1">
+            <MudPaper Elevation="0" Class="flex-grow-1" Square>
                 <MudList T="string" Class="d-flex flex-column mud-height-full" ReadOnly>
-                    <MudListItem>
-                        <MudText Typo="Typo.h6">
-                            Reorder Barcodes
-                        </MudText>
-                    </MudListItem>
+                    <MudContainer Class="position-absolute" Style="height: 100%; width: calc(100% - 56px); z-index: 1;"/>
 
                     <!-- The Drop Zone Renders Items in their Current Order -->
-                    <MudDropZone @ref="dropZone"
-                                 T="DropBarcodeItem"
-                                 Identifier="1"
-                                 Class="flex-grow-1"
-                                 AllowReorder />
+                    <MudDropZone
+                        @ref="dropZone"
+                        T="DropBarcodeItem"
+                        Identifier="1"
+                        Class="flex-grow-1"
+                        AllowReorder
+                    />
                 </MudList>
             </MudPaper>
         </ChildContent>
@@ -56,7 +53,7 @@
 </MudContainer>
 
 <!-- Page Actions -->
-<MudStack Class="px-6 pb-6" Row Spacing="3">
+<MudStack Class="px-4 pb-5" Row Spacing="3">
     <MudButton Color="Color.Primary"
                StartIcon="@Icons.Material.Rounded.ContentCopy"
                Variant="Variant.Filled"
