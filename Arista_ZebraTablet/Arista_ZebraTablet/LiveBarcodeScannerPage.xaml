@@ -13,8 +13,6 @@
 
     <Grid RowDefinitions="0.6*,0.4*">
         <AbsoluteLayout Grid.Row="0">
-
-
             <Grid AbsoluteLayout.LayoutBounds="0,0,1,1"
                  AbsoluteLayout.LayoutFlags="All">
 
@@ -35,7 +33,7 @@
                                     OnDetectionFinished="OnDetectionFinished" />
             </Grid>
 
-            <!-- 🔵 Batch loader overlay (AFTER camera grid & BEFORE closing AbsoluteLayout) -->
+            <!-- Batch loader overlay (AFTER camera grid & BEFORE closing AbsoluteLayout) -->
             <Grid x:Name="BatchLoader"
                   AbsoluteLayout.LayoutBounds="0,0,1,0.12"  
                   AbsoluteLayout.LayoutFlags="All"

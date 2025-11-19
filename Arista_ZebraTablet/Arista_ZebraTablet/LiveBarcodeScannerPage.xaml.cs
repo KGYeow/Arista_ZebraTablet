@@ -35,7 +35,7 @@ public partial class LiveBarcodeScannerPage : ContentPage
         "ASY", "ASY-OTL", "Serial Number", "MAC Address", "Deviation", "PCA"
     };
 
-    // LiveBarcodeScannerPage.xaml.cs
+    // Loading state for detection processing
     private bool _isDetectionProcessing;   // show a spinner while handling a batch
     private int? _detectionProgress;       // optional 0–100 if you reveal rows progressively
 
@@ -220,16 +220,16 @@ public partial class LiveBarcodeScannerPage : ContentPage
 
     private async void OnDetectionFinished(object sender, OnDetectionFinishedEventArg e)
     {
-        // === Show loader & pause camera during UI update ===
-        IsDetectionProcessing = true;
-        DetectionProgress = 0;
-
 
         var barcodeResults = e.BarcodeResults?.Where(r => !string.IsNullOrWhiteSpace(r.RawValue)).ToList();
         if (barcodeResults == null || !barcodeResults.Any()) return;
 
+        // === Show loader & pause camera during UI update ===
+        IsDetectionProcessing = true;
+        DetectionProgress = 0;
+
         // Give the UI a chance to render the spinner before heavy work
-        //await Task.Yield();
+        await Task.Yield();
 
         var currentGroup = _detectorService.CurrentGroup ?? new BarcodeGroupItemViewModel
         {
