@@ -58,6 +58,7 @@ public sealed class BarcodeDetectorService : IBarcodeDetectorService
     /// </summary>
     public void CompleteCurrentGroup()
     {
+        CurrentGroup.Name = $"Scan Session {CurrentGroup.Timestamp:dd-MM-yyyy hh:mm:ss tt}";
         BarcodeGroups.Add(CurrentGroup);
         CurrentGroup = new BarcodeGroupItemViewModel();
     }

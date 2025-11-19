@@ -33,7 +33,7 @@
                     else
                     {
                         <MudAvatar Class="me-3" Size="Size.Large" Color="Color.Default" Rounded>
-                            <MudIcon Icon="@Icons.Material.Rounded.Scanner" />
+                            <MudIcon Icon="material-symbols-rounded/barcode_scanner" />
                         </MudAvatar>
                     }
 
@@ -80,16 +80,19 @@
                                     />
                                 </MudTooltip>
 
-                                <!-- Reorder Button -->
-                                <MudTooltip Text="Reorder" Placement="Placement.Top" Delay="400" Arrow>
-                                    <MudIconButton
-                                        Icon="@Icons.Material.Rounded.Reorder"
-                                        Color="Color.Primary"
-                                        Size="Size.Small"
-                                        Disabled="@IsBusy"
-                                        OnClick="() => EnableReorderMode(barcodeGroup.Id)"
-                                    />
-                                </MudTooltip>
+                                @if (ShowReorderButton)
+                                {
+                                    <!-- Reorder Button -->
+                                    <MudTooltip Text="Reorder" Placement="Placement.Top" Delay="400" Arrow>
+                                        <MudIconButton
+                                            Icon="@Icons.Material.Rounded.Reorder"
+                                            Color="Color.Primary"
+                                            Size="Size.Small"
+                                            Disabled="@IsBusy"
+                                            OnClick="() => EnableReorderMode(barcodeGroup.Id)"
+                                        />
+                                    </MudTooltip>
+                                }
                             }
                             <!-- Delete Image Button -->
                             <MudTooltip Text="Delete" Placement="Placement.Top" Delay="400" Arrow>
@@ -120,16 +123,19 @@
                                         Icon="@Icons.Material.Rounded.ContentCopy"
                                         OnClick="() => CopyToClipboard(barcodeGroup)"
                                     />
-                                    <MudMenuItem
-                                        Label="Reorder"
-                                        Icon="@Icons.Material.Rounded.Reorder"
-                                        OnClick="() => EnableReorderMode(barcodeGroup.Id)"
-                                    />
+                                    @if (ShowReorderButton)
+                                    {
+                                        <MudMenuItem
+                                            Label="Reorder"
+                                            Icon="@Icons.Material.Rounded.Reorder"
+                                            OnClick="() => EnableReorderMode(barcodeGroup.Id)"
+                                        />
+                                    }
                                 }
                                 <MudMenuItem
                                     Label="Delete"
                                     Icon="@Icons.Material.Rounded.DeleteOutline"
-                                    OnClick="@(() => DeleteBarcodeGroupConfirmationAsync(barcodeGroup))"
+                                    OnClick="() => DeleteBarcodeGroupConfirmationAsync(barcodeGroup)"
                                 />
                             </MudMenu>
                         </MudHidden>

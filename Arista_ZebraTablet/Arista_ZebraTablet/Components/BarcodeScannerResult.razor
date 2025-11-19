@@ -5,16 +5,9 @@
         <MudContainer Class="py-4" MaxWidth="MaxWidth.Large">
             <!-- Header Section -->
             <MudStack Row AlignItems="AlignItems.Center" Spacing="2" Class="mb-4">
-                <!-- Title + Live Scanned Barcode Result Count -->
+                <!-- Scanning Barcodes Title -->
                 <MudStack Row AlignItems="AlignItems.Center" Spacing="1">
                     <MudText Typo="Typo.h6">Scanning Barcodes</MudText>
-
-                    @if (CameraBarcodeGroups.Any())
-                    {
-                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
-                            @CameraBarcodeGroups.Count()
-                        </MudChip>
-                    }
                 </MudStack>
 
                 <MudSpacer/>
@@ -88,13 +81,13 @@
                                 <MudStack Row Spacing="1" AlignItems="AlignItems.Center">
                                     <!-- Barcode Group Thumbnail -->
                                     <MudAvatar Class="me-3" Size="Size.Large" Color="Color.Default" Rounded>
-                                        <MudIcon Icon="@Icons.Material.Rounded.Scanner" />
+                                        <MudIcon Icon="material-symbols-rounded/frame_inspect" />
                                     </MudAvatar>
 
                                     <!-- Barcode Group Information -->
                                     <MudStack Spacing="0" Class="overflow-hidden">
                                         <MudText Typo="Typo.subtitle2" Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                            Current Frame
+                                            Live Scanning Session
                                         </MudText>
 
                                         <MudStack Row Spacing="0">
@@ -199,11 +192,22 @@
             <!-- Scanned Barcode's Result Cards -->
             @if (CameraBarcodeGroups.Any())
             {
-                <MudDivider/>
-                <MudText Typo="Typo.body2" Class="mt-4">Scanned Result</MudText>
+                <MudDivider Class="mt-4"/>
+
+                <!-- Scanned Result Title + Live Scanned Barcode Result Count -->
+                <MudStack Row Class="my-4" AlignItems="AlignItems.Center" Spacing="1">
+                    <MudText Typo="Typo.h6">Completed Scanning Sessions</MudText>
+
+                    @if (CameraBarcodeGroups.Any())
+                    {
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">
+                            @CameraBarcodeGroups.Count()
+                        </MudChip>
+                    }
+                </MudStack>
 
                 <!-- Scanned Barcode Preview Cards -->
-                <BarcodeGroupList BarcodeGroups="scanResultsService.BarcodeGroups" Source="BarcodeSource.Camera" />
+                <BarcodeGroupList BarcodeGroups="scanResultsService.BarcodeGroups" Source="BarcodeSource.Camera" ShowReorderButton="false"/>
             }
         </MudContainer>
     </Body>
